@@ -1,0 +1,1 @@
+csrf_token|s:64:"bb20bbd453090dccb6cb04601668985386994db88e081b4d0240de44fc45da2b";usuario|a:8:{s:6:"cedula";s:8:"33333333";s:6:"nombre";s:30:"Carlos Talento Humano (Prueba)";s:5:"email";s:15:"rrhh@ugc.edu.co";s:3:"rol";s:14:"talento_humano";s:5:"nivel";i:60;s:12:"centro_costo";s:7:"2413001";s:8:"nit_jefe";s:8:"44444444";s:11:"nombre_jefe";s:18:"Ana Admin (Prueba)";}

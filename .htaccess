@@ -1,0 +1,10 @@
+Options -Indexes
+RewriteEngine On
+RewriteBase /ugc_incapacidadess/
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^$ index.php [L]
+RewriteRule ^(.+)$ index.php?view=$1 [QSA,L]

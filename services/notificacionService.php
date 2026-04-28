@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../models/notificacionModel.php';
+require_once __DIR__ . '/../models/empleadoModel.php';
+require_once __DIR__ . '/../config/app.php';
+
+class notificacionService
+{
+    private notificacionModel $model;
+    private empleadoModel $empleadoModel;
+
+    public function __construct()
+    {
+        $this->model = new notificacionModel();
+        $this->empleadoModel = new empleadoModel();
+    }
+
+    public function notificarNuevaSolicitud(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
+    {
+        $empleado = $this->empleadoModel->getByNit($nitEmpleado);
+        $nombre = $empleado['NOMBRE_COMPLETO'] ?? $nitEmpleado;
+        $mensaje = $nombre . ' solicito ' . $this->tipoLabel($tipoSolicitud) . ' y requiere tu aprobacion';
+        $this->safeCrear($nitJefe, 'NUEVA_SOLICITUD', $mensaje, $idSolicitud);
+    }
+
+    public function notificarAprobacionJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
+    {
+        $jefe = $this->empleadoModel->getByNit($nitJefe);
+        $nombre = $jefe['NOMBRE_COMPLETO'] ?? 'Tu jefe';
+        $mensaje = $nombre . ' aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud);
+        $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_JEFE', $mensaje, $idSolicitud);
+        $this->notificarRevisionRRHH($idSolicitud, $nitEmpleado, $tipoSolicitud);
+    }
+
+    public function notificarRechazoJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
+    {
+        $jefe = $this->empleadoModel->getByNit($nitJefe);
+        $nombre = $jefe['NOMBRE_COMPLETO'] ?? 'Tu jefe';
+        $mensaje = $nombre . ' rechazo tu solicitud de ' . $this->tipoLabel($tipoSolicitud);
+        if ($obs !== '') {
+            $mensaje .= '. Observacion: ' . substr($obs, 0, 100);
+        }
+        $this->safeCrear($nitEmpleado, 'SOLICITUD_RECHAZADA_JEFE', $mensaje, $idSolicitud);
+    }
+
+    public function notificarRevisionRRHH(int $idSolicitud, string $nitEmpleado, string $tipoSolicitud): void
+    {
+        $empleado = $this->empleadoModel->getByNit($nitEmpleado);
+        $nombre = $empleado['NOMBRE_COMPLETO'] ?? $nitEmpleado;
+        $mensaje = 'Nueva solicitud de ' . $this->tipoLabel($tipoSolicitud) . ' de ' . $nombre . ' pendiente de revision';
+        foreach ($this->usuariosRRHH() as $nit) {
+            $this->safeCrear($nit, 'REVISION_RRHH', $mensaje, $idSolicitud);
+        }
+    }
+
+    public function notificarAprobacionRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
+    {
+        $tipo = $this->tipoLabel($tipoSolicitud);
+        $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_RRHH', 'Talento Humano aprobo tu solicitud de ' . $tipo, $idSolicitud);
+        $this->safeCrear($nitJefe, 'SOLICITUD_APROBADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue aprobada por Talento Humano', $idSolicitud);
+    }
+
+    public function notificarRechazoRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
+    {
+        $tipo = $this->tipoLabel($tipoSolicitud);
+        $msg = 'Talento Humano rechazo tu solicitud de ' . $tipo;
+        if ($obs !== '') {
+            $msg .= '. Observacion: ' . substr($obs, 0, 100);
+        }
+        $this->safeCrear($nitEmpleado, 'SOLICITUD_RECHAZADA_RRHH', $msg, $idSolicitud);
+        $this->safeCrear($nitJefe, 'SOLICITUD_RECHAZADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue rechazada por Talento Humano', $idSolicitud);
+    }
+
+    public function contarNoLeidas(string $nit): int
+    {
+        try { return $this->model->contarNoLeidas($nit); } catch (Throwable $e) { return 0; }
+    }
+
+    public function getNoLeidas(string $nit): array
+    {
+        try { return $this->model->getNoLeidas($nit); } catch (Throwable $e) { return []; }
+    }
+
+    public function marcarLeida(int $id, string $nit): bool
+    {
+        try { return $this->model->marcarLeida($id, $nit); } catch (Throwable $e) { return false; }
+    }
+
+    public function marcarTodasLeidas(string $nit): bool
+    {
+        try { return $this->model->marcarTodasLeidas($nit); } catch (Throwable $e) { return false; }
+    }
+
+    private function usuariosRRHH(): array
+    {
+        $rrhh = [];
+        foreach ($this->empleadoModel->getPorCentrosCosto(CC_RRHH) as $emp) {
+            if (!empty($emp['NIT'])) { $rrhh[] = (string)$emp['NIT']; }
+        }
+        if (APP_ENV === 'development') {
+            foreach (USUARIOS_PRUEBA as $cedula => $datos) {
+                if (in_array($datos['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)) {
+                    $rrhh[] = (string)$cedula;
+                }
+            }
+        }
+        return array_values(array_unique($rrhh));
+    }
+
+    private function tipoLabel(string $tipo): string
+    {
+        return TIPOS_SOLICITUD[$tipo] ?? $tipo;
+    }
+
+    private function safeCrear(string $nit, string $tipo, string $mensaje, int $idSolicitud): void
+    {
+        if ($nit === '' || $idSolicitud <= 0) { return; }
+        try { $this->model->crear($nit, $tipo, $mensaje, $idSolicitud); } catch (Throwable $e) { error_log('Notificacion error: ' . $e->getMessage()); }
+    }
+}
