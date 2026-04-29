@@ -1,22 +1,41 @@
+<?php
+use Core\Config;
+use Core\Security;
+
+// 🔥 NO DEPENDER DE CONFIG
+$baseUrl    = $baseUrl ?? '';
+$esAprendiz = $esAprendiz ?? false;
+$jefes      = $jefes ?? [];
+$tipos      = $tipos ?? [];
+$hoy        = $hoy ?? date('Y-m-d');
+
+// 🔥 CSRF SIN USAR CLASE SECURITY
+if (empty($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
+
 <section class="page-header animate-fade-down">
   <div>
     <h1 class="page-title">Nueva solicitud</h1>
-    <p style="color:var(--muted)">Registra una solicitud con soporte PDF para revision de tu jefe inmediato.</p>
   </div>
-  <a class="btn btn-outline" href="<?= e(url_view('dashboard')) ?>">Volver</a>
 </section>
 
 <div class="form-card">
-  <form method="post" action="<?= e(url_action('solicitud_create')) ?>" enctype="multipart/form-data" autocomplete="off">
+  <form id="formSolicitud" method="post" action="<?= e(url_action('solicitud_create')) ?>" enctype="multipart/form-data" autocomplete="off">
+    
     <?= csrf_input() ?>
+
     <?php if (empty($esAprendiz)): ?>
       <input type="hidden" name="nit_jefe" value="<?= e($user['nit_jefe'] ?? '') ?>">
     <?php endif; ?>
 
     <div class="form-grid">
+
+      <!-- TIPO -->
       <div class="form-group">
-        <label for="tipo_solicitud">Tipo de solicitud</label>
-        <select id="tipo_solicitud" name="tipo_solicitud" required>
+        <label>Tipo de solicitud</label>
+        <select name="tipo_solicitud" required>
           <option value="">Selecciona...</option>
           <?php foreach (TIPOS_SOLICITUD as $key => $label): ?>
             <option value="<?= e($key) ?>"><?= e($label) ?></option>
@@ -24,105 +43,141 @@
         </select>
       </div>
 
+      <!-- JEFE -->
       <?php if (!empty($esAprendiz)): ?>
-        <div class="form-group">
-          <label for="nit_jefe_seleccionado">Jefe que revisa la solicitud</label>
-          <select id="nit_jefe_seleccionado" name="nit_jefe_seleccionado" required>
-            <option value="">Selecciona...</option>
-            <?php foreach (($jefes ?? []) as $jefe): ?>
-              <option value="<?= e($jefe['NIT'] ?? '') ?>">
-                <?= e($jefe['NOMBRE_COMPLETO'] ?? $jefe['NIT'] ?? '') ?>
-                <?php if (!empty($jefe['CENTRO_COSTO'])): ?>
-                  - CC <?= e($jefe['CENTRO_COSTO']) ?>
-                <?php endif; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <small class="field-hint">Para aprendices o pasantes se permite escoger el jefe responsable.</small>
-        </div>
+      <div class="form-group">
+        <label>Jefe que revisa</label>
+        <select name="nit_jefe_seleccionado" required>
+          <option value="">Selecciona...</option>
+          <?php foreach (($jefes ?? []) as $jefe): ?>
+            <option value="<?= e($jefe['NIT']) ?>">
+              <?= e($jefe['NOMBRE_COMPLETO']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
       <?php endif; ?>
 
-      <div class="form-group">
-        <label for="fecha_inicio">Fecha inicio</label>
-        <input id="fecha_inicio" name="fecha_inicio" type="date" required value="<?= e(date('Y-m-d')) ?>">
-      </div>
-
-      <div class="form-group">
-        <label for="fecha_fin">Fecha fin</label>
-        <input id="fecha_fin" name="fecha_fin" type="date" required value="<?= e(date('Y-m-d')) ?>">
-      </div>
-
-      <div class="form-group">
-        <label for="duracion_horas">Duracion horas</label>
-        <input id="duracion_horas" name="duracion_horas" type="number" min="0" max="999" step="0.5" placeholder="Opcional">
-      </div>
-
-      <div class="form-group">
-        <label for="duracion_dias">Duracion dias</label>
-        <input id="duracion_dias" name="duracion_dias" type="number" min="0" max="365" step="0.5" placeholder="Opcional">
-      </div>
-
-      <div class="form-group">
-        <label for="documento_pdf">Documento PDF</label>
-        <div class="file-upload-container">
-          <input id="documento_pdf" name="documento_pdf" type="file" accept="application/pdf,.pdf" required>
+      <!-- FECHAS -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha inicio *</label>
+          <input type="date" id="fecha_inicio" name="fecha_inicio"
+                 min="<?= htmlspecialchars($hoy) ?>" required />
         </div>
-        <small class="field-hint">Maximo 5MB. Solo PDF.</small>
-        <div id="pdf-error" class="file-error" style="display:none"></div>
+
+        <div class="form-group">
+          <label>Fecha fin *</label>
+          <input type="date" id="fecha_fin" name="fecha_fin"
+                 min="<?= htmlspecialchars($hoy) ?>" required />
+        </div>
       </div>
+
+      <!-- DURACIÓN -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Duración en horas</label>
+          <input type="number" id="duracion_horas" name="duracion_horas"
+                 min="0" step="0.5">
+        </div>
+
+        <div class="form-group">
+          <label>Duración en días</label>
+          <input type="number" id="duracion_dias" name="duracion_dias" readonly>
+        </div>
+      </div>
+
+      <!-- OBSERVACIONES -->
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea name="observaciones" rows="4"></textarea>
+      </div>
+
+      <!-- DOCUMENTO -->
+      <div class="form-group">
+        <label>Documento PDF</label>
+        <input type="file" name="documento_pdf" accept=".pdf" required>
+      </div>
+
     </div>
 
-    <div class="form-group">
-      <label for="observaciones">Observaciones</label>
-      <textarea id="observaciones" name="observaciones" rows="5" maxlength="2000" placeholder="Describe brevemente la solicitud"></textarea>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-green">Enviar solicitud</button>
+      <a href="<?= $baseUrl ?>/dashboard" class="btn btn-gray">Cancelar</a>
     </div>
 
-    <?php if (empty($esAprendiz) && !empty($user['nombre_jefe'])): ?>
-      <div class="alert" style="margin:14px 0;background:var(--green3);border:1px solid var(--green4);color:var(--green)">
-        Jefe asignado: <strong><?= e($user['nombre_jefe']) ?></strong> (<?= e($user['nit_jefe'] ?? '') ?>)
-      </div>
-    <?php elseif (!empty($esAprendiz) && empty($jefes)): ?>
-      <div class="alert alert-error" style="margin:14px 0">
-        No se encontraron jefes disponibles para asignar la solicitud.
-      </div>
-    <?php endif; ?>
-
-    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px">
-      <a class="btn btn-gray" href="<?= e(url_view('dashboard')) ?>">Cancelar</a>
-      <button class="btn btn-green" type="submit">Guardar solicitud</button>
-    </div>
   </form>
 </div>
 
 <script>
 (function () {
-  var input = document.getElementById('documento_pdf');
-  var error = document.getElementById('pdf-error');
-  if (!input || !error) {
-    return;
+
+  var hoy = <?= json_encode($hoy) ?>;
+  var HORAS_POR_DIA = 8;
+
+  var ini = document.getElementById('fecha_inicio');
+  var fin = document.getElementById('fecha_fin');
+  var horas = document.getElementById('duracion_horas');
+  var dias = document.getElementById('duracion_dias');
+
+  // ===== LIMITE 5 MESES =====
+  function sumarMeses(fecha, meses) {
+    var f = new Date(fecha);
+    f.setMonth(f.getMonth() + meses);
+    return f.toISOString().split('T')[0];
   }
 
-  input.addEventListener('change', function () {
-    error.style.display = 'none';
-    error.textContent = '';
-    var file = input.files && input.files[0] ? input.files[0] : null;
-    if (!file) {
+  var maxFecha = sumarMeses(hoy, 5);
+
+  ini.max = maxFecha;
+  fin.max = maxFecha;
+
+  function calcularDuracion() {
+
+    var fechaInicio = ini.value;
+    var fechaFin = fin.value;
+
+    if (!fechaInicio) {
+      dias.value = '';
+      horas.value = '';
       return;
     }
 
-    var isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-    if (!isPdf) {
-      input.value = '';
-      error.textContent = 'Selecciona un archivo PDF valido.';
-      error.style.display = 'block';
-      return;
+    // reglas fechas
+    fin.min = fechaInicio;
+    fin.max = maxFecha;
+
+    if (!fechaFin) {
+      fin.value = fechaInicio;
+      fechaFin = fechaInicio;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      input.value = '';
-      error.textContent = 'El PDF no puede superar 5MB.';
-      error.style.display = 'block';
+    if (fechaFin < fechaInicio) {
+      fin.value = fechaInicio;
+      fechaFin = fechaInicio;
     }
+
+    var d1 = new Date(fechaInicio + 'T00:00:00');
+    var d2 = new Date(fechaFin + 'T00:00:00');
+
+    var diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+
+    // días automáticos
+    dias.value = diffDays;
+
+    // horas automáticas (solo si no editó)
+    if (!horas.dataset.editado) {
+      horas.value = diffDays * HORAS_POR_DIA;
+    }
+  }
+
+  // detectar edición manual de horas
+  horas.addEventListener('input', function () {
+    horas.dataset.editado = "true";
   });
+
+  ini.addEventListener('change', calcularDuracion);
+  fin.addEventListener('change', calcularDuracion);
+
 })();
 </script>
