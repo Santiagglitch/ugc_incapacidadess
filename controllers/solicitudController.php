@@ -561,7 +561,7 @@ class solicitudController
 
     private function puedeEditar(array $solicitud, array $user): bool
     {
-        return (string)($solicitud['NIT_EMPLEADO'] ?? '') === (string)($user['cedula'] ?? '')
+        return normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '') === normalizar_documento($user['cedula'] ?? '')
             && ($solicitud['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE;
     }
 

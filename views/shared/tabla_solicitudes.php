@@ -32,8 +32,8 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
   <?php
     $idSolicitud = (string) ($s['ID'] ?? '');
     $rolUsuario = $user['rol'] ?? '';
-    $cedulaUsuario = (string) ($user['cedula'] ?? '');
-    $nitEmpleadoSolicitud = (string) ($s['NIT_EMPLEADO'] ?? '');
+    $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
+    $nitEmpleadoSolicitud = normalizar_documento($s['NIT_EMPLEADO'] ?? '');
     $estadoSolicitud = $s['ESTADO'] ?? '';
 
     $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
