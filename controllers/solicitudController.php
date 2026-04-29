@@ -113,10 +113,15 @@ class solicitudController
 
         $empleadoModel = new empleadoModel();
         $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
+        $requiereSoloRrhh = ($user['rol'] ?? '') === ROL_JEFE;
 
         $nitJefe = $esAprendiz
             ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
             : limpiar_texto($_POST['nit_jefe'] ?? ($user['nit_jefe'] ?? ''));
+
+        if ($requiereSoloRrhh && $nitJefe === '') {
+            $nitJefe = (string)($user['cedula'] ?? '');
+        }
 
         if ($nitJefe === '') {
             $jefe = (new empleadoModel())->getJefeInmediato((string)($user['cedula'] ?? ''));
@@ -154,6 +159,7 @@ class solicitudController
             'duracion_dias' => $duracionDias,
             'observaciones' => $observaciones !== '' ? $observaciones : null,
             'ruta_comprobante' => $rutaPdf,
+            'estado' => $requiereSoloRrhh ? ESTADO_APROBADO_JEFE : ESTADO_PENDIENTE_JEFE,
         ]);
 
         if (!$ok && $rutaPdf) {
@@ -166,7 +172,13 @@ class solicitudController
 
         if ($ok) {
             $idSolicitud = $this->model->getUltimoIdByEmpleado((string)$user['cedula']);
-            (new notificacionService())->notificarNuevaSolicitud($idSolicitud, (string)$user['cedula'], $nitJefe, $tipoSolicitud);
+            $notificaciones = new notificacionService();
+
+            if ($requiereSoloRrhh) {
+                $notificaciones->notificarRevisionRRHH($idSolicitud, (string)$user['cedula'], $tipoSolicitud);
+            } else {
+                $notificaciones->notificarNuevaSolicitud($idSolicitud, (string)$user['cedula'], $nitJefe, $tipoSolicitud);
+            }
         }
 
         flash_set(
@@ -243,6 +255,20 @@ class solicitudController
             redirect_to(url_view('solicitud_editar') . '&id=' . urlencode((string)$id));
         }
 
+        $rutaPdfActual = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
+        $rutaPdfNueva = null;
+        $hayNuevoPdf = isset($_FILES['documento_pdf']) && ($_FILES['documento_pdf']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+        if ($hayNuevoPdf) {
+            $rutaPdfNueva = $this->procesarArchivoPDF((string)$user['cedula']);
+
+            if ($rutaPdfNueva === false) {
+                redirect_to(url_view('solicitud_editar') . '&id=' . urlencode((string)$id));
+            }
+        }
+
+        $permiteAprobadoJefe = ($user['rol'] ?? '') === ROL_JEFE && ($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
+
         $ok = $this->model->actualizarSolicitudEmpleado($id, (string)$user['cedula'], [
             'tipo_solicitud' => $tipoSolicitud,
             'fecha_inicio' => $fechaInicio,
@@ -250,14 +276,31 @@ class solicitudController
             'duracion_horas' => $duracionHoras,
             'duracion_dias' => $duracionDias,
             'observaciones' => $observaciones !== '' ? $observaciones : null,
-        ]);
+            'ruta_comprobante' => $rutaPdfNueva ?: $rutaPdfActual,
+        ], $permiteAprobadoJefe);
+
+        if (!$ok && $rutaPdfNueva) {
+            $nuevoAbs = dirname(__DIR__) . '/' . $rutaPdfNueva;
+
+            if (is_file($nuevoAbs)) {
+                @unlink($nuevoAbs);
+            }
+        }
+
+        if ($ok && $rutaPdfNueva && $rutaPdfActual !== '' && $rutaPdfActual !== $rutaPdfNueva) {
+            $anteriorAbs = dirname(__DIR__) . '/' . $rutaPdfActual;
+
+            if (is_file($anteriorAbs)) {
+                @unlink($anteriorAbs);
+            }
+        }
 
         flash_set(
             $ok ? 'success' : 'error',
             $ok ? 'Solicitud actualizada correctamente.' : 'No se pudo actualizar la solicitud.'
         );
 
-        redirect_to($this->returnTo(url_view('solicitudes') . '&tipo=pendientes'));
+        redirect_to($this->returnTo(url_view('dashboard')));
     }
 
     public function gestionJefePost(int $id): void
@@ -352,8 +395,16 @@ class solicitudController
         $this->validarPost();
 
         $user = usuario_actual();
+        $solicitud = $this->model->getById($id);
 
-        $ok = $this->model->eliminar($id, $user['cedula']);
+        if (!$solicitud || !$this->puedeEditar($solicitud, $user)) {
+            http_response_code(403);
+            exit('No tienes permisos para eliminar esta solicitud.');
+        }
+
+        $permiteAprobadoJefe = ($user['rol'] ?? '') === ROL_JEFE && ($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
+
+        $ok = $this->model->eliminar($id, $user['cedula'], $permiteAprobadoJefe);
 
         flash_set(
             $ok ? 'success' : 'error',
@@ -561,8 +612,15 @@ class solicitudController
 
     private function puedeEditar(array $solicitud, array $user): bool
     {
-        return normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '') === normalizar_documento($user['cedula'] ?? '')
-            && ($solicitud['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE;
+        $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+        $cedula = normalizar_documento($user['cedula'] ?? '');
+        $estado = (string)($solicitud['ESTADO'] ?? '');
+
+        return $nitEmpleado === $cedula
+            && (
+                $estado === ESTADO_PENDIENTE_JEFE
+                || ($estado === ESTADO_APROBADO_JEFE && ($user['rol'] ?? '') === ROL_JEFE)
+            );
     }
 
     private function jefesDisponibles(empleadoModel $empleadoModel): array

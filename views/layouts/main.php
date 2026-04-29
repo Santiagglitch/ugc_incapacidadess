@@ -3,7 +3,6 @@ $cssUrl = app_asset('assets/css/ugc.css');
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $rolesLabel = [ROL_ADMIN => 'Administrador', ROL_RRHH => 'Talento Humano', ROL_JEFE => 'Jefe Inmediato', ROL_EMPLEADO => 'Empleado'];
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
-$solicitudesUrl = url_view('solicitudes');
 $notifCountUrl = url_view('notif_count');
 $notifListUrl = url_view('notif_list');
 $notifReadUrl = url_action('notif_read');
@@ -28,7 +27,6 @@ $csrfToken = csrf_token();
   </a>
   <nav>
     <a href="<?= e(url_view('dashboard')) ?>">Inicio</a>
-    <a href="<?= e($solicitudesUrl) ?>">Solicitudes</a>
     <?php if (($user['rol'] ?? '') === ROL_ADMIN): ?>
       <a href="<?= e(url_view('admin_empleados')) ?>">Empleados</a>
     <?php endif; ?>
@@ -78,7 +76,6 @@ $csrfToken = csrf_token();
     </div>
     <div class="footer-links">
       <a href="<?= e(url_view('dashboard')) ?>">Inicio</a>
-      <a href="<?= e($solicitudesUrl) ?>">Solicitudes</a>
       <form action="<?= e(url_action('logout')) ?>" method="post" class="footer-logout-form">
         <?= csrf_input() ?>
         <button type="submit" class="footer-logout-btn">Cerrar Sesion</button>

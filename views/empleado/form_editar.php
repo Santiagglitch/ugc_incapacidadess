@@ -16,7 +16,7 @@ $duracionDias = (string)($solicitud['DURACION_DIAS'] ?? '');
 $observaciones = (string)($solicitud['OBSERVACIONES'] ?? '');
 $rutaComprobante = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
 
-$returnTo = $_GET['return_to'] ?? (url_view('solicitudes') . '&tipo=pendientes');
+$returnTo = $_GET['return_to'] ?? url_view('dashboard');
 
 if (empty($_SESSION['csrf_token'])) {
   $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

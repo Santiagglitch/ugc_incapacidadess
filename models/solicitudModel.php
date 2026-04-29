@@ -24,6 +24,8 @@ class solicitudModel extends mainModel
 
     public function crear(array $data): bool
     {
+        $estado = (string)($data['estado'] ?? 'PENDIENTE_JEFE');
+
         return $this->ejecutar(
             "INSERT INTO ICEBERG.SOLICITUDES_PERMISOS
                 (NIT_EMPLEADO, NIT_JEFE, TIPO_SOLICITUD, FECHA_INICIO, FECHA_FIN,
@@ -33,7 +35,7 @@ class solicitudModel extends mainModel
                 (:nit_empleado, :nit_jefe, :tipo_solicitud,
                  TO_DATE(:fecha_inicio, 'YYYY-MM-DD'), TO_DATE(:fecha_fin, 'YYYY-MM-DD'),
                  :duracion_horas, :duracion_dias, :observaciones, :ruta_comprobante,
-                 'PENDIENTE_JEFE', 1, SYSDATE, SYSDATE)",
+                 :estado, 1, SYSDATE, SYSDATE)",
             [
                 ':nit_empleado' => $data['nit_empleado'],
                 ':nit_jefe' => $data['nit_jefe'],
@@ -44,6 +46,7 @@ class solicitudModel extends mainModel
                 ':duracion_dias' => $data['duracion_dias'],
                 ':observaciones' => $data['observaciones'],
                 ':ruta_comprobante' => $data['ruta_comprobante'],
+                ':estado' => $estado,
             ]
         );
     }
@@ -88,7 +91,10 @@ class solicitudModel extends mainModel
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
              FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE NIT_JEFE=:nit AND ESTADO='PENDIENTE_JEFE' AND ACTIVO=1
+             WHERE NIT_JEFE=:nit
+               AND NIT_EMPLEADO<>:nit
+               AND ESTADO='PENDIENTE_JEFE'
+               AND ACTIVO=1
              ORDER BY FECHA_CREACION ASC",
             [':nit' => $nit]
         );
@@ -100,6 +106,7 @@ class solicitudModel extends mainModel
             "SELECT " . self::LIST_SELECT . "
              FROM ICEBERG.SOLICITUDES_PERMISOS
              WHERE NIT_JEFE=:nit
+               AND NIT_EMPLEADO<>:nit
                AND ACTIVO=1
                AND ESTADO IN ('APROBADO_JEFE','RECHAZADO_JEFE','APROBADO_RRHH','RECHAZADO_RRHH')
              ORDER BY FECHA_GESTION_JEFE DESC",
@@ -112,7 +119,11 @@ class solicitudModel extends mainModel
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
              FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE ESTADO='APROBADO_JEFE' AND ACTIVO=1
+             WHERE ACTIVO=1
+               AND (
+                    ESTADO='APROBADO_JEFE'
+                    OR (ESTADO='PENDIENTE_JEFE' AND NIT_EMPLEADO=NIT_JEFE)
+               )
              ORDER BY FECHA_CREACION ASC"
         );
     }
@@ -224,25 +235,33 @@ class solicitudModel extends mainModel
         return $this->gestionarRRHH($id, $nit, $obs, 'RECHAZADO_RRHH');
     }
 
-    public function eliminar(int $id, string $nit): bool
+    public function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool
     {
+        $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
+
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
              SET ACTIVO=0,
                  FECHA_MODIFICACION=SYSDATE
              WHERE ID=:id
                AND NIT_EMPLEADO=:nit
-               AND ESTADO='PENDIENTE_JEFE'
+               AND (
+                    ESTADO='PENDIENTE_JEFE'
+                    OR (:permitir_aprobado_jefe=1 AND ESTADO='APROBADO_JEFE')
+               )
                AND ACTIVO=1",
             [
                 ':id' => $id,
                 ':nit' => $nit,
+                ':permitir_aprobado_jefe' => $permitirAprobadoJefe,
             ]
         );
     }
 
-    public function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data): bool
+    public function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data, bool $permitirAprobadoJefe = false): bool
     {
+        $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
+
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
              SET TIPO_SOLICITUD=:tipo_solicitud,
@@ -251,10 +270,14 @@ class solicitudModel extends mainModel
                  DURACION_HORAS=:duracion_horas,
                  DURACION_DIAS=:duracion_dias,
                  OBSERVACIONES=:observaciones,
+                 RUTA_COMPROBANTE=:ruta_comprobante,
                  FECHA_MODIFICACION=SYSDATE
              WHERE ID=:id
                AND NIT_EMPLEADO=:nit_empleado
-               AND ESTADO='PENDIENTE_JEFE'
+               AND (
+                    ESTADO='PENDIENTE_JEFE'
+                    OR (:permitir_aprobado_jefe=1 AND ESTADO='APROBADO_JEFE')
+               )
                AND ACTIVO=1",
             [
                 ':tipo_solicitud' => $data['tipo_solicitud'],
@@ -263,8 +286,10 @@ class solicitudModel extends mainModel
                 ':duracion_horas' => $data['duracion_horas'],
                 ':duracion_dias' => $data['duracion_dias'],
                 ':observaciones' => $data['observaciones'],
+                ':ruta_comprobante' => $data['ruta_comprobante'],
                 ':id' => $id,
                 ':nit_empleado' => $nitEmpleado,
+                ':permitir_aprobado_jefe' => $permitirAprobadoJefe,
             ]
         );
     }
@@ -278,6 +303,7 @@ class solicitudModel extends mainModel
                  OBSERVACION_JEFE=:obs
              WHERE ID=:id
                AND NIT_JEFE=:nit
+               AND NIT_EMPLEADO<>:nit
                AND ESTADO='PENDIENTE_JEFE'
                AND ACTIVO=1",
             [
@@ -298,7 +324,10 @@ class solicitudModel extends mainModel
                  FECHA_GESTION_RRHH=SYSDATE,
                  OBSERVACION_RRHH=:obs
              WHERE ID=:id
-               AND ESTADO='APROBADO_JEFE'
+               AND (
+                    ESTADO='APROBADO_JEFE'
+                    OR (ESTADO='PENDIENTE_JEFE' AND NIT_EMPLEADO=NIT_JEFE)
+               )
                AND ACTIVO=1",
             [
                 ':estado' => $estado,

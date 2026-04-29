@@ -1446,6 +1446,11 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   transform: translateY(-3px);
 }
 
+.stat-card-link.is-active{
+  border-color: var(--green);
+  box-shadow: 0 12px 32px rgba(10,90,31,.16);
+}
+
 .stat-card-link .stat-icon,
 .stat-card-link .num,
 .stat-card-link .lbl{
