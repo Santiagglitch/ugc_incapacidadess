@@ -832,8 +832,11 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   border-bottom: 1px solid #e2e8f0;
 }
 
-.pdf-preview-header .pdf-icon {
-  font-size: 20px;
+.pdf-preview-header .pdf-icon{
+  width:20px;
+  height:20px;
+  color:#64748b;
+  flex-shrink:0;
 }
 
 .pdf-preview-header .pdf-filename {
