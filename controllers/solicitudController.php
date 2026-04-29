@@ -552,8 +552,10 @@ class solicitudController
 
     private function puedeVer(array $solicitud, array $user): bool
     {
-        return ($solicitud['NIT_EMPLEADO'] ?? '') === ($user['cedula'] ?? '')
-            || ($solicitud['NIT_JEFE'] ?? '') === ($user['cedula'] ?? '')
+        $cedula = normalizar_documento($user['cedula'] ?? '');
+
+        return normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '') === $cedula
+            || normalizar_documento($solicitud['NIT_JEFE'] ?? '') === $cedula
             || in_array($user['rol'] ?? '', [ROL_ADMIN, ROL_RRHH], true);
     }
 

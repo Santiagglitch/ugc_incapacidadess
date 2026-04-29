@@ -15,6 +15,7 @@ define('APP_VERSION', '2.0.0-simple');
 define('APP_ENV', 'development'); // development | production
 define('BASE_URL', '/ugc_incapacidadess');
 define('APP_TIMEZONE', 'America/Bogota');
+define('SESSION_SAVE_PATH', ''); // Vacio usa el directorio temporal configurado por PHP
 
 /*
  * Oracle ICEBERG / RH.

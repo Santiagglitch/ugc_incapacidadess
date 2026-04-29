@@ -10,11 +10,11 @@ function iniciar_sesion_segura(): void
         return;
     }
 
-    $sessionPath = dirname(__DIR__) . '/storage/sessions';
-    if (!is_dir($sessionPath)) {
+    $sessionPath = defined('SESSION_SAVE_PATH') ? trim((string) SESSION_SAVE_PATH) : '';
+    if ($sessionPath !== '' && !is_dir($sessionPath)) {
         @mkdir($sessionPath, 0755, true);
     }
-    if (is_dir($sessionPath) && is_writable($sessionPath)) {
+    if ($sessionPath !== '' && is_dir($sessionPath) && is_writable($sessionPath)) {
         ini_set('session.save_path', $sessionPath);
     }
     session_name('UGC_SOL');
@@ -84,6 +84,11 @@ function e($valor): string
 function limpiar_texto($valor): string
 {
     return trim(strip_tags((string) $valor));
+}
+
+function normalizar_documento($valor): string
+{
+    return preg_replace('/\D/', '', (string) $valor) ?? '';
 }
 
 function usuario_actual(): array
