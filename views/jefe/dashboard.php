@@ -8,7 +8,15 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div><h1 class="page-title">Panel de Jefe Inmediato</h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Gestiona las solicitudes de tu equipo</p></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap"><a href="<?= e(url_view('solicitud_crear')) ?>" class="btn btn-green">+ Nueva solicitud</a></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+  <a href="<?= e(url_view('solicitud_crear')) ?>" class="btn btn-green">
+    + Nueva solicitud
+  </a>
+
+  <a href="Export/Jefe/ExportController.php?download=1" class="btn btn-green">
+    + Exportar datos
+  </a>
+</div>
 </section>
 <div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
   <a href="<?= e($historialUrl('pendientes')) ?>" class="<?= e($historialCardClass('pendientes')) ?>"><div class="stat-icon">&#9201;</div><div class="num"><?= e($stats['pendientes'] ?? 0) ?></div><div class="lbl">Pendientes de Aprobacion</div></a>
