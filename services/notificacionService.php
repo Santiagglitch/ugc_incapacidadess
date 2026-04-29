@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../models/notificacionModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
+require_once __DIR__ . '/../config/helpers.php';
 require_once __DIR__ . '/../config/app.php';
 
 class notificacionService
@@ -59,7 +60,9 @@ class notificacionService
     {
         $tipo = $this->tipoLabel($tipoSolicitud);
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_RRHH', 'Talento Humano aprobo tu solicitud de ' . $tipo, $idSolicitud);
-        $this->safeCrear($nitJefe, 'SOLICITUD_APROBADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue aprobada por Talento Humano', $idSolicitud);
+        if (normalizar_documento($nitJefe) !== normalizar_documento($nitEmpleado)) {
+            $this->safeCrear($nitJefe, 'SOLICITUD_APROBADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue aprobada por Talento Humano', $idSolicitud);
+        }
     }
 
     public function notificarRechazoRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
@@ -70,7 +73,9 @@ class notificacionService
             $msg .= '. Observacion: ' . substr($obs, 0, 100);
         }
         $this->safeCrear($nitEmpleado, 'SOLICITUD_RECHAZADA_RRHH', $msg, $idSolicitud);
-        $this->safeCrear($nitJefe, 'SOLICITUD_RECHAZADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue rechazada por Talento Humano', $idSolicitud);
+        if (normalizar_documento($nitJefe) !== normalizar_documento($nitEmpleado)) {
+            $this->safeCrear($nitJefe, 'SOLICITUD_RECHAZADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue rechazada por Talento Humano', $idSolicitud);
+        }
     }
 
     public function contarNoLeidas(string $nit): int

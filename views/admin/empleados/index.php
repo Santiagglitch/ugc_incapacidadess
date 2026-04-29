@@ -63,10 +63,13 @@
 </div>
 <?php endif; ?>
 
-<?php if (($totalPaginas ?? 1) > 1): ?>
-<div class="pagination" style="display:flex;gap:8px;justify-content:center;margin-top:18px">
-  <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-    <a class="btn <?= $i === ($pagina ?? 1) ? 'btn-green' : 'btn-outline' ?>" href="<?= e(url_view('admin_empleados') . '&pagina=' . $i . '&q=' . urlencode($busqueda ?? '') . '&rol=' . urlencode($filtroRol ?? '')) ?>"><?= $i ?></a>
-  <?php endfor; ?>
-</div>
-<?php endif; ?>
+<?php
+require_once dirname(__DIR__, 2) . '/shared/pagination.php';
+ugcRenderPagination([
+  'current' => $pagina ?? 1,
+  'totalPages' => $totalPaginas ?? 1,
+  'total' => $total ?? 0,
+  'perPage' => 12,
+  'paramName' => 'pagina',
+], 'empleados');
+?>

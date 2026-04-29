@@ -1,9 +1,34 @@
+<?php
+$solicitud = $solicitud ?? [];
+$user = $user ?? usuario_actual();
+$idSolicitud = (string)($solicitud['ID'] ?? '');
+$cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
+$nitEmpleadoSolicitud = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+$estadoSolicitud = (string)($solicitud['ESTADO'] ?? '');
+$esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
+$estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
+$esSolicitudPropiaDirectaRrhh = ($user['rol'] ?? '') === ROL_JEFE && $estadoSolicitud === ESTADO_APROBADO_JEFE;
+$puedeModificarSolicitud = $esDuenoSolicitud && ($estaPendienteJefe || $esSolicitudPropiaDirectaRrhh);
+$returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
+?>
 <section class="page-header">
   <div>
     <h1 class="page-title">Solicitud #<?= e($solicitud['ID'] ?? '') ?></h1>
     <p style="color:var(--muted)"><?= e(TIPOS_SOLICITUD[$solicitud['TIPO_SOLICITUD'] ?? ''] ?? ($solicitud['TIPO_SOLICITUD'] ?? '')) ?></p>
   </div>
-  <a class="btn btn-outline" href="<?= e(url_view('solicitudes')) ?>">← Volver a solicitudes</a>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <?php if ($puedeModificarSolicitud): ?>
+      <a class="btn btn-outline" href="<?= e(url_view('solicitud_editar') . '&id=' . urlencode($idSolicitud) . '&return_to=' . urlencode($returnToDetalle)) ?>">Editar</a>
+      <form class="inline-form" method="post" action="<?= e(url_action('solicitud_delete')) ?>" onsubmit="return confirm('Seguro que deseas eliminar esta solicitud?')">
+        <?= csrf_input() ?>
+        <input type="hidden" name="return_to" value="<?= e(url_view('dashboard')) ?>">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+        <button class="btn btn-red" type="submit">Eliminar</button>
+      </form>
+    <?php endif; ?>
+    <a class="btn btn-outline" href="<?= e(url_view('dashboard')) ?>">Volver a inicio</a>
+  </div>
 </section>
 
 <!-- Card de Informacion General -->

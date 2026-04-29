@@ -39,6 +39,8 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
     $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
     $estaAprobadaJefe = $estadoSolicitud === ESTADO_APROBADO_JEFE;
+    $esSolicitudPropiaDirectaRrhh = $rolUsuario === ROL_JEFE && $estaAprobadaJefe;
+    $puedeModificarSolicitud = $esDuenoSolicitud && ($estaPendienteJefe || $esSolicitudPropiaDirectaRrhh);
 
     $esJefe = $rolUsuario === ROL_JEFE;
     $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
@@ -51,10 +53,10 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     Ver
   </a>
 
-  <?php if ($esDuenoSolicitud && $estaPendienteJefe): ?>
+  <?php if ($puedeModificarSolicitud): ?>
     <a 
       class="btn btn-outline btn-sm" 
-      href="<?= e(url_view('solicitud_editar') . '&id=' . urlencode($idSolicitud)) ?>"
+      href="<?= e(url_view('solicitud_editar') . '&id=' . urlencode($idSolicitud) . '&return_to=' . urlencode($returnTo)) ?>"
     >
       Editar
     </a>
@@ -73,7 +75,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     </form>
   <?php endif; ?>
 
-  <?php if ($esJefe && $estaPendienteJefe): ?>
+  <?php if ($esJefe && !$esDuenoSolicitud && $estaPendienteJefe): ?>
     <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
       <?= csrf_input() ?>
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
