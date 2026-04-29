@@ -62,7 +62,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
                 <button class="btn btn-red btn-sm" type="submit">Rechazar RRHH</button>
               </form>
             <?php endif; ?>
-            <?php if (($s['NIT_EMPLEADO'] ?? '') === ($user['cedula'] ?? '') && ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE): ?>
+            <?php if (normalizar_documento($s['NIT_EMPLEADO'] ?? '') === normalizar_documento($user['cedula'] ?? '') && ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE): ?>
               <form class="inline-form" method="post" action="<?= e(url_action('solicitud_delete')) ?>" onsubmit="return confirm('Eliminar solicitud?')">
                 <?= csrf_input() ?>
                 <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">

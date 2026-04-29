@@ -1,0 +1,3 @@
+storage/sessions/*
+storage/solicitudes/*
+logs/*.log
