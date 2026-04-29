@@ -28,50 +28,87 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
           <td data-label="Inicio"><?= e(substr((string)($s['FECHA_INICIO'] ?? ''), 0, 10)) ?></td>
           <td data-label="Fin"><?= e(substr((string)($s['FECHA_FIN'] ?? ''), 0, 10)) ?></td>
           <td data-label="Estado"><?php $estadoValue = $s['ESTADO'] ?? ''; require __DIR__ . '/badge_estado.php'; ?></td>
-          <td data-label="Acciones" class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode((string) ($s['ID'] ?? ''))) ?>">Ver</a>
-            <?php if (($user['rol'] ?? '') === ROL_JEFE && ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE): ?>
-              <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
-                <?= csrf_input() ?>
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <input type="hidden" name="id" value="<?= e($s['ID'] ?? '') ?>">
-                <input type="hidden" name="decision" value="aprobar">
-                <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
-              </form>
-              <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
-                <?= csrf_input() ?>
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <input type="hidden" name="id" value="<?= e($s['ID'] ?? '') ?>">
-                <input type="hidden" name="decision" value="rechazar">
-                <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
-              </form>
-            <?php endif; ?>
-            <?php if (in_array(($user['rol'] ?? ''), [ROL_RRHH, ROL_ADMIN], true) && ($s['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE): ?>
-              <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
-                <?= csrf_input() ?>
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <input type="hidden" name="id" value="<?= e($s['ID'] ?? '') ?>">
-                <input type="hidden" name="decision" value="aprobar">
-                <button class="btn btn-green btn-sm" type="submit">Aprobar RRHH</button>
-              </form>
-              <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
-                <?= csrf_input() ?>
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <input type="hidden" name="id" value="<?= e($s['ID'] ?? '') ?>">
-                <input type="hidden" name="decision" value="rechazar">
-                <button class="btn btn-red btn-sm" type="submit">Rechazar RRHH</button>
-              </form>
-            <?php endif; ?>
-            <?php if (($s['NIT_EMPLEADO'] ?? '') === ($user['cedula'] ?? '') && ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE): ?>
-              <form class="inline-form" method="post" action="<?= e(url_action('solicitud_delete')) ?>" onsubmit="return confirm('Eliminar solicitud?')">
-                <?= csrf_input() ?>
-                <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-                <input type="hidden" name="_method" value="DELETE">
-                <input type="hidden" name="id" value="<?= e($s['ID'] ?? '') ?>">
-                <button class="btn btn-red btn-sm" type="submit">Eliminar</button>
-              </form>
-            <?php endif; ?>
-          </td>
+         <td data-label="Acciones" class="actions-cell">
+  <?php
+    $idSolicitud = (string) ($s['ID'] ?? '');
+    $rolUsuario = $user['rol'] ?? '';
+    $cedulaUsuario = (string) ($user['cedula'] ?? '');
+    $nitEmpleadoSolicitud = (string) ($s['NIT_EMPLEADO'] ?? '');
+    $estadoSolicitud = $s['ESTADO'] ?? '';
+
+    $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
+    $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
+    $estaAprobadaJefe = $estadoSolicitud === ESTADO_APROBADO_JEFE;
+
+    $esJefe = $rolUsuario === ROL_JEFE;
+    $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
+  ?>
+
+  <a 
+    class="btn btn-outline btn-sm" 
+    href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode($idSolicitud)) ?>"
+  >
+    Ver
+  </a>
+
+  <?php if ($esDuenoSolicitud && $estaPendienteJefe): ?>
+    <a 
+      class="btn btn-outline btn-sm" 
+      href="<?= e(url_view('solicitud_editar') . '&id=' . urlencode($idSolicitud)) ?>"
+    >
+      Editar
+    </a>
+
+    <form 
+      class="inline-form" 
+      method="post" 
+      action="<?= e(url_action('solicitud_delete')) ?>" 
+      onsubmit="return confirm('¿Seguro que deseas eliminar esta solicitud?')"
+    >
+      <?= csrf_input() ?>
+      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+      <input type="hidden" name="_method" value="DELETE">
+      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+      <button class="btn btn-red btn-sm" type="submit">Eliminar</button>
+    </form>
+  <?php endif; ?>
+
+  <?php if ($esJefe && $estaPendienteJefe): ?>
+    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
+      <?= csrf_input() ?>
+      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+      <input type="hidden" name="decision" value="aprobar">
+      <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
+    </form>
+
+    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
+      <?= csrf_input() ?>
+      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+      <input type="hidden" name="decision" value="rechazar">
+      <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
+    </form>
+  <?php endif; ?>
+
+  <?php if ($esRrhhOAdmin && $estaAprobadaJefe): ?>
+    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
+      <?= csrf_input() ?>
+      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+      <input type="hidden" name="decision" value="aprobar">
+      <button class="btn btn-green btn-sm" type="submit">Aprobar RRHH</button>
+    </form>
+
+    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
+      <?= csrf_input() ?>
+      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+      <input type="hidden" name="decision" value="rechazar">
+      <button class="btn btn-red btn-sm" type="submit">Rechazar RRHH</button>
+    </form>
+  <?php endif; ?>
+</td>
         </tr>
       <?php endforeach; ?>
     </tbody>

@@ -22,7 +22,6 @@ class solicitudModel extends mainModel
         TO_CHAR(FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE,
         TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH";
 
-
     public function crear(array $data): bool
     {
         return $this->ejecutar(
@@ -62,29 +61,60 @@ class solicitudModel extends mainModel
 
         return (int)($row['ID'] ?? 0);
     }
+
     public function getById(int $id): ?array
     {
-        return $this->consultarUno("SELECT " . self::DETAIL_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE ID=:id AND ACTIVO=1", [':id' => $id]);
+        return $this->consultarUno(
+            "SELECT " . self::DETAIL_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE ID=:id AND ACTIVO=1",
+            [':id' => $id]
+        );
     }
 
     public function getByEmpleado(string $nit): array
     {
-        return $this->consultarTodo("SELECT " . self::LIST_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE NIT_EMPLEADO=:nit AND ACTIVO=1 ORDER BY FECHA_CREACION DESC", [':nit' => $nit]);
+        return $this->consultarTodo(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE NIT_EMPLEADO=:nit AND ACTIVO=1
+             ORDER BY FECHA_CREACION DESC",
+            [':nit' => $nit]
+        );
     }
 
     public function getPendientesJefe(string $nit): array
     {
-        return $this->consultarTodo("SELECT " . self::LIST_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE NIT_JEFE=:nit AND ESTADO='PENDIENTE_JEFE' AND ACTIVO=1 ORDER BY FECHA_CREACION ASC", [':nit' => $nit]);
+        return $this->consultarTodo(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE NIT_JEFE=:nit AND ESTADO='PENDIENTE_JEFE' AND ACTIVO=1
+             ORDER BY FECHA_CREACION ASC",
+            [':nit' => $nit]
+        );
     }
 
     public function getGestionadasByJefe(string $nit): array
     {
-        return $this->consultarTodo("SELECT " . self::LIST_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE NIT_JEFE=:nit AND ACTIVO=1 AND ESTADO IN ('APROBADO_JEFE','RECHAZADO_JEFE','APROBADO_RRHH','RECHAZADO_RRHH') ORDER BY FECHA_GESTION_JEFE DESC", [':nit' => $nit]);
+        return $this->consultarTodo(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE NIT_JEFE=:nit
+               AND ACTIVO=1
+               AND ESTADO IN ('APROBADO_JEFE','RECHAZADO_JEFE','APROBADO_RRHH','RECHAZADO_RRHH')
+             ORDER BY FECHA_GESTION_JEFE DESC",
+            [':nit' => $nit]
+        );
     }
 
     public function getPendientesRRHH(): array
     {
-        return $this->consultarTodo("SELECT " . self::LIST_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE ESTADO='APROBADO_JEFE' AND ACTIVO=1 ORDER BY FECHA_CREACION ASC");
+        return $this->consultarTodo(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE ESTADO='APROBADO_JEFE' AND ACTIVO=1
+             ORDER BY FECHA_CREACION ASC"
+        );
     }
 
     public function getHistoricoRRHH(): array
@@ -106,26 +136,42 @@ class solicitudModel extends mainModel
             $where[] = 'ESTADO=:estado';
             $binds[':estado'] = $filtros['estado'];
         }
+
         if (!empty($filtros['tipo'])) {
             $where[] = 'TIPO_SOLICITUD=:tipo';
             $binds[':tipo'] = $filtros['tipo'];
         }
+
         if (!empty($filtros['nit'])) {
             $where[] = '(NIT_EMPLEADO=:nit_emp OR NIT_JEFE=:nit_jefe)';
             $binds[':nit_emp'] = $filtros['nit'];
             $binds[':nit_jefe'] = $filtros['nit'];
         }
 
-        return $this->consultarTodo("SELECT " . self::LIST_SELECT . " FROM ICEBERG.SOLICITUDES_PERMISOS WHERE " . implode(' AND ', $where) . " ORDER BY FECHA_CREACION DESC", $binds);
+        return $this->consultarTodo(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE " . implode(' AND ', $where) . "
+             ORDER BY FECHA_CREACION DESC",
+            $binds
+        );
     }
 
     public function contarPorEstado(): array
     {
-        $rows = $this->consultarTodo("SELECT ESTADO, COUNT(*) AS TOTAL FROM ICEBERG.SOLICITUDES_PERMISOS WHERE ACTIVO=1 GROUP BY ESTADO");
+        $rows = $this->consultarTodo(
+            "SELECT ESTADO, COUNT(*) AS TOTAL
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE ACTIVO=1
+             GROUP BY ESTADO"
+        );
+
         $result = [];
+
         foreach ($rows as $row) {
             $result[$row['ESTADO']] = (int) $row['TOTAL'];
         }
+
         return $result;
     }
 
@@ -136,7 +182,8 @@ class solicitudModel extends mainModel
                     SUM(CASE WHEN ESTADO='PENDIENTE_JEFE' THEN 1 ELSE 0 END) AS PENDIENTES,
                     SUM(CASE WHEN ESTADO IN ('APROBADO_JEFE','APROBADO_RRHH') THEN 1 ELSE 0 END) AS APROBADAS,
                     SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS
-             FROM ICEBERG.SOLICITUDES_PERMISOS WHERE NIT_EMPLEADO=:nit AND ACTIVO=1",
+             FROM ICEBERG.SOLICITUDES_PERMISOS
+             WHERE NIT_EMPLEADO=:nit AND ACTIVO=1",
             [':nit' => $nit]
         ) ?? [];
 
@@ -179,16 +226,66 @@ class solicitudModel extends mainModel
 
     public function eliminar(int $id, string $nit): bool
     {
-        return $this->ejecutar("UPDATE ICEBERG.SOLICITUDES_PERMISOS SET ACTIVO=0 WHERE ID=:id AND NIT_EMPLEADO=:nit AND ESTADO='PENDIENTE_JEFE' AND ACTIVO=1", [':id' => $id, ':nit' => $nit]);
+        return $this->ejecutar(
+            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+             SET ACTIVO=0,
+                 FECHA_MODIFICACION=SYSDATE
+             WHERE ID=:id
+               AND NIT_EMPLEADO=:nit
+               AND ESTADO='PENDIENTE_JEFE'
+               AND ACTIVO=1",
+            [
+                ':id' => $id,
+                ':nit' => $nit,
+            ]
+        );
+    }
+
+    public function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data): bool
+    {
+        return $this->ejecutar(
+            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+             SET TIPO_SOLICITUD=:tipo_solicitud,
+                 FECHA_INICIO=TO_DATE(:fecha_inicio, 'YYYY-MM-DD'),
+                 FECHA_FIN=TO_DATE(:fecha_fin, 'YYYY-MM-DD'),
+                 DURACION_HORAS=:duracion_horas,
+                 DURACION_DIAS=:duracion_dias,
+                 OBSERVACIONES=:observaciones,
+                 FECHA_MODIFICACION=SYSDATE
+             WHERE ID=:id
+               AND NIT_EMPLEADO=:nit_empleado
+               AND ESTADO='PENDIENTE_JEFE'
+               AND ACTIVO=1",
+            [
+                ':tipo_solicitud' => $data['tipo_solicitud'],
+                ':fecha_inicio' => $data['fecha_inicio'],
+                ':fecha_fin' => $data['fecha_fin'],
+                ':duracion_horas' => $data['duracion_horas'],
+                ':duracion_dias' => $data['duracion_dias'],
+                ':observaciones' => $data['observaciones'],
+                ':id' => $id,
+                ':nit_empleado' => $nitEmpleado,
+            ]
+        );
     }
 
     private function gestionarJefe(int $id, string $nit, string $obs, string $estado): bool
     {
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
-                SET ESTADO=:estado, FECHA_GESTION_JEFE=SYSDATE, OBSERVACION_JEFE=:obs
-              WHERE ID=:id AND NIT_JEFE=:nit AND ESTADO='PENDIENTE_JEFE' AND ACTIVO=1",
-            [':estado' => $estado, ':obs' => $obs, ':id' => $id, ':nit' => $nit]
+             SET ESTADO=:estado,
+                 FECHA_GESTION_JEFE=SYSDATE,
+                 OBSERVACION_JEFE=:obs
+             WHERE ID=:id
+               AND NIT_JEFE=:nit
+               AND ESTADO='PENDIENTE_JEFE'
+               AND ACTIVO=1",
+            [
+                ':estado' => $estado,
+                ':obs' => $obs,
+                ':id' => $id,
+                ':nit' => $nit,
+            ]
         );
     }
 
@@ -196,9 +293,19 @@ class solicitudModel extends mainModel
     {
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
-                SET ESTADO=:estado, NIT_RRHH=:nit, FECHA_GESTION_RRHH=SYSDATE, OBSERVACION_RRHH=:obs
-              WHERE ID=:id AND ESTADO='APROBADO_JEFE' AND ACTIVO=1",
-            [':estado' => $estado, ':obs' => $obs, ':id' => $id, ':nit' => $nit]
+             SET ESTADO=:estado,
+                 NIT_RRHH=:nit,
+                 FECHA_GESTION_RRHH=SYSDATE,
+                 OBSERVACION_RRHH=:obs
+             WHERE ID=:id
+               AND ESTADO='APROBADO_JEFE'
+               AND ACTIVO=1",
+            [
+                ':estado' => $estado,
+                ':obs' => $obs,
+                ':id' => $id,
+                ':nit' => $nit,
+            ]
         );
     }
 }
