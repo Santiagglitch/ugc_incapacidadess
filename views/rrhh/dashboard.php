@@ -8,6 +8,12 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div><h1 class="page-title">Talento Humano</h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Gestion de aprobaciones finales</p></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="Export/RRHH/ExportController.php?download=1" class="btn btn-green">
+      + Exportar datos
+    </a>
+  </div>
+
 </section>
 <div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
   <a href="<?= e($historialUrl('pendientes')) ?>" class="<?= e($historialCardClass('pendientes')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats['pendientes'] ?? 0) ?></div><div class="lbl">Pendientes RRHH</div></a>
