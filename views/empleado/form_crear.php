@@ -96,14 +96,36 @@ if (empty($_SESSION['csrf_token'])) {
       <!-- DOCUMENTO -->
       <div class="form-group">
         <label>Documento PDF</label>
-        <input type="file" name="documento_pdf" accept=".pdf" required>
+        <input type="file" id="documento_pdf" name="documento_pdf" accept=".pdf" required>
+        <span class="field-hint">Máximo 5MB. Formatos permitidos: PDF</span>
+
+        <!-- Vista previa del PDF -->
+        <div id="pdf-preview-container" class="pdf-preview-container" style="display: none;">
+          <div class="pdf-preview-header">
+            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span class="pdf-filename" id="pdf-filename">documento.pdf</span>
+            <span class="pdf-size" id="pdf-size">0 KB</span>
+            <button type="button" class="remove-pdf-btn" id="remove-pdf" title="Eliminar archivo">×</button>
+          </div>
+          <div class="pdf-preview-content">
+            <iframe id="pdf-iframe" src="" title="Vista previa del PDF"></iframe>
+          </div>
+        </div>
+
+        <!-- Error de validación -->
+        <div id="pdf-error" class="file-error" style="display: none;"></div>
       </div>
 
     </div>
 
     <div class="form-actions">
       <button type="submit" class="btn btn-green">Enviar solicitud</button>
-      <a href="<?= $baseUrl ?>/dashboard" class="btn btn-gray">Cancelar</a>
+      <a href="<?= e(url_view('dashboard')) ?>" class="btn btn-gray">Cancelar</a>
     </div>
 
   </form>
@@ -178,6 +200,86 @@ if (empty($_SESSION['csrf_token'])) {
 
   ini.addEventListener('change', calcularDuracion);
   fin.addEventListener('change', calcularDuracion);
+
+  // ===== VISTA PREVIA DEL PDF =====
+  var pdfInput = document.getElementById('documento_pdf');
+  var pdfPreviewContainer = document.getElementById('pdf-preview-container');
+  var pdfFilename = document.getElementById('pdf-filename');
+  var pdfSize = document.getElementById('pdf-size');
+  var pdfIframe = document.getElementById('pdf-iframe');
+  var removePdfBtn = document.getElementById('remove-pdf');
+  var pdfError = document.getElementById('pdf-error');
+  var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    var k = 1024;
+    var sizes = ['Bytes', 'KB', 'MB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function showPdfError(message) {
+    pdfError.textContent = message;
+    pdfError.style.display = 'block';
+    pdfPreviewContainer.style.display = 'none';
+    pdfInput.value = '';
+  }
+
+  function hidePdfError() {
+    pdfError.style.display = 'none';
+  }
+
+  function resetPdfPreview() {
+    pdfPreviewContainer.style.display = 'none';
+    pdfIframe.src = '';
+    pdfInput.value = '';
+    hidePdfError();
+  }
+
+  pdfInput.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+
+    if (!file) {
+      resetPdfPreview();
+      return;
+    }
+
+    // Validar tipo de archivo
+    if (file.type !== 'application/pdf') {
+      showPdfError('El archivo debe ser un PDF válido.');
+      return;
+    }
+
+    // Validar tamaño
+    if (file.size > MAX_FILE_SIZE) {
+      showPdfError('El archivo no puede superar 5MB.');
+      return;
+    }
+
+    hidePdfError();
+
+    // Mostrar información del archivo
+    pdfFilename.textContent = file.name;
+    pdfSize.textContent = formatFileSize(file.size);
+
+    // Crear URL para vista previa
+    var fileUrl = URL.createObjectURL(file);
+    pdfIframe.src = fileUrl;
+    pdfPreviewContainer.style.display = 'block';
+  });
+
+  // Eliminar archivo seleccionado
+  removePdfBtn.addEventListener('click', function() {
+    resetPdfPreview();
+  });
+
+  // Limpiar URL cuando se envíe el formulario o se abandone la página
+  window.addEventListener('beforeunload', function() {
+    if (pdfIframe.src && pdfIframe.src.startsWith('blob:')) {
+      URL.revokeObjectURL(pdfIframe.src);
+    }
+  });
 
 })();
 </script>
