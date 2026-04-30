@@ -4,6 +4,7 @@ $user = $user ?? usuario_actual();
 
 $baseUrl = $baseUrl ?? '';
 $esAprendiz = $esAprendiz ?? false;
+$puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes = $jefes ?? [];
 $hoy = $hoy ?? date('Y-m-d');
 
@@ -37,7 +38,7 @@ if (empty($_SESSION['csrf_token'])) {
     <input type="hidden" name="id" value="<?= e($id) ?>">
     <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
 
-    <?php if (empty($esAprendiz)): ?>
+    <?php if (empty($puedeSeleccionarJefe)): ?>
       <input type="hidden" name="nit_jefe" value="<?= e($solicitud['NIT_JEFE'] ?? ($user['nit_jefe'] ?? '')) ?>">
     <?php endif; ?>
 
@@ -58,7 +59,7 @@ if (empty($_SESSION['csrf_token'])) {
       </div>
 
       <!-- JEFE -->
-      <?php if (!empty($esAprendiz)): ?>
+      <?php if (!empty($puedeSeleccionarJefe)): ?>
         <div class="form-group">
           <label>Jefe que revisa</label>
           <select name="nit_jefe_seleccionado" required>
@@ -73,6 +74,15 @@ if (empty($_SESSION['csrf_token'])) {
               </option>
             <?php endforeach; ?>
           </select>
+        </div>
+      <?php else: ?>
+        <div class="form-group">
+          <label>Jefe que revisa</label>
+          <input
+            type="text"
+            value="<?= e((string)($solicitud['NIT_JEFE'] ?? ($user['nit_jefe'] ?? ''))) ?>"
+            readonly
+          >
         </div>
       <?php endif; ?>
 

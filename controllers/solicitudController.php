@@ -49,7 +49,7 @@ class solicitudController
             $gestionadas = $this->model->getGestionadasByJefe($user['cedula']);
 
             if ($tipo === 'aprobadas') {
-                $solicitudes = array_values(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)));
+                $solicitudes = array_values(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH], true)));
                 $titulo = 'Aprobadas por mi';
             } elseif ($tipo === 'rechazadas') {
                 $solicitudes = array_values(array_filter($gestionadas, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_RECHAZADO_JEFE));
@@ -92,9 +92,22 @@ class solicitudController
         $user = usuario_actual();
         $empleadoModel = new empleadoModel();
         $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $jefes = $esAprendiz ? $this->jefesDisponibles($empleadoModel) : [];
+        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
+        $jefes = $puedeSeleccionarJefe ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
 
-        render_view('empleado/form_crear', compact('user', 'esAprendiz', 'jefes'));
+        if (!$puedeSeleccionarJefe && empty($user['nit_jefe'])) {
+            $jefe = $empleadoModel->getJefeInmediato((string)($user['cedula'] ?? ''));
+            if (!empty($jefe['NIT_JEFE'])) {
+                $_SESSION['usuario']['nit_jefe'] = (string)$jefe['NIT_JEFE'];
+                $_SESSION['usuario']['nombre_jefe'] = (string)($jefe['NOMBRE_JEFE'] ?? '');
+                $user = usuario_actual();
+            } else {
+                render_view('empleado/sin_jefe', compact('user'));
+                return;
+            }
+        }
+
+        render_view('empleado/form_crear', compact('user', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes'));
     }
 
     public function crearPost(): void
@@ -113,15 +126,11 @@ class solicitudController
 
         $empleadoModel = new empleadoModel();
         $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $requiereSoloRrhh = ($user['rol'] ?? '') === ROL_JEFE;
+        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
 
-        $nitJefe = $esAprendiz
+        $nitJefe = $puedeSeleccionarJefe
             ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
             : limpiar_texto($_POST['nit_jefe'] ?? ($user['nit_jefe'] ?? ''));
-
-        if ($requiereSoloRrhh && $nitJefe === '') {
-            $nitJefe = (string)($user['cedula'] ?? '');
-        }
 
         if ($nitJefe === '') {
             $jefe = (new empleadoModel())->getJefeInmediato((string)($user['cedula'] ?? ''));
@@ -137,6 +146,10 @@ class solicitudController
             $observaciones,
             $nitJefe
         );
+
+        if (normalizar_documento($nitJefe) === normalizar_documento($user['cedula'] ?? '')) {
+            $errores[] = 'No puedes seleccionarte a ti mismo como jefe revisor.';
+        }
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -159,7 +172,7 @@ class solicitudController
             'duracion_dias' => $duracionDias,
             'observaciones' => $observaciones !== '' ? $observaciones : null,
             'ruta_comprobante' => $rutaPdf,
-            'estado' => $requiereSoloRrhh ? ESTADO_APROBADO_JEFE : ESTADO_PENDIENTE_JEFE,
+            'estado' => ESTADO_PENDIENTE_JEFE,
         ]);
 
         if (!$ok && $rutaPdf) {
@@ -173,12 +186,7 @@ class solicitudController
         if ($ok) {
             $idSolicitud = $this->model->getUltimoIdByEmpleado((string)$user['cedula']);
             $notificaciones = new notificacionService();
-
-            if ($requiereSoloRrhh) {
-                $notificaciones->notificarRevisionRRHH($idSolicitud, (string)$user['cedula'], $tipoSolicitud);
-            } else {
-                $notificaciones->notificarNuevaSolicitud($idSolicitud, (string)$user['cedula'], $nitJefe, $tipoSolicitud);
-            }
+            $notificaciones->notificarNuevaSolicitud($idSolicitud, (string)$user['cedula'], $nitJefe, $tipoSolicitud);
         }
 
         flash_set(
@@ -216,7 +224,12 @@ class solicitudController
             exit('No tienes permisos para editar esta solicitud.');
         }
 
-        render_view('empleado/form_editar', compact('user', 'solicitud'));
+        $empleadoModel = new empleadoModel();
+        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
+        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
+        $jefes = $puedeSeleccionarJefe ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
+
+        render_view('empleado/form_editar', compact('user', 'solicitud', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes'));
     }
 
     public function editarPost(int $id): void
@@ -238,7 +251,12 @@ class solicitudController
         $duracionHoras = $this->numeroOpcional($_POST['duracion_horas'] ?? '');
         $duracionDias = $this->numeroOpcional($_POST['duracion_dias'] ?? '');
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
-        $nitJefe = (string)($solicitud['NIT_JEFE'] ?? '');
+        $empleadoModel = new empleadoModel();
+        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
+        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
+        $nitJefe = $puedeSeleccionarJefe
+            ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
+            : (string)($solicitud['NIT_JEFE'] ?? '');
 
         $errores = $this->validarSolicitud(
             $tipoSolicitud,
@@ -249,6 +267,10 @@ class solicitudController
             $observaciones,
             $nitJefe
         );
+
+        if (normalizar_documento($nitJefe) === normalizar_documento($user['cedula'] ?? '')) {
+            $errores[] = 'No puedes seleccionarte a ti mismo como jefe revisor.';
+        }
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -267,8 +289,6 @@ class solicitudController
             }
         }
 
-        $permiteAprobadoJefe = ($user['rol'] ?? '') === ROL_JEFE && ($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
-
         $ok = $this->model->actualizarSolicitudEmpleado($id, (string)$user['cedula'], [
             'tipo_solicitud' => $tipoSolicitud,
             'fecha_inicio' => $fechaInicio,
@@ -277,7 +297,8 @@ class solicitudController
             'duracion_dias' => $duracionDias,
             'observaciones' => $observaciones !== '' ? $observaciones : null,
             'ruta_comprobante' => $rutaPdfNueva ?: $rutaPdfActual,
-        ], $permiteAprobadoJefe);
+            'nit_jefe' => $nitJefe,
+        ]);
 
         if (!$ok && $rutaPdfNueva) {
             $nuevoAbs = dirname(__DIR__) . '/' . $rutaPdfNueva;
@@ -312,6 +333,11 @@ class solicitudController
         $accion = limpiar_texto($_POST['decision'] ?? '');
         $obs = limpiar_texto($_POST['observacion_jefe'] ?? '');
         $solicitud = $this->model->getById($id);
+
+        if (!in_array($accion, ['aprobar', 'rechazar'], true)) {
+            flash_set('error', 'Selecciona una decision valida.');
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
 
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarJefe($id, $user['cedula'], $obs)
@@ -355,6 +381,11 @@ class solicitudController
         $accion = limpiar_texto($_POST['decision'] ?? '');
         $obs = limpiar_texto($_POST['observacion_rrhh'] ?? '');
         $solicitud = $this->model->getById($id);
+
+        if (!in_array($accion, ['aprobar', 'rechazar'], true)) {
+            flash_set('error', 'Selecciona una decision valida.');
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
 
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarRRHH($id, $user['cedula'], $obs)
@@ -402,9 +433,7 @@ class solicitudController
             exit('No tienes permisos para eliminar esta solicitud.');
         }
 
-        $permiteAprobadoJefe = ($user['rol'] ?? '') === ROL_JEFE && ($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
-
-        $ok = $this->model->eliminar($id, $user['cedula'], $permiteAprobadoJefe);
+        $ok = $this->model->eliminar($id, $user['cedula']);
 
         flash_set(
             $ok ? 'success' : 'error',
@@ -617,15 +646,13 @@ class solicitudController
         $estado = (string)($solicitud['ESTADO'] ?? '');
 
         return $nitEmpleado === $cedula
-            && (
-                $estado === ESTADO_PENDIENTE_JEFE
-                || ($estado === ESTADO_APROBADO_JEFE && ($user['rol'] ?? '') === ROL_JEFE)
-            );
+            && $estado === ESTADO_PENDIENTE_JEFE;
     }
 
-    private function jefesDisponibles(empleadoModel $empleadoModel): array
+    private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array
     {
         $jefes = $empleadoModel->getTodosLosJefes();
+        $excluirNit = normalizar_documento($excluirNit);
 
         if (APP_ENV === 'development') {
             foreach (USUARIOS_PRUEBA as $cedula => $datos) {
@@ -644,6 +671,10 @@ class solicitudController
 
         foreach ($jefes as $jefe) {
             if (empty($jefe['NIT'])) {
+                continue;
+            }
+
+            if ($excluirNit !== '' && normalizar_documento($jefe['NIT']) === $excluirNit) {
                 continue;
             }
 
