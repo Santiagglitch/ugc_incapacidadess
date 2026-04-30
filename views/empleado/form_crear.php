@@ -5,6 +5,7 @@ use Core\Security;
 // 🔥 NO DEPENDER DE CONFIG
 $baseUrl    = $baseUrl ?? '';
 $esAprendiz = $esAprendiz ?? false;
+$puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes      = $jefes ?? [];
 $tipos      = $tipos ?? [];
 $hoy        = $hoy ?? date('Y-m-d');
@@ -26,7 +27,7 @@ if (empty($_SESSION['csrf_token'])) {
     
     <?= csrf_input() ?>
 
-    <?php if (empty($esAprendiz)): ?>
+    <?php if (empty($puedeSeleccionarJefe)): ?>
       <input type="hidden" name="nit_jefe" value="<?= e($user['nit_jefe'] ?? '') ?>">
     <?php endif; ?>
 
@@ -44,17 +45,29 @@ if (empty($_SESSION['csrf_token'])) {
       </div>
 
       <!-- JEFE -->
-      <?php if (!empty($esAprendiz)): ?>
+      <?php if (!empty($puedeSeleccionarJefe)): ?>
       <div class="form-group">
         <label>Jefe que revisa</label>
         <select name="nit_jefe_seleccionado" required>
           <option value="">Selecciona...</option>
           <?php foreach (($jefes ?? []) as $jefe): ?>
-            <option value="<?= e($jefe['NIT']) ?>">
+            <option
+              value="<?= e($jefe['NIT']) ?>"
+              <?= (string)($user['nit_jefe'] ?? '') === (string)($jefe['NIT'] ?? '') ? 'selected' : '' ?>
+            >
               <?= e($jefe['NOMBRE_COMPLETO']) ?>
             </option>
           <?php endforeach; ?>
         </select>
+      </div>
+      <?php else: ?>
+      <div class="form-group">
+        <label>Jefe que revisa</label>
+        <input
+          type="text"
+          value="<?= e(trim((string)($user['nombre_jefe'] ?? '')) !== '' ? ($user['nombre_jefe'] . ' - ' . ($user['nit_jefe'] ?? '')) : ($user['nit_jefe'] ?? '')) ?>"
+          readonly
+        >
       </div>
       <?php endif; ?>
 

@@ -34,15 +34,15 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     $rolUsuario = $user['rol'] ?? '';
     $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
     $nitEmpleadoSolicitud = normalizar_documento($s['NIT_EMPLEADO'] ?? '');
+    $nitJefeSolicitud = normalizar_documento($s['NIT_JEFE'] ?? '');
     $estadoSolicitud = $s['ESTADO'] ?? '';
 
     $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
     $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
     $estaAprobadaJefe = $estadoSolicitud === ESTADO_APROBADO_JEFE;
-    $esSolicitudPropiaDirectaRrhh = $rolUsuario === ROL_JEFE && $estaAprobadaJefe;
-    $puedeModificarSolicitud = $esDuenoSolicitud && ($estaPendienteJefe || $esSolicitudPropiaDirectaRrhh);
+    $puedeModificarSolicitud = $esDuenoSolicitud && $estaPendienteJefe;
 
-    $esJefe = $rolUsuario === ROL_JEFE;
+    $esJefeAsignado = in_array($rolUsuario, [ROL_JEFE, ROL_ADMIN], true) && $nitJefeSolicitud === $cedulaUsuario;
     $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
   ?>
 
@@ -75,7 +75,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     </form>
   <?php endif; ?>
 
-  <?php if ($esJefe && !$esDuenoSolicitud && $estaPendienteJefe): ?>
+  <?php if ($esJefeAsignado && !$esDuenoSolicitud && $estaPendienteJefe): ?>
     <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
       <?= csrf_input() ?>
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">

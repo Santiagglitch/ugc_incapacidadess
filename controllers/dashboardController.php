@@ -91,7 +91,7 @@ class dashboardController
                 'pendientes' => count($pendientes),
                 'aprobadas' => (int) ($counts[ESTADO_APROBADO_RRHH] ?? 0),
                 'rechazadas' => (int) ($counts[ESTADO_RECHAZADO_RRHH] ?? 0),
-                'historico' => (int) ($counts[ESTADO_APROBADO_RRHH] ?? 0) + (int) ($counts[ESTADO_RECHAZADO_RRHH] ?? 0),
+                'historico' => count($todas),
                 'revisionJefe' => (int) ($counts[ESTADO_PENDIENTE_JEFE] ?? 0),
             ];
             render_view('rrhh/dashboard', compact('user', 'stats', 'pendientes', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes'));
@@ -110,7 +110,7 @@ class dashboardController
                 ],
                 'aprobadas' => [
                     'titulo' => 'Solicitudes aprobadas por ti',
-                    'solicitudes' => array_values(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true))),
+                    'solicitudes' => array_values(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH], true))),
                 ],
                 'rechazadas' => [
                     'titulo' => 'Solicitudes rechazadas por ti',
@@ -134,7 +134,7 @@ class dashboardController
             $historialSolicitudes = $historialOpciones[$historialTipo]['solicitudes'];
             $stats = [
                 'pendientes' => count($pendientes),
-                'aprobadas' => count(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true))),
+                'aprobadas' => count(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH], true))),
                 'rechazadas' => count(array_filter($gestionadas, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_RECHAZADO_JEFE)),
                 'misSolicitudes' => count($misSolicitudes),
                 'gestionadas' => count($gestionadas),
