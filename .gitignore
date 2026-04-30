@@ -1,3 +1,12 @@
 storage/sessions/*
 storage/solicitudes/*
 logs/*.log
+mcp_config.json
+mcp_ldap_server.py
+oracle-mcp-server/
+%USERPROFILE%\.codeium\windsurf\mcp_config.json
+INSTALLATION_COMPLETE.md
+MCP_SETUP_README.md
+install_mcp_oracle.bat
+%USERPROFILE%oracle-mcp-server/
+UsersJohanS.BocanegraSoracle-mcp-server/
