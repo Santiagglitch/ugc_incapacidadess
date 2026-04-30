@@ -29,6 +29,7 @@ class mainModel
                 }
                 oci_bind_by_name($stmt, $nombre, $valor);
             }
+            unset($valor);
 
             if (!@oci_execute($stmt, $modo)) {
                 $error = oci_error($stmt);

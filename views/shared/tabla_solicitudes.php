@@ -22,8 +22,14 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <?php foreach ($solicitudesPagina as $s): ?>
         <tr>
           <td data-label="ID">#<?= e($s['ID'] ?? '') ?></td>
-          <td data-label="Empleado"><?= e($s['NIT_EMPLEADO'] ?? '') ?></td>
-          <td data-label="Jefe"><?= e($s['NIT_JEFE'] ?? '') ?></td>
+          <td data-label="Empleado">
+            <strong><?= e($s['NOMBRE_EMPLEADO'] ?? ($s['NIT_EMPLEADO'] ?? '')) ?></strong>
+            <span class="table-subtext"><?= e($s['NIT_EMPLEADO'] ?? '') ?></span>
+          </td>
+          <td data-label="Jefe">
+            <strong><?= e($s['NOMBRE_JEFE'] ?? ($s['NIT_JEFE'] ?? '')) ?></strong>
+            <span class="table-subtext"><?= e($s['NIT_JEFE'] ?? '') ?></span>
+          </td>
           <td data-label="Tipo"><?= e(TIPOS_SOLICITUD[$s['TIPO_SOLICITUD'] ?? ''] ?? ($s['TIPO_SOLICITUD'] ?? '')) ?></td>
           <td data-label="Inicio"><?= e(substr((string)($s['FECHA_INICIO'] ?? ''), 0, 10)) ?></td>
           <td data-label="Fin"><?= e(substr((string)($s['FECHA_FIN'] ?? ''), 0, 10)) ?></td>
@@ -34,15 +40,15 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     $rolUsuario = $user['rol'] ?? '';
     $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
     $nitEmpleadoSolicitud = normalizar_documento($s['NIT_EMPLEADO'] ?? '');
+    $nitJefeSolicitud = normalizar_documento($s['NIT_JEFE'] ?? '');
     $estadoSolicitud = $s['ESTADO'] ?? '';
 
     $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
     $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
     $estaAprobadaJefe = $estadoSolicitud === ESTADO_APROBADO_JEFE;
-    $esSolicitudPropiaDirectaRrhh = $rolUsuario === ROL_JEFE && $estaAprobadaJefe;
-    $puedeModificarSolicitud = $esDuenoSolicitud && ($estaPendienteJefe || $esSolicitudPropiaDirectaRrhh);
+    $puedeModificarSolicitud = $esDuenoSolicitud && $estaPendienteJefe;
 
-    $esJefe = $rolUsuario === ROL_JEFE;
+    $esJefeAsignado = in_array($rolUsuario, [ROL_JEFE, ROL_ADMIN], true) && $nitJefeSolicitud === $cedulaUsuario;
     $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
   ?>
 
@@ -75,7 +81,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     </form>
   <?php endif; ?>
 
-  <?php if ($esJefe && !$esDuenoSolicitud && $estaPendienteJefe): ?>
+  <?php if ($esJefeAsignado && !$esDuenoSolicitud && $estaPendienteJefe): ?>
     <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
       <?= csrf_input() ?>
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
@@ -99,7 +105,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
       <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
       <input type="hidden" name="decision" value="aprobar">
-      <button class="btn btn-green btn-sm" type="submit">Aprobar RRHH</button>
+      <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
     </form>
 
     <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
@@ -107,7 +113,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
       <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
       <input type="hidden" name="decision" value="rechazar">
-      <button class="btn btn-red btn-sm" type="submit">Rechazar RRHH</button>
+      <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
     </form>
   <?php endif; ?>
 </td>

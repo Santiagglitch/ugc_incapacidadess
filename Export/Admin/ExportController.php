@@ -11,101 +11,64 @@ final class ExportController
     private array $cabeceras = [
         'ID',
         'NIT EMPLEADO',
+        'NIT JEFE',
+        'NIT RRHH',
         'TIPO SOLICITUD',
-        'FECHA SOLICITUD',
         'FECHA INICIO',
         'FECHA FIN',
         'HORAS',
-        'DÍAS',
+        'DIAS',
         'ESTADO',
         'OBSERVACIONES',
-        'FECHA CREACIÓN'
+        'OBSERVACION JEFE',
+        'OBSERVACION RRHH',
+        'FECHA CREACION',
     ];
 
     private array $campos = [
         'ID',
         'NIT_EMPLEADO',
+        'NIT_JEFE',
+        'NIT_RRHH',
         'TIPO_SOLICITUD',
-        'FECHA_SOLICITUD',
         'FECHA_INICIO',
         'FECHA_FIN',
         'DURACION_HORAS',
         'DURACION_DIAS',
         'ESTADO',
         'OBSERVACIONES',
-        'FECHA_CREACION'
+        'OBSERVACION_JEFE',
+        'OBSERVACION_RRHH',
+        'FECHA_CREACION',
     ];
 
     public function todasExcel(): void
     {
-        $rutaHelpers = __DIR__ . '/../../config/helpers.php';
-        $rutaModelo = __DIR__ . '/../../models/SolicitudModel.php';
-        $rutaLibreria = __DIR__ . '/../Libraries/SimpleXLSXGen.php';
+        require_once __DIR__ . '/../../config/helpers.php';
+        require_once __DIR__ . '/../Libraries/SimpleXLSXGen.php';
+        require_once __DIR__ . '/../../models/solicitudModel.php';
 
-        if (file_exists($rutaHelpers)) {
-            require_once $rutaHelpers;
-        }
+        \iniciar_sesion_segura();
+        \requiere_rol([\ROL_ADMIN]);
 
-        if (!file_exists($rutaLibreria)) {
-            http_response_code(500);
-            echo 'No se encontró la librería SimpleXLSXGen en: ' . $rutaLibreria;
-            exit;
-        }
-
-        if (!file_exists($rutaModelo)) {
-            http_response_code(500);
-            echo 'No se encontró el modelo SolicitudModel en: ' . $rutaModelo;
-            exit;
-        }
-
-        require_once $rutaLibreria;
-        require_once $rutaModelo;
-
-        if (class_exists('\App\Models\SolicitudModel')) {
-            $model = new \App\Models\SolicitudModel();
-        } elseif (class_exists('\SolicitudModel')) {
-            $model = new \SolicitudModel();
-        } else {
-            http_response_code(500);
-            echo 'El archivo SolicitudModel.php existe, pero no se encontró la clase SolicitudModel.';
-            exit;
-        }
-
-        if (!method_exists($model, 'getAll')) {
-            http_response_code(500);
-            echo 'El modelo SolicitudModel no tiene el método getAll().';
-            exit;
-        }
-
+        $model = new \solicitudModel();
         $todas = $model->getAll();
 
         $data = [
             'Total Solicitudes' => $todas,
-
-            'Pendiente Jefe' => $this->filtrarPorEstados($todas, [
-                'PENDIENTE_JEFE'
-            ]),
-
-            'Pendientes RRHH' => $this->filtrarPorEstados($todas, [
-                'APROBADO_JEFE'
-            ]),
-
-            'Aprobado RRHH' => $this->filtrarPorEstados($todas, [
-                'APROBADO_RRHH'
-            ]),
-
-            'Rechazado RRHH' => $this->filtrarPorEstados($todas, [
-                'RECHAZADO_RRHH'
-            ]),
+            'Pendiente Jefe' => $this->filtrarPorEstado($todas, \ESTADO_PENDIENTE_JEFE),
+            'Pendientes RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_JEFE),
+            'Aprobado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_RRHH),
+            'Rechazado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_RECHAZADO_RRHH),
         ];
 
         $this->generarExcelPorHojas($data, 'reporte_admin');
     }
 
-    private function filtrarPorEstados(array $rows, array $estados): array
+    private function filtrarPorEstado(array $rows, string $estado): array
     {
-        return array_values(array_filter($rows, function (array $row) use ($estados): bool {
-            return isset($row['ESTADO']) && in_array($row['ESTADO'], $estados, true);
+        return array_values(array_filter($rows, static function (array $row) use ($estado): bool {
+            return (string)($row['ESTADO'] ?? '') === $estado;
         }));
     }
 
@@ -114,43 +77,30 @@ final class ExportController
         $xlsx = new SimpleXLSXGen();
 
         foreach ($data as $tituloHoja => $rows) {
-            $filas = $this->prepararFilas($rows);
-            $xlsx->addSheet($filas, $this->limpiarTituloHoja($tituloHoja));
+            $xlsx->addSheet($this->prepararFilas($rows), $this->limpiarTituloHoja($tituloHoja));
         }
-
-        $archivo = $nombreArchivo . '_' . date('Ymd_His') . '.xlsx';
 
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
-        $xlsx->downloadAs($archivo);
+        $xlsx->downloadAs($nombreArchivo . '_' . date('Ymd_His') . '.xlsx');
         exit;
     }
 
     private function prepararFilas(array $rows): array
     {
-        $filas = [];
-
-        $filas[] = $this->cabeceras;
+        $filas = [$this->cabeceras];
 
         foreach ($rows as $row) {
             $fila = [];
-
             foreach ($this->campos as $campo) {
                 $valor = $row[$campo] ?? '';
-
-                if (
-                    $campo === 'TIPO_SOLICITUD'
-                    && defined('TIPOS_SOLICITUD')
-                    && isset(TIPOS_SOLICITUD[$valor])
-                ) {
-                    $valor = TIPOS_SOLICITUD[$valor];
+                if ($campo === 'TIPO_SOLICITUD' && defined('TIPOS_SOLICITUD') && isset(\TIPOS_SOLICITUD[$valor])) {
+                    $valor = \TIPOS_SOLICITUD[$valor];
                 }
-
                 $fila[] = $this->normalizarValor($valor);
             }
-
             $filas[] = $fila;
         }
 
@@ -159,43 +109,20 @@ final class ExportController
 
     private function normalizarValor($valor): string
     {
-        if ($valor === null) {
+        if ($valor === null || is_array($valor) || is_object($valor)) {
             return '';
         }
 
-        if ($valor instanceof \DateTimeInterface) {
-            return $valor->format('Y-m-d H:i:s');
-        }
-
-        if (is_object($valor) && method_exists($valor, 'load')) {
-            return (string) $valor->load();
-        }
-
-        if (is_array($valor) || is_object($valor)) {
-            return '';
-        }
-
-        return (string) $valor;
+        return (string)$valor;
     }
 
     private function limpiarTituloHoja(string $titulo): string
     {
-        $titulo = str_replace(['\\', '/', '*', '[', ']', ':', '?'], ' ', $titulo);
-        $titulo = trim($titulo);
-
-        if ($titulo === '') {
-            $titulo = 'Hoja';
-        }
-
-        if (function_exists('mb_substr')) {
-            return mb_substr($titulo, 0, 31);
-        }
-
-        return substr($titulo, 0, 31);
+        $titulo = trim(str_replace(['\\', '/', '*', '[', ']', ':', '?'], ' ', $titulo));
+        return substr($titulo !== '' ? $titulo : 'Hoja', 0, 31);
     }
 }
 
 if (isset($_GET['download']) && $_GET['download'] === '1') {
-    $controller = new ExportController();
-    $controller->todasExcel();
+    (new ExportController())->todasExcel();
 }

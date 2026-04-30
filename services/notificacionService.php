@@ -11,6 +11,8 @@ class notificacionService
 {
     private notificacionModel $model;
     private empleadoModel $empleadoModel;
+    private array $nombreEmpleadoCache = [];
+    private ?array $usuariosRrhhCache = null;
 
     public function __construct()
     {
@@ -20,16 +22,14 @@ class notificacionService
 
     public function notificarNuevaSolicitud(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
     {
-        $empleado = $this->empleadoModel->getByNit($nitEmpleado);
-        $nombre = $empleado['NOMBRE_COMPLETO'] ?? $nitEmpleado;
+        $nombre = $this->nombreEmpleado($nitEmpleado, $nitEmpleado);
         $mensaje = $nombre . ' solicito ' . $this->tipoLabel($tipoSolicitud) . ' y requiere tu aprobacion';
         $this->safeCrear($nitJefe, 'NUEVA_SOLICITUD', $mensaje, $idSolicitud);
     }
 
     public function notificarAprobacionJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
     {
-        $jefe = $this->empleadoModel->getByNit($nitJefe);
-        $nombre = $jefe['NOMBRE_COMPLETO'] ?? 'Tu jefe';
+        $nombre = $this->nombreEmpleado($nitJefe, 'Tu jefe');
         $mensaje = $nombre . ' aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud);
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_JEFE', $mensaje, $idSolicitud);
         $this->notificarRevisionRRHH($idSolicitud, $nitEmpleado, $tipoSolicitud);
@@ -37,8 +37,7 @@ class notificacionService
 
     public function notificarRechazoJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
     {
-        $jefe = $this->empleadoModel->getByNit($nitJefe);
-        $nombre = $jefe['NOMBRE_COMPLETO'] ?? 'Tu jefe';
+        $nombre = $this->nombreEmpleado($nitJefe, 'Tu jefe');
         $mensaje = $nombre . ' rechazo tu solicitud de ' . $this->tipoLabel($tipoSolicitud);
         if ($obs !== '') {
             $mensaje .= '. Observacion: ' . substr($obs, 0, 100);
@@ -48,8 +47,7 @@ class notificacionService
 
     public function notificarRevisionRRHH(int $idSolicitud, string $nitEmpleado, string $tipoSolicitud): void
     {
-        $empleado = $this->empleadoModel->getByNit($nitEmpleado);
-        $nombre = $empleado['NOMBRE_COMPLETO'] ?? $nitEmpleado;
+        $nombre = $this->nombreEmpleado($nitEmpleado, $nitEmpleado);
         $mensaje = 'Nueva solicitud de ' . $this->tipoLabel($tipoSolicitud) . ' de ' . $nombre . ' pendiente de revision';
         foreach ($this->usuariosRRHH() as $nit) {
             $this->safeCrear($nit, 'REVISION_RRHH', $mensaje, $idSolicitud);
@@ -100,6 +98,10 @@ class notificacionService
 
     private function usuariosRRHH(): array
     {
+        if ($this->usuariosRrhhCache !== null) {
+            return $this->usuariosRrhhCache;
+        }
+
         $rrhh = [];
         foreach ($this->empleadoModel->getPorCentrosCosto(CC_RRHH) as $emp) {
             if (!empty($emp['NIT'])) { $rrhh[] = (string)$emp['NIT']; }
@@ -111,7 +113,30 @@ class notificacionService
                 }
             }
         }
-        return array_values(array_unique($rrhh));
+        return $this->usuariosRrhhCache = array_values(array_unique($rrhh));
+    }
+
+    private function nombreEmpleado(string $nit, string $fallback): string
+    {
+        if ($nit === '') {
+            return $fallback;
+        }
+
+        if (array_key_exists($nit, $this->nombreEmpleadoCache)) {
+            return $this->nombreEmpleadoCache[$nit] !== '' ? $this->nombreEmpleadoCache[$nit] : $fallback;
+        }
+
+        if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$nit])) {
+            $nombre = trim((string)(USUARIOS_PRUEBA[$nit]['nombre'] ?? ''));
+            $this->nombreEmpleadoCache[$nit] = $nombre;
+            return $nombre !== '' ? $nombre : $fallback;
+        }
+
+        $empleado = $this->empleadoModel->getByNit($nit);
+        $nombre = trim((string)($empleado['NOMBRE_COMPLETO'] ?? ''));
+        $this->nombreEmpleadoCache[$nit] = $nombre;
+
+        return $nombre !== '' ? $nombre : $fallback;
     }
 
     private function tipoLabel(string $tipo): string

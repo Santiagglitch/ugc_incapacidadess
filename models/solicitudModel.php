@@ -6,12 +6,13 @@ require_once __DIR__ . '/mainModel.php';
 
 class solicitudModel extends mainModel
 {
-    private const LIST_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
+    private const LIST_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
         OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO,
         TO_CHAR(FECHA_INICIO, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_INICIO,
         TO_CHAR(FECHA_FIN, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_FIN,
         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION,
-        TO_CHAR(FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE";
+        TO_CHAR(FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE,
+        TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH";
 
     private const DETAIL_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
         OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO, ACTIVO,
@@ -120,10 +121,7 @@ class solicitudModel extends mainModel
             "SELECT " . self::LIST_SELECT . "
              FROM ICEBERG.SOLICITUDES_PERMISOS
              WHERE ACTIVO=1
-               AND (
-                    ESTADO='APROBADO_JEFE'
-                    OR (ESTADO='PENDIENTE_JEFE' AND NIT_EMPLEADO=NIT_JEFE)
-               )
+               AND ESTADO='APROBADO_JEFE'
              ORDER BY FECHA_CREACION ASC"
         );
     }
@@ -133,8 +131,8 @@ class solicitudModel extends mainModel
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
              FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE ESTADO IN ('APROBADO_RRHH', 'RECHAZADO_RRHH') AND ACTIVO=1
-             ORDER BY FECHA_GESTION_RRHH DESC, FECHA_CREACION DESC"
+             WHERE ACTIVO=1
+             ORDER BY FECHA_CREACION DESC"
         );
     }
 
@@ -265,6 +263,7 @@ class solicitudModel extends mainModel
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
              SET TIPO_SOLICITUD=:tipo_solicitud,
+                 NIT_JEFE=:nit_jefe,
                  FECHA_INICIO=TO_DATE(:fecha_inicio, 'YYYY-MM-DD'),
                  FECHA_FIN=TO_DATE(:fecha_fin, 'YYYY-MM-DD'),
                  DURACION_HORAS=:duracion_horas,
@@ -281,6 +280,7 @@ class solicitudModel extends mainModel
                AND ACTIVO=1",
             [
                 ':tipo_solicitud' => $data['tipo_solicitud'],
+                ':nit_jefe' => $data['nit_jefe'],
                 ':fecha_inicio' => $data['fecha_inicio'],
                 ':fecha_fin' => $data['fecha_fin'],
                 ':duracion_horas' => $data['duracion_horas'],
@@ -324,10 +324,7 @@ class solicitudModel extends mainModel
                  FECHA_GESTION_RRHH=SYSDATE,
                  OBSERVACION_RRHH=:obs
              WHERE ID=:id
-               AND (
-                    ESTADO='APROBADO_JEFE'
-                    OR (ESTADO='PENDIENTE_JEFE' AND NIT_EMPLEADO=NIT_JEFE)
-               )
+               AND ESTADO='APROBADO_JEFE'
                AND ACTIVO=1",
             [
                 ':estado' => $estado,

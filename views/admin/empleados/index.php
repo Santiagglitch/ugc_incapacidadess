@@ -1,3 +1,16 @@
+<?php
+$filtroRol = $filtroRol ?? '';
+$busqueda = $busqueda ?? '';
+$empleadosUrl = static function (string $rol = '') use ($busqueda): string {
+  $params = array_filter([
+    'q' => $busqueda,
+    'rol' => $rol,
+  ], static fn($value): bool => $value !== '' && $value !== null);
+
+  return url_view('admin_empleados') . (!empty($params) ? '&' . http_build_query($params) : '');
+};
+$statCardClass = static fn(string $rol = ''): string => 'stat-card stat-card-link' . ($filtroRol === $rol ? ' is-active' : '');
+?>
 <section class="page-header">
   <div>
     <h1 class="page-title">Gestion de Empleados</h1>
@@ -7,11 +20,11 @@
 </section>
 
 <div class="stats-row">
-  <a class="stat-card" href="<?= e(url_view('admin_empleados')) ?>"><div class="num"><?= e($stats['total'] ?? 0) ?></div><div class="lbl">Total</div></a>
-  <a class="stat-card" href="<?= e(url_view('admin_empleados') . '&rol=admin') ?>"><div class="num"><?= e($stats['admin'] ?? 0) ?></div><div class="lbl">Administradores</div></a>
-  <a class="stat-card" href="<?= e(url_view('admin_empleados') . '&rol=rrhh') ?>"><div class="num"><?= e($stats['rrhh'] ?? 0) ?></div><div class="lbl">Talento Humano</div></a>
-  <a class="stat-card" href="<?= e(url_view('admin_empleados') . '&rol=jefe') ?>"><div class="num"><?= e($stats['jefe'] ?? 0) ?></div><div class="lbl">Jefes</div></a>
-  <a class="stat-card" href="<?= e(url_view('admin_empleados') . '&rol=empleado') ?>"><div class="num"><?= e($stats['empleado'] ?? 0) ?></div><div class="lbl">Empleados</div></a>
+  <a class="<?= e($statCardClass('')) ?>" href="<?= e($empleadosUrl()) ?>"><div class="num"><?= e($stats['total'] ?? 0) ?></div><div class="lbl">Total</div></a>
+  <a class="<?= e($statCardClass('admin')) ?>" href="<?= e($empleadosUrl('admin')) ?>"><div class="num"><?= e($stats['admin'] ?? 0) ?></div><div class="lbl">Administradores</div></a>
+  <a class="<?= e($statCardClass('rrhh')) ?>" href="<?= e($empleadosUrl('rrhh')) ?>"><div class="num"><?= e($stats['rrhh'] ?? 0) ?></div><div class="lbl">Talento Humano</div></a>
+  <a class="<?= e($statCardClass('jefe')) ?>" href="<?= e($empleadosUrl('jefe')) ?>"><div class="num"><?= e($stats['jefe'] ?? 0) ?></div><div class="lbl">Jefes</div></a>
+  <a class="<?= e($statCardClass('empleado')) ?>" href="<?= e($empleadosUrl('empleado')) ?>"><div class="num"><?= e($stats['empleado'] ?? 0) ?></div><div class="lbl">Empleados</div></a>
 </div>
 
 <div class="form-card" style="margin-bottom:18px">
@@ -48,13 +61,14 @@
           $nit = (string) ($emp['NIT'] ?? '');
           $esAdmin = $nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales ?? [], true);
           $rol = $esAdmin ? 'Administrador' : (in_array(($emp['CENTRO_COSTO'] ?? ''), CC_RRHH, true) ? 'Talento Humano' : (((int)($emp['NIVEL'] ?? 0) >= NIVEL_MIN_JEFE) ? 'Jefe' : 'Empleado'));
+          $rolBadge = $esAdmin ? 'admin' : (in_array(($emp['CENTRO_COSTO'] ?? ''), CC_RRHH, true) ? 'rrhh' : (((int)($emp['NIVEL'] ?? 0) >= NIVEL_MIN_JEFE) ? 'jefe' : 'empleado'));
         ?>
         <tr>
           <td data-label="NIT"><?= e($nit) ?></td>
           <td data-label="Nombre"><?= e($emp['NOMBRE_COMPLETO'] ?? '') ?></td>
           <td data-label="Centro costo"><?= e($emp['CENTRO_COSTO'] ?? '') ?></td>
           <td data-label="Nivel"><?= e($emp['NIVEL'] ?? '') ?></td>
-          <td data-label="Rol"><span class="badge badge-info"><?= e($rol) ?></span></td>
+          <td data-label="Rol"><span class="badge badge-role-<?= e($rolBadge) ?>"><?= e($rol) ?></span></td>
           <td data-label="Acciones"><a class="btn btn-outline" href="<?= e(url_view('admin_empleado') . '&nit=' . urlencode($nit)) ?>">Ver perfil</a></td>
         </tr>
       <?php endforeach; ?>

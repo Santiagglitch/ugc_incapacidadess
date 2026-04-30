@@ -2,8 +2,14 @@
 $historialTipo = $historialTipo ?? 'total';
 $historialTitulo = $historialTitulo ?? 'Solicitudes recientes';
 $historialSolicitudes = $historialSolicitudes ?? ($todas ?? []);
+$q = $q ?? '';
+$tipoFiltro = $tipoFiltro ?? '';
 
-$historialUrl = static fn(string $tipo): string => url_view('dashboard') . '&historial=' . urlencode($tipo) . '#historial-admin';
+$historialUrl = static fn(string $tipo): string => url_view('dashboard') . '&' . http_build_query(array_filter([
+  'historial' => $tipo,
+  'q' => $q,
+  'tipo_solicitud' => $tipoFiltro,
+], static fn($value): bool => $value !== '' && $value !== null));
 $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-link' . ($historialTipo === $tipo ? ' is-active' : '');
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">

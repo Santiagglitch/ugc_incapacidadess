@@ -5,6 +5,7 @@ declare(strict_types=1);
 class adminRolesModel
 {
     private string $path;
+    private static ?array $adminsCache = null;
 
     public function __construct()
     {
@@ -13,20 +14,24 @@ class adminRolesModel
 
     public function getAdminsAdicionales(): array
     {
+        if (self::$adminsCache !== null) {
+            return self::$adminsCache;
+        }
+
         if (!is_file($this->path)) {
-            return [];
+            return self::$adminsCache = [];
         }
 
         $data = json_decode((string) file_get_contents($this->path), true);
         if (!is_array($data)) {
-            return [];
+            return self::$adminsCache = [];
         }
 
         if (isset($data['admins']) && is_array($data['admins'])) {
-            return array_values(array_map('strval', $data['admins']));
+            return self::$adminsCache = array_values(array_map('strval', $data['admins']));
         }
 
-        return array_values(array_map('strval', $data));
+        return self::$adminsCache = array_values(array_map('strval', $data));
     }
 
     public function esAdminAdicional(string $nit): bool
@@ -66,6 +71,12 @@ class adminRolesModel
         }
 
         $payload = ['admins' => array_values(array_unique($admins)), 'version' => 1];
-        return file_put_contents($this->path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+        $ok = file_put_contents($this->path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+
+        if ($ok) {
+            self::$adminsCache = $payload['admins'];
+        }
+
+        return $ok;
     }
 }

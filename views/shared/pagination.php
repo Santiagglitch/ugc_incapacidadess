@@ -48,39 +48,39 @@ if (!function_exists('ugcRenderPagination')) {
         $firstShown = (($current - 1) * $perPage) + 1;
         $lastShown = min($total, $current * $perPage);
         ?>
-        <nav class="ugc-pagination" aria-label="Paginacion de <?= e($label) ?>" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0;flex-wrap:wrap">
-            <div class="ugc-pagination__meta" style="color:var(--muted);font-size:13px">
+        <nav class="ugc-pagination" aria-label="Paginacion de <?= e($label) ?>">
+            <div class="ugc-pagination__meta">
                 <?= $firstShown ?>-<?= $lastShown ?> de <?= $total ?> <?= e($label) ?>
             </div>
-            <div class="ugc-pagination__controls" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="ugc-pagination__controls">
                 <?php if ($current > 1): ?>
-                    <a class="btn btn-outline btn-sm" href="<?= e(ugcBuildPageUrl($paramName, $current - 1)) ?>">Anterior</a>
+                    <a class="btn btn-outline btn-sm ugc-pagination__step" href="<?= e(ugcBuildPageUrl($paramName, $current - 1)) ?>">Anterior</a>
                 <?php else: ?>
-                    <span class="btn btn-gray btn-sm" style="opacity:.55">Anterior</span>
+                    <span class="btn btn-gray btn-sm ugc-pagination__step is-disabled">Anterior</span>
                 <?php endif; ?>
 
                 <?php if ($current === 1): ?>
-                    <span class="btn btn-green btn-sm">1</span>
+                    <span class="btn btn-green btn-sm ugc-pagination__page is-active">1</span>
                 <?php else: ?>
-                    <a class="btn btn-outline btn-sm" href="<?= e(ugcBuildPageUrl($paramName, 1)) ?>">1</a>
+                    <a class="btn btn-outline btn-sm ugc-pagination__page" href="<?= e(ugcBuildPageUrl($paramName, 1)) ?>">1</a>
                 <?php endif; ?>
 
-                <?php if ($start > 2): ?><span style="padding:0 4px;color:var(--muted)">...</span><?php endif; ?>
+                <?php if ($start > 2): ?><span class="ugc-pagination__ellipsis">...</span><?php endif; ?>
 
                 <?php for ($page = $start; $page <= $end; $page++): ?>
                     <?php if ($page === $current): ?>
-                        <span class="btn btn-green btn-sm"><?= $page ?></span>
+                        <span class="btn btn-green btn-sm ugc-pagination__page is-active"><?= $page ?></span>
                     <?php else: ?>
-                        <a class="btn btn-outline btn-sm" href="<?= e(ugcBuildPageUrl($paramName, $page)) ?>"><?= $page ?></a>
+                        <a class="btn btn-outline btn-sm ugc-pagination__page" href="<?= e(ugcBuildPageUrl($paramName, $page)) ?>"><?= $page ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
 
-                <?php if ($end < $totalPages): ?><span style="padding:0 4px;color:var(--muted)">...</span><?php endif; ?>
+                <?php if ($end < $totalPages): ?><span class="ugc-pagination__ellipsis">...</span><?php endif; ?>
 
                 <?php if ($current < $totalPages): ?>
-                    <a class="btn btn-outline btn-sm" href="<?= e(ugcBuildPageUrl($paramName, $current + 1)) ?>">Siguiente</a>
+                    <a class="btn btn-outline btn-sm ugc-pagination__step" href="<?= e(ugcBuildPageUrl($paramName, $current + 1)) ?>">Siguiente</a>
                 <?php else: ?>
-                    <span class="btn btn-gray btn-sm" style="opacity:.55">Siguiente</span>
+                    <span class="btn btn-gray btn-sm ugc-pagination__step is-disabled">Siguiente</span>
                 <?php endif; ?>
             </div>
         </nav>

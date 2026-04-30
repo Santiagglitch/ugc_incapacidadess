@@ -4,11 +4,17 @@ $user = $user ?? usuario_actual();
 $idSolicitud = (string)($solicitud['ID'] ?? '');
 $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
 $nitEmpleadoSolicitud = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+$nitJefeSolicitud = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
 $estadoSolicitud = (string)($solicitud['ESTADO'] ?? '');
 $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
 $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
-$esSolicitudPropiaDirectaRrhh = ($user['rol'] ?? '') === ROL_JEFE && $estadoSolicitud === ESTADO_APROBADO_JEFE;
-$puedeModificarSolicitud = $esDuenoSolicitud && ($estaPendienteJefe || $esSolicitudPropiaDirectaRrhh);
+$puedeModificarSolicitud = $esDuenoSolicitud && $estaPendienteJefe;
+$puedeGestionarJefe = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
+  && $estaPendienteJefe
+  && $nitJefeSolicitud === $cedulaUsuario
+  && !$esDuenoSolicitud;
+$puedeGestionarRrhh = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
+  && $estadoSolicitud === ESTADO_APROBADO_JEFE;
 $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
 ?>
 <section class="page-header">
@@ -106,6 +112,44 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
   </div>
   <?php endif; ?>
 </div>
+
+<?php if ($puedeGestionarJefe): ?>
+<div class="gestion-card">
+  <h3>Gestion de jefe inmediato</h3>
+  <form method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
+    <?= csrf_input() ?>
+    <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <div class="form-group">
+      <label>Observacion</label>
+      <textarea name="observacion_jefe" rows="3" maxlength="2000"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-green" type="submit" name="decision" value="aprobar">Aprobar</button>
+      <button class="btn btn-red" type="submit" name="decision" value="rechazar">Rechazar</button>
+    </div>
+  </form>
+</div>
+<?php endif; ?>
+
+<?php if ($puedeGestionarRrhh): ?>
+<div class="gestion-card">
+  <h3>Gestion de Talento Humano</h3>
+  <form method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
+    <?= csrf_input() ?>
+    <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <div class="form-group">
+      <label>Observacion</label>
+      <textarea name="observacion_rrhh" rows="3" maxlength="2000"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-green" type="submit" name="decision" value="aprobar">Aprobar RRHH</button>
+      <button class="btn btn-red" type="submit" name="decision" value="rechazar">Rechazar RRHH</button>
+    </div>
+  </form>
+</div>
+<?php endif; ?>
 
 <!-- Card de Documento Adjunto -->
 <?php if (!empty($solicitud['RUTA_COMPROBANTE'])): ?>
