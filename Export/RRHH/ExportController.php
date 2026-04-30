@@ -54,16 +54,39 @@ final class ExportController
         \requiere_rol([\ROL_RRHH, \ROL_ADMIN]);
 
         $model = new \solicitudModel();
+        $todas = $model->getAll();
 
         $data = [
-            'Pendientes RRHH' => $model->getPendientesRRHH(),
-            'Aprobadas RRHH' => $model->getAll(['estado' => \ESTADO_APROBADO_RRHH]),
-            'Rechazadas RRHH' => $model->getAll(['estado' => \ESTADO_RECHAZADO_RRHH]),
-            'Total Historico' => $model->getAll(),
-            'En Revision Jefe' => $model->getAll(['estado' => \ESTADO_PENDIENTE_JEFE]),
+            'Pendientes RRHH' => $this->ordenarPorFechaCreacionAsc($this->filtrarPorEstado($todas, \ESTADO_APROBADO_JEFE)),
+            'Aprobadas RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_RRHH),
+            'Rechazadas RRHH' => $this->filtrarPorEstado($todas, \ESTADO_RECHAZADO_RRHH),
+            'Total Historico' => $todas,
+            'En Revision Jefe' => $this->filtrarPorEstado($todas, \ESTADO_PENDIENTE_JEFE),
         ];
 
         $this->generarExcelPorHojas($data, 'reporte_rrhh');
+    }
+
+    private function filtrarPorEstado(array $rows, string $estado): array
+    {
+        return array_values(array_filter($rows, static function (array $row) use ($estado): bool {
+            return (string)($row['ESTADO'] ?? '') === $estado;
+        }));
+    }
+
+    private function ordenarPorFechaCreacionAsc(array $rows): array
+    {
+        usort($rows, static function (array $a, array $b): int {
+            $fecha = strcmp((string)($a['FECHA_CREACION'] ?? ''), (string)($b['FECHA_CREACION'] ?? ''));
+
+            if ($fecha !== 0) {
+                return $fecha;
+            }
+
+            return (int)($a['ID'] ?? 0) <=> (int)($b['ID'] ?? 0);
+        });
+
+        return $rows;
     }
 
     private function generarExcelPorHojas(array $data, string $nombreArchivo): void

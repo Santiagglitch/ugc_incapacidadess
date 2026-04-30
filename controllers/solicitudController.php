@@ -133,7 +133,7 @@ class solicitudController
             : limpiar_texto($_POST['nit_jefe'] ?? ($user['nit_jefe'] ?? ''));
 
         if ($nitJefe === '') {
-            $jefe = (new empleadoModel())->getJefeInmediato((string)($user['cedula'] ?? ''));
+            $jefe = $empleadoModel->getJefeInmediato((string)($user['cedula'] ?? ''));
             $nitJefe = (string)($jefe['NIT_JEFE'] ?? '');
         }
 

@@ -22,8 +22,14 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <?php foreach ($solicitudesPagina as $s): ?>
         <tr>
           <td data-label="ID">#<?= e($s['ID'] ?? '') ?></td>
-          <td data-label="Empleado"><?= e($s['NIT_EMPLEADO'] ?? '') ?></td>
-          <td data-label="Jefe"><?= e($s['NIT_JEFE'] ?? '') ?></td>
+          <td data-label="Empleado">
+            <strong><?= e($s['NOMBRE_EMPLEADO'] ?? ($s['NIT_EMPLEADO'] ?? '')) ?></strong>
+            <span class="table-subtext"><?= e($s['NIT_EMPLEADO'] ?? '') ?></span>
+          </td>
+          <td data-label="Jefe">
+            <strong><?= e($s['NOMBRE_JEFE'] ?? ($s['NIT_JEFE'] ?? '')) ?></strong>
+            <span class="table-subtext"><?= e($s['NIT_JEFE'] ?? '') ?></span>
+          </td>
           <td data-label="Tipo"><?= e(TIPOS_SOLICITUD[$s['TIPO_SOLICITUD'] ?? ''] ?? ($s['TIPO_SOLICITUD'] ?? '')) ?></td>
           <td data-label="Inicio"><?= e(substr((string)($s['FECHA_INICIO'] ?? ''), 0, 10)) ?></td>
           <td data-label="Fin"><?= e(substr((string)($s['FECHA_FIN'] ?? ''), 0, 10)) ?></td>

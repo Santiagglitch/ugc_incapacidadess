@@ -33,7 +33,7 @@ class authModel
 
         $empleadoModel = new empleadoModel();
         $empleado = $empleadoModel->getByNit($cedula);
-        $rol = $empleadoModel->getRol($cedula);
+        $rol = $empleadoModel->getRol($cedula, $empleado);
         $jefe = !in_array($rol, [ROL_ADMIN, ROL_RRHH], true) ? $empleadoModel->getJefeInmediato($cedula) : null;
 
         return [

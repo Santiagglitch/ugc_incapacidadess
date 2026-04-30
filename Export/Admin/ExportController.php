@@ -52,16 +52,24 @@ final class ExportController
         \requiere_rol([\ROL_ADMIN]);
 
         $model = new \solicitudModel();
+        $todas = $model->getAll();
 
         $data = [
-            'Total Solicitudes' => $model->getAll(),
-            'Pendiente Jefe' => $model->getAll(['estado' => \ESTADO_PENDIENTE_JEFE]),
-            'Pendientes RRHH' => $model->getAll(['estado' => \ESTADO_APROBADO_JEFE]),
-            'Aprobado RRHH' => $model->getAll(['estado' => \ESTADO_APROBADO_RRHH]),
-            'Rechazado RRHH' => $model->getAll(['estado' => \ESTADO_RECHAZADO_RRHH]),
+            'Total Solicitudes' => $todas,
+            'Pendiente Jefe' => $this->filtrarPorEstado($todas, \ESTADO_PENDIENTE_JEFE),
+            'Pendientes RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_JEFE),
+            'Aprobado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_RRHH),
+            'Rechazado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_RECHAZADO_RRHH),
         ];
 
         $this->generarExcelPorHojas($data, 'reporte_admin');
+    }
+
+    private function filtrarPorEstado(array $rows, string $estado): array
+    {
+        return array_values(array_filter($rows, static function (array $row) use ($estado): bool {
+            return (string)($row['ESTADO'] ?? '') === $estado;
+        }));
     }
 
     private function generarExcelPorHojas(array $data, string $nombreArchivo): void
