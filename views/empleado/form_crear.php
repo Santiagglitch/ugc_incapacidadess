@@ -1,19 +1,8 @@
 <?php
-use Core\Config;
-use Core\Security;
-
-// 🔥 NO DEPENDER DE CONFIG
-$baseUrl    = $baseUrl ?? '';
 $esAprendiz = $esAprendiz ?? false;
 $puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes      = $jefes ?? [];
-$tipos      = $tipos ?? [];
 $hoy        = $hoy ?? date('Y-m-d');
-
-// 🔥 CSRF SIN USAR CLASE SECURITY
-if (empty($_SESSION['csrf_token'])) {
-  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
 ?>
 
 <section class="page-header animate-fade-down">

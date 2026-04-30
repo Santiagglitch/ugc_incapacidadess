@@ -2,7 +2,6 @@
 $solicitud = $solicitud ?? [];
 $user = $user ?? usuario_actual();
 
-$baseUrl = $baseUrl ?? '';
 $esAprendiz = $esAprendiz ?? false;
 $puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes = $jefes ?? [];
@@ -18,10 +17,6 @@ $observaciones = (string)($solicitud['OBSERVACIONES'] ?? '');
 $rutaComprobante = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
 
 $returnTo = $_GET['return_to'] ?? url_view('dashboard');
-
-if (empty($_SESSION['csrf_token'])) {
-  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
 ?>
 
 <section class="page-header animate-fade-down">

@@ -16,9 +16,49 @@ class empleadoModel extends mainModel
                     CENTRO_COSTO, NIVEL, ESTADO, FECHA_INGRESO
              FROM EMPLEADO
              WHERE EMPRESA='BA2' AND ESTADO='A' AND NIT=:nit
-             ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC",
+             ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
+             FETCH FIRST 1 ROWS ONLY",
             [':nit' => $nit]
         );
+    }
+
+    public function getNombresPorNit(array $nits): array
+    {
+        $nits = array_values(array_unique(array_filter(array_map('strval', $nits), static fn(string $nit): bool => $nit !== '')));
+
+        if (empty($nits)) {
+            return [];
+        }
+
+        $nombres = [];
+
+        foreach (array_chunk($nits, 900) as $chunkIndex => $chunk) {
+            [$inClause, $binds] = $this->buildInClause($chunk, 'nit_nombre_' . $chunkIndex . '_');
+
+            $rows = $this->consultarTodo(
+                "SELECT NIT,
+                        TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO
+                 FROM (
+                    SELECT NIT, NOMBRE, PRIMER_APELLIDO, SEGUNDO_APELLIDO,
+                           ROW_NUMBER() OVER (PARTITION BY NIT ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC) AS RN
+                    FROM EMPLEADO
+                    WHERE EMPRESA='BA2'
+                      AND ESTADO='A'
+                      AND NIT IN ($inClause)
+                 )
+                 WHERE RN=1",
+                $binds
+            );
+
+            foreach ($rows as $row) {
+                $nit = (string)($row['NIT'] ?? '');
+                if ($nit !== '') {
+                    $nombres[$nit] = (string)($row['NOMBRE_COMPLETO'] ?? '');
+                }
+            }
+        }
+
+        return $nombres;
     }
 
     public function getTodos(): array
@@ -33,7 +73,7 @@ class empleadoModel extends mainModel
         );
     }
 
-    public function getRol(string $nit): string
+    public function getRol(string $nit, ?array $empleado = null): string
     {
         if ($nit === SUPER_ADMIN_NIT) {
             return ROL_ADMIN;
@@ -43,7 +83,7 @@ class empleadoModel extends mainModel
             return ROL_ADMIN;
         }
 
-        $empleado = $this->getByNit($nit);
+        $empleado = $empleado ?? $this->getByNit($nit);
         if (!$empleado) {
             return ROL_EMPLEADO;
         }
@@ -183,24 +223,23 @@ class empleadoModel extends mainModel
 
     public function getPorCentrosCosto(array $centrosCosto): array
     {
+        $centrosCosto = array_values(array_unique(array_filter(
+            array_map('strval', $centrosCosto),
+            static fn(string $centroCosto): bool => $centroCosto !== ''
+        )));
+
         if (empty($centrosCosto)) {
             return [];
         }
 
-        $binds = [];
-        $placeholders = [];
-        foreach (array_values($centrosCosto) as $i => $centroCosto) {
-            $key = ':cc' . $i;
-            $placeholders[] = $key;
-            $binds[$key] = $centroCosto;
-        }
+        [$inClause, $binds] = $this->buildInClause($centrosCosto, 'cc_');
 
         return $this->consultarTodo(
             "SELECT NIT,
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL, ESTADO
              FROM EMPLEADO
-             WHERE EMPRESA='BA2' AND ESTADO='A' AND CENTRO_COSTO IN (" . implode(',', $placeholders) . ")
+             WHERE EMPRESA='BA2' AND ESTADO='A' AND CENTRO_COSTO IN ($inClause)
              ORDER BY NOMBRE_COMPLETO",
             $binds
         );

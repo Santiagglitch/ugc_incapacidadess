@@ -16,6 +16,9 @@ $notifListUrl = url_view('notif_list');
 $notifReadUrl = url_action('notif_read');
 $notifReadAllUrl = url_action('notif_read_all');
 $solicitudDetalleUrl = url_view('solicitud_ver');
+$headerQ = limpiar_texto($_GET['q'] ?? '');
+$headerTipo = limpiar_texto($_GET['tipo_solicitud'] ?? '');
+$headerHistorial = limpiar_texto($_GET['historial'] ?? '');
 
 // Sonido de notificación
 $notifSoundUrl = app_asset('assets/sounds/notificacion.mp3');
@@ -37,51 +40,86 @@ $csrfToken = csrf_token();
 <body>
 
 <header class="ugc-header">
-  <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio">
-    <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="header-logo" height="50">
-  </a>
+  <div class="header-left">
+    <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio">
+      <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="header-logo" height="50">
+    </a>
 
-  <nav>
-    <a href="<?= e(url_view('dashboard')) ?>">Inicio</a>
+    <nav>
+      <?php if (($user['rol'] ?? '') === ROL_ADMIN): ?>
+        <a href="<?= e(url_view('admin_empleados')) ?>">Empleados</a>
+      <?php endif; ?>
+    </nav>
+  </div>
 
-    <?php if (($user['rol'] ?? '') === ROL_ADMIN): ?>
-      <a href="<?= e(url_view('admin_empleados')) ?>">Empleados</a>
+  <form class="header-search" method="get" action="<?= e(app_base_url('index.php')) ?>">
+    <input type="hidden" name="view" value="dashboard">
+    <?php if ($headerHistorial !== ''): ?>
+      <input type="hidden" name="historial" value="<?= e($headerHistorial) ?>">
     <?php endif; ?>
-  </nav>
 
-  <div class="notificacion-wrap" data-notificaciones>
-    <button class="notificacion-bell" type="button" data-notificacion-toggle aria-label="Notificaciones" title="Notificaciones">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M15 17H9m10-2c-1.2-1.1-2-2.2-2-5a5 5 0 0 0-10 0c0 2.8-.8 3.9-2 5h14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <span class="header-search-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
       </svg>
+    </span>
 
-      <span class="notificacion-badge" data-notificacion-count data-count="0"></span>
-    </button>
+    <input
+      type="search"
+      name="q"
+      value="<?= e($headerQ) ?>"
+      placeholder="Buscar empleado, NIT o tipo..."
+      autocomplete="off"
+    >
 
-    <div class="notificacion-dropdown" data-notificacion-dropdown>
-      <div class="notificacion-header">
-        <h4>Notificaciones</h4>
-        <button type="button" class="mark-all" data-notificacion-read-all>Marcar todas</button>
-      </div>
+    <select name="tipo_solicitud" aria-label="Tipo de solicitud">
+      <option value="">Todos</option>
+      <?php foreach (TIPOS_SOLICITUD as $key => $label): ?>
+        <option value="<?= e($key) ?>" <?= $headerTipo === (string)$key ? 'selected' : '' ?>>
+          <?= e($label) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
 
-      <div class="notificacion-list" data-notificacion-list>
-        <div class="notificacion-empty">
-          <p>Cargando...</p>
+    <button type="submit">Buscar</button>
+  </form>
+
+  <div class="header-actions">
+    <div class="notificacion-wrap" data-notificaciones>
+      <button class="notificacion-bell" type="button" data-notificacion-toggle aria-label="Notificaciones" title="Notificaciones">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 17H9m10-2c-1.2-1.1-2-2.2-2-5a5 5 0 0 0-10 0c0 2.8-.8 3.9-2 5h14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+
+        <span class="notificacion-badge" data-notificacion-count data-count="0"></span>
+      </button>
+
+      <div class="notificacion-dropdown" data-notificacion-dropdown>
+        <div class="notificacion-header">
+          <h4>Notificaciones</h4>
+          <button type="button" class="mark-all" data-notificacion-read-all>Marcar todas</button>
+        </div>
+
+        <div class="notificacion-list" data-notificacion-list>
+          <div class="notificacion-empty">
+            <p>Cargando...</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="user-chip">
-    <?= e($user['nombre'] ?? '') ?>
-    <span class="user-role"><?= e($rolLabel) ?></span>
-  </div>
+    <div class="user-chip">
+      <?= e($user['nombre'] ?? '') ?>
+      <span class="user-role"><?= e($rolLabel) ?></span>
+    </div>
 
-  <form action="<?= e(url_action('logout')) ?>" method="post">
-    <?= csrf_input() ?>
-    <button class="logout" type="submit">Salir</button>
-  </form>
+    <form action="<?= e(url_action('logout')) ?>" method="post" class="header-logout-form">
+      <?= csrf_input() ?>
+      <button class="logout" type="submit">Salir</button>
+    </form>
+  </div>
 </header>
 
 <main class="ugc-wrap">
