@@ -99,7 +99,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
       <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
       <input type="hidden" name="decision" value="aprobar">
-      <button class="btn btn-green btn-sm" type="submit">Aprobar RRHH</button>
+      <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
     </form>
 
     <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
@@ -107,7 +107,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
       <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
       <input type="hidden" name="decision" value="rechazar">
-      <button class="btn btn-red btn-sm" type="submit">Rechazar RRHH</button>
+      <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
     </form>
   <?php endif; ?>
 </td>
