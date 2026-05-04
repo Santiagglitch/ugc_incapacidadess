@@ -129,9 +129,19 @@ public function cambiarModo(): void
         }
 
         $modoActual = $_SESSION['super_admin_modo'] ?? 'super_usuario';
+        $modoDestino = limpiar_texto($_POST['modo_destino'] ?? '');
 
-        // Alternar entre modos
-        if ($modoActual === 'super_usuario') {
+        if (!in_array($modoDestino, ['super_usuario', 'empleado'], true)) {
+            $modoDestino = $modoActual === 'super_usuario' ? 'empleado' : 'super_usuario';
+        }
+
+        if ($modoDestino === $modoActual) {
+            flash_set('success', 'El modo seleccionado ya esta activo.');
+            redirect_to(url_view('dashboard'));
+        }
+
+        // Cambiar al modo solicitado. Esto evita que un doble envio revierta el cambio.
+        if ($modoDestino === 'empleado') {
             // Cambiar a modo empleado
             $_SESSION['super_admin_modo'] = 'empleado';
             $empleadoModel = new empleadoModel();

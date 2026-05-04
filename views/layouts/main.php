@@ -109,6 +109,14 @@ $csrfToken = csrf_token();
     .btn-cambiar-modo:active {
       transform: translateY(0);
     }
+    .btn-cambiar-modo:disabled,
+    .btn-cambiar-modo.is-disabled {
+      opacity: 0.62;
+      cursor: not-allowed;
+      pointer-events: none;
+      transform: none;
+      box-shadow: none;
+    }
     @media (max-width: 768px) {
       .btn-cambiar-modo span {
         display: none;
@@ -124,15 +132,9 @@ $csrfToken = csrf_token();
 
 <header class="ugc-header">
   <div class="header-left">
-    <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio">
+    <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio" data-click-once>
       <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="header-logo" height="50">
     </a>
-
-    <nav>
-      <?php if (($user['rol'] ?? '') === ROL_ADMIN): ?>
-        <a href="<?= e(url_view('admin_empleados')) ?>">Empleados</a>
-      <?php endif; ?>
-    </nav>
   </div>
 
   <form class="header-search" method="get" action="<?= e(app_base_url('index.php')) ?>">
@@ -204,6 +206,7 @@ $csrfToken = csrf_token();
     <?php if ($esSuperAdmin): ?>
     <form action="<?= e(url_action('cambiar_modo')) ?>" method="post" class="header-cambiar-modo-form">
       <?= csrf_input() ?>
+      <input type="hidden" name="modo_destino" value="<?= $modoActual === 'super_usuario' ? 'empleado' : 'super_usuario' ?>">
       <button class="btn-cambiar-modo <?= $modoActual === 'super_usuario' ? 'btn-modo-admin' : 'btn-modo-empleado' ?>" type="submit" title="Cambiar a <?= $modoActual === 'super_usuario' ? 'Modo Empleado' : 'Super Usuario' ?>">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M16 3h3v3h-3zM8 3h3v3H8zM5 8h14v12H5z"/>
@@ -223,7 +226,7 @@ $csrfToken = csrf_token();
 
 <main class="ugc-wrap">
   <?php if (!empty($flash)): ?>
-    <div class="flash flash-<?= $flash['type'] === 'success' ? 'ok' : 'err' ?> animate-fade-down">
+    <div class="flash flash-<?= $flash['type'] === 'success' ? 'ok' : 'err' ?> animate-fade-down" data-flash-message>
       <?= e($flash['message']) ?>
     </div>
   <?php endif; ?>
@@ -239,7 +242,7 @@ $csrfToken = csrf_token();
     </div>
 
     <div class="footer-links">
-      <a href="<?= e(url_view('dashboard')) ?>">Inicio</a>
+      <a href="<?= e(url_view('dashboard')) ?>" data-click-once>Inicio</a>
 
       <form action="<?= e(url_action('logout')) ?>" method="post" class="footer-logout-form">
         <?= csrf_input() ?>
@@ -254,6 +257,119 @@ $csrfToken = csrf_token();
 </footer>
 
 <script>
+(function () {
+  var flashes = document.querySelectorAll('[data-flash-message]');
+
+  if (!flashes.length) {
+    return;
+  }
+
+  window.setTimeout(function () {
+    flashes.forEach(function (flash) {
+      flash.classList.add('flash-exit');
+
+      window.setTimeout(function () {
+        if (flash.parentNode) {
+          flash.parentNode.removeChild(flash);
+        }
+      }, 400);
+    });
+  }, 3000);
+})();
+
+(function () {
+  document.addEventListener('click', function (event) {
+    var submitter = event.target.closest('button[type="submit"], input[type="submit"]');
+
+    if (submitter && submitter.form) {
+      submitter.form._ugcSubmitter = submitter;
+    }
+
+    var link = event.target.closest('a[data-click-once], a.stat-card-link, a.logo-link, a.btn');
+
+    if (
+      !link
+      || link.target === '_blank'
+      || link.hasAttribute('download')
+      || (link.href || '').indexOf('download=1') !== -1
+    ) {
+      return;
+    }
+
+    if (link.dataset.clicked === 'true') {
+      event.preventDefault();
+      return;
+    }
+
+    link.dataset.clicked = 'true';
+    link.classList.add('is-disabled');
+    link.setAttribute('aria-disabled', 'true');
+  });
+
+  document.querySelectorAll('form').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        return;
+      }
+
+      form.dataset.submitting = 'true';
+
+      var submitter = event.submitter || form._ugcSubmitter;
+
+      if (submitter && submitter.name) {
+        var hiddenSubmitter = document.createElement('input');
+        hiddenSubmitter.type = 'hidden';
+        hiddenSubmitter.name = submitter.name;
+        hiddenSubmitter.value = submitter.value;
+        form.appendChild(hiddenSubmitter);
+      }
+
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+        button.disabled = true;
+        button.classList.add('is-disabled');
+      });
+    });
+  });
+})();
+
+(function () {
+  var form = document.querySelector('.header-search');
+
+  if (!form) {
+    return;
+  }
+
+  var input = form.querySelector('input[name="q"]');
+  var tipo = form.querySelector('select[name="tipo_solicitud"]');
+
+  if (!input || !tipo) {
+    return;
+  }
+
+  input.addEventListener('input', function () {
+    if (input.value.trim() !== '') {
+      tipo.value = '';
+    }
+  });
+
+  tipo.addEventListener('change', function () {
+    if (tipo.value !== '') {
+      input.value = '';
+    }
+  });
+
+  form.addEventListener('submit', function () {
+    if (input.value.trim() !== '') {
+      tipo.value = '';
+    }
+  });
+})();
+
 (function () {
   var root = document.querySelector('[data-notificaciones]');
 
