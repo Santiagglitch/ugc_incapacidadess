@@ -34,6 +34,10 @@ case 'cambiar_modo':
             (new authController())->cambiarModo();
             break;
 
+        case 'cambiar_modo':
+            (new authController())->cambiarModo();
+            break;
+
         case 'solicitud_create':
             (new solicitudController())->crearPost();
             break;

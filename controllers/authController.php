@@ -160,7 +160,45 @@ public function cambiarModo(): void
     }
 
 
-    
+    public function cambiarModo(): void
+    {
+        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
+            flash_set('error', 'Token de seguridad invalido.');
+            redirect_to(url_view('dashboard'));
+        }
+
+        if (!usuario_autenticado()) {
+            redirect_to(url_view('login'));
+        }
+
+        $user = usuario_actual();
+        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+            http_response_code(403);
+            flash_set('error', 'Solo el Super Admin puede cambiar de modo.');
+            redirect_to(url_view('dashboard'));
+        }
+
+        $modoActual = $_SESSION['super_admin_modo'] ?? 'super_usuario';
+
+        // Alternar entre modos
+        if ($modoActual === 'super_usuario') {
+            // Cambiar a modo empleado
+            $_SESSION['super_admin_modo'] = 'empleado';
+            $empleadoModel = new empleadoModel();
+            $empleado = $empleadoModel->getByNit($user['cedula']);
+            $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
+            $_SESSION['usuario']['rol'] = $rolReal;
+            flash_set('success', 'Modo cambiado a Empleado/Jefe. Permisos administrativos desactivados.');
+        } else {
+            // Cambiar a modo super usuario
+            $_SESSION['super_admin_modo'] = 'super_usuario';
+            $_SESSION['usuario']['rol'] = ROL_ADMIN;
+            flash_set('success', 'Modo cambiado a Super Usuario. Acceso administrativo total activado.');
+        }
+
+        redirect_to(url_view('dashboard'));
+    }
+
     private function calcularRolOperativo(string $cedula, ?array $empleado): string
     {
         // Si tiene centro de costo de RRHH, es RRHH

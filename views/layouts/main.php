@@ -109,14 +109,6 @@ $csrfToken = csrf_token();
     .btn-cambiar-modo:active {
       transform: translateY(0);
     }
-    .btn-cambiar-modo:disabled,
-    .btn-cambiar-modo.is-disabled {
-      opacity: 0.62;
-      cursor: not-allowed;
-      pointer-events: none;
-      transform: none;
-      box-shadow: none;
-    }
     @media (max-width: 768px) {
       .btn-cambiar-modo span {
         display: none;
@@ -206,7 +198,6 @@ $csrfToken = csrf_token();
     <?php if ($esSuperAdmin): ?>
     <form action="<?= e(url_action('cambiar_modo')) ?>" method="post" class="header-cambiar-modo-form">
       <?= csrf_input() ?>
-      <input type="hidden" name="modo_destino" value="<?= $modoActual === 'super_usuario' ? 'empleado' : 'super_usuario' ?>">
       <button class="btn-cambiar-modo <?= $modoActual === 'super_usuario' ? 'btn-modo-admin' : 'btn-modo-empleado' ?>" type="submit" title="Cambiar a <?= $modoActual === 'super_usuario' ? 'Modo Empleado' : 'Super Usuario' ?>">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M16 3h3v3h-3zM8 3h3v3H8zM5 8h14v12H5z"/>
