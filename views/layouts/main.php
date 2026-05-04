@@ -11,6 +11,11 @@ $rolesLabel = [
 
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
+// Variables para el modo Super Admin
+$esSuperAdmin = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$modoActual = $_SESSION['super_admin_modo'] ?? 'super_usuario';
+$modoLabel = $modoActual === 'super_usuario' ? 'Super Usuario' : 'Modo Empleado';
+
 $notifCountUrl = url_view('notif_count');
 $notifListUrl = url_view('notif_list');
 $notifReadUrl = url_action('notif_read');
@@ -35,6 +40,84 @@ $csrfToken = csrf_token();
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e($cssUrl) ?>">
+  <style>
+    /* Estilos para el botón Cambiar Modo - Super Admin */
+    .user-modo-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      margin-left: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .user-modo-badge.modo-admin {
+      background: #ffd700;
+      color: #0a5a1f;
+      box-shadow: 0 2px 8px rgba(255,215,0,0.4);
+    }
+    .user-modo-badge.modo-empleado {
+      background: #e8f5ec;
+      color: #0a5a1f;
+      box-shadow: 0 2px 8px rgba(232,245,236,0.4);
+    }
+    .header-cambiar-modo-form {
+      display: inline-flex;
+    }
+    .btn-cambiar-modo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .btn-cambiar-modo svg {
+      width: 16px;
+      height: 16px;
+    }
+    /* Modo Super Usuario - Amarillo dorado que resalta sobre verde */
+    .btn-cambiar-modo.btn-modo-admin {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+      color: #0a5a1f;
+      box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+    }
+    .btn-cambiar-modo.btn-modo-admin:hover {
+      background: linear-gradient(135deg, #ffed4a 0%, #ffd700 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255,215,0,0.5);
+    }
+    /* Modo Empleado - Blanco/verde claro */
+    .btn-cambiar-modo.btn-modo-empleado {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, #e8f5ec 100%);
+      color: #0a5a1f;
+      box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+    }
+    .btn-cambiar-modo.btn-modo-empleado:hover {
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.95) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255,255,255,0.35);
+    }
+    .btn-cambiar-modo:active {
+      transform: translateY(0);
+    }
+    @media (max-width: 768px) {
+      .btn-cambiar-modo span {
+        display: none;
+      }
+      .btn-cambiar-modo {
+        padding: 0.5rem;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -113,7 +196,23 @@ $csrfToken = csrf_token();
     <div class="user-chip">
       <?= e($user['nombre'] ?? '') ?>
       <span class="user-role"><?= e($rolLabel) ?></span>
+      <?php if ($esSuperAdmin): ?>
+        <span class="user-modo-badge <?= $modoActual === 'super_usuario' ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
+      <?php endif; ?>
     </div>
+
+    <?php if ($esSuperAdmin): ?>
+    <form action="<?= e(url_action('cambiar_modo')) ?>" method="post" class="header-cambiar-modo-form">
+      <?= csrf_input() ?>
+      <button class="btn-cambiar-modo <?= $modoActual === 'super_usuario' ? 'btn-modo-admin' : 'btn-modo-empleado' ?>" type="submit" title="Cambiar a <?= $modoActual === 'super_usuario' ? 'Modo Empleado' : 'Super Usuario' ?>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M16 3h3v3h-3zM8 3h3v3H8zM5 8h14v12H5z"/>
+          <path d="M12 12v6M8 15h8"/>
+        </svg>
+        <span>Cambiar Modo</span>
+      </button>
+    </form>
+    <?php endif; ?>
 
     <form action="<?= e(url_action('logout')) ?>" method="post" class="header-logout-form">
       <?= csrf_input() ?>

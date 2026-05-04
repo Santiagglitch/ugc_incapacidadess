@@ -14,7 +14,15 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div><h1 class="page-title">Panel de Administrador</h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Vista general del sistema de solicitudes</p></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-green" href="<?= e(url_view('solicitud_crear')) ?>">+ Nueva solicitud</a><a class="btn btn-outline" href="<?= e(url_view('admin_empleados')) ?>">Gestionar empleados</a>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <?php
+    // Super Admin en modo empleado puede crear solicitudes
+    $esSuperAdminModoEmpleado = (($user['cedula'] ?? '') === SUPER_ADMIN_NIT) && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'empleado');
+    if ($esSuperAdminModoEmpleado):
+    ?>
+      <a class="btn btn-green" href="<?= e(url_view('solicitud_crear')) ?>">+ Nueva solicitud</a>
+    <?php endif; ?>
+    <a class="btn btn-outline" href="<?= e(url_view('admin_empleados')) ?>">Gestionar empleados</a>
  <a class="btn btn-green" href="Export/Admin/ExportController.php?download=1">
   + Exportar datos
 </a>
