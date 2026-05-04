@@ -107,13 +107,20 @@ class solicitudController
             }
         }
 
-        render_view('empleado/form_crear', compact('user', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes'));
+        $submitToken = $this->crearSubmitToken('solicitud_create');
+
+        render_view('empleado/form_crear', compact('user', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes', 'submitToken'));
     }
 
     public function crearPost(): void
     {
         requiere_login();
         $this->validarPost();
+
+        if (!$this->consumirSubmitToken('solicitud_create', $_POST['_submit_token'] ?? null)) {
+            flash_set('error', 'Esta solicitud ya fue procesada. Si necesitas crear otra, vuelve a intentarlo.');
+            redirect_to(url_view('dashboard'));
+        }
 
         $user = usuario_actual();
 
@@ -695,5 +702,36 @@ class solicitudController
             http_response_code(422);
             exit('Token de seguridad invalido.');
         }
+    }
+
+    private function crearSubmitToken(string $key): string
+    {
+        iniciar_sesion_segura();
+
+        $token = bin2hex(random_bytes(32));
+        $_SESSION['submit_tokens'][$key][$token] = time();
+
+        foreach ($_SESSION['submit_tokens'][$key] as $storedToken => $createdAt) {
+            if (!is_int($createdAt) || $createdAt < time() - 3600) {
+                unset($_SESSION['submit_tokens'][$key][$storedToken]);
+            }
+        }
+
+        return $token;
+    }
+
+    private function consumirSubmitToken(string $key, $token): bool
+    {
+        iniciar_sesion_segura();
+
+        $token = (string)$token;
+
+        if ($token === '' || empty($_SESSION['submit_tokens'][$key][$token])) {
+            return false;
+        }
+
+        unset($_SESSION['submit_tokens'][$key][$token]);
+
+        return true;
     }
 }

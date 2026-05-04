@@ -163,7 +163,7 @@ $returnTo = $_GET['return_to'] ?? url_view('dashboard');
 
     <div class="form-actions">
       <button type="submit" class="btn btn-green">Guardar cambios</button>
-      <a href="<?= e($returnTo) ?>" class="btn btn-gray">Cancelar</a>
+      <a href="<?= e($returnTo) ?>" class="btn btn-gray" data-click-once>Cancelar</a>
     </div>
 
   </form>

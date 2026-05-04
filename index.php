@@ -29,6 +29,10 @@ if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
         case 'seleccionar_modo':
             (new authController())->seleccionarModoPost();
             break;
+            
+case 'cambiar_modo':
+            (new authController())->cambiarModo();
+            break;
 
         case 'cambiar_modo':
             (new authController())->cambiarModo();
