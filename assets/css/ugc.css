@@ -1667,3 +1667,23 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   }
 }
     
+/* HEADER Y FOOTER - mostrar una sola imagen completa, sin líneas */
+.topbar,
+.app-header,
+.main-header,
+.header,
+.navbar,
+header,
+.footer-login-fondo,
+.app-footer,
+footer {
+  background-color: #063125 !important;
+
+  background-image:
+    linear-gradient(rgba(6, 49, 37, 0.35), rgba(6, 49, 37, 0.35)),
+    url("../img/login-fondo.png") !important;
+
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  background-position: center center !important;
+}
