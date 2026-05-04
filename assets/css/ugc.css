@@ -218,6 +218,8 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
 /* BOTONES */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:var(--r2);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:var(--tr);font-family:inherit;white-space:nowrap}
 .btn:active{transform:scale(.97)}
+.btn:disabled,.btn.is-disabled{opacity:.62;cursor:not-allowed;pointer-events:none;transform:none;box-shadow:none}
+.btn-login:disabled,.btn-login.is-disabled,.btn-link:disabled,.btn-link.is-disabled,a[data-click-once].is-disabled,.stat-card-link.is-disabled,.logo-link.is-disabled{opacity:.62;cursor:not-allowed;pointer-events:none;transform:none;box-shadow:none}
 .btn-green{background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;box-shadow:0 4px 12px rgba(18,139,59,.3)}
 .btn-green:hover{box-shadow:0 6px 20px rgba(18,139,59,.45);transform:translateY(-1px)}
 .btn-red{background:linear-gradient(135deg,#e53935,var(--red));color:#fff;box-shadow:0 4px 12px rgba(192,57,43,.3)}

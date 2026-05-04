@@ -15,6 +15,7 @@ $hoy        = $hoy ?? date('Y-m-d');
   <form id="formSolicitud" method="post" action="<?= e(url_action('solicitud_create')) ?>" enctype="multipart/form-data" autocomplete="off">
     
     <?= csrf_input() ?>
+    <input type="hidden" name="_submit_token" value="<?= e($submitToken ?? '') ?>">
 
     <?php if (empty($puedeSeleccionarJefe)): ?>
       <input type="hidden" name="nit_jefe" value="<?= e($user['nit_jefe'] ?? '') ?>">
@@ -127,7 +128,7 @@ $hoy        = $hoy ?? date('Y-m-d');
 
     <div class="form-actions">
       <button type="submit" class="btn btn-green">Enviar solicitud</button>
-      <a href="<?= e(url_view('dashboard')) ?>" class="btn btn-gray">Cancelar</a>
+      <a href="<?= e(url_view('dashboard')) ?>" class="btn btn-gray" data-click-once>Cancelar</a>
     </div>
 
   </form>

@@ -15,5 +15,50 @@ $loginBg = app_asset('assets/img/login-fondo.png');
 </head>
 <body>
 <?= $content ?>
+<script>
+(function () {
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-click-once], a.stat-card-link, a.logo-link, a.btn');
+
+    if (
+      !link
+      || link.target === '_blank'
+      || link.hasAttribute('download')
+      || (link.href || '').indexOf('download=1') !== -1
+    ) {
+      return;
+    }
+
+    if (link.dataset.clicked === 'true') {
+      event.preventDefault();
+      return;
+    }
+
+    link.dataset.clicked = 'true';
+    link.classList.add('is-disabled');
+    link.setAttribute('aria-disabled', 'true');
+  });
+
+  document.querySelectorAll('form').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        return;
+      }
+
+      form.dataset.submitting = 'true';
+
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+        button.disabled = true;
+        button.classList.add('is-disabled');
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
