@@ -26,6 +26,10 @@ if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
             (new authController())->logout();
             break;
 
+        case 'seleccionar_modo':
+            (new authController())->seleccionarModoPost();
+            break;
+
         case 'solicitud_create':
             (new solicitudController())->crearPost();
             break;
@@ -104,6 +108,10 @@ switch ($view) {
 
     case 'notif_list':
         (new notificacionController())->listar();
+        break;
+
+    case 'seleccionar_modo':
+        (new authController())->seleccionarModoForm();
         break;
 
     case 'admin_empleados':

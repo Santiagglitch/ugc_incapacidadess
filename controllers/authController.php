@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/helpers.php';
 require_once __DIR__ . '/../models/authModel.php';
+require_once __DIR__ . '/../models/empleadoModel.php';
 
 class authController
 {
@@ -40,7 +41,92 @@ class authController
 
         session_regenerate_id(true);
         $_SESSION['usuario'] = $result['user'];
+
+        // Si es Super Admin, redirigir a selección de modo
+        if (($result['user']['cedula'] ?? '') === SUPER_ADMIN_NIT) {
+            $_SESSION['super_admin_modo_pendiente'] = true;
+            redirect_to(url_view('seleccionar_modo'));
+        }
+
         redirect_to(url_view('dashboard'));
+    }
+
+    public function seleccionarModoForm(): void
+    {
+        if (!usuario_autenticado() || empty($_SESSION['super_admin_modo_pendiente'])) {
+            redirect_to(url_view('dashboard'));
+        }
+
+        $user = usuario_actual();
+        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+            unset($_SESSION['super_admin_modo_pendiente']);
+            redirect_to(url_view('dashboard'));
+        }
+
+        $error = $_SESSION['modo_error'] ?? null;
+        unset($_SESSION['modo_error']);
+
+        render_view('auth/seleccionar_modo', [
+            'user' => $user,
+            'error' => $error,
+        ], 'auth');
+    }
+
+    public function seleccionarModoPost(): void
+    {
+        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
+            $_SESSION['modo_error'] = 'Token de seguridad invalido.';
+            redirect_to(url_view('seleccionar_modo'));
+        }
+
+        if (!usuario_autenticado() || empty($_SESSION['super_admin_modo_pendiente'])) {
+            redirect_to(url_view('dashboard'));
+        }
+
+        $user = usuario_actual();
+        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+            unset($_SESSION['super_admin_modo_pendiente']);
+            redirect_to(url_view('dashboard'));
+        }
+
+        $modo = limpiar_texto($_POST['modo'] ?? '');
+
+        if (!in_array($modo, ['super_usuario', 'empleado'], true)) {
+            $_SESSION['modo_error'] = 'Selecciona un modo valido.';
+            redirect_to(url_view('seleccionar_modo'));
+        }
+
+        // Guardar el modo seleccionado en sesión
+        $_SESSION['super_admin_modo'] = $modo;
+        unset($_SESSION['super_admin_modo_pendiente']);
+
+        // Si elige modo empleado, recalcular su rol real según su jerarquía
+        if ($modo === 'empleado') {
+            $empleadoModel = new empleadoModel();
+            $empleado = $empleadoModel->getByNit($user['cedula']);
+            $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
+            $_SESSION['usuario']['rol'] = $rolReal;
+        }
+
+        redirect_to(url_view('dashboard'));
+    }
+
+    private function calcularRolOperativo(string $cedula, ?array $empleado): string
+    {
+        // Si tiene centro de costo de RRHH, es RRHH
+        $centroCosto = (string) ($empleado['CENTRO_COSTO'] ?? '');
+        if (in_array($centroCosto, CC_RRHH, true)) {
+            return ROL_RRHH;
+        }
+
+        // Si tiene nivel de jefe o superior
+        $nivel = (int) ($empleado['NIVEL'] ?? 0);
+        if ($nivel >= NIVEL_MIN_JEFE) {
+            return ROL_JEFE;
+        }
+
+        // Por defecto es empleado
+        return ROL_EMPLEADO;
     }
 
     public function logout(): void
