@@ -2,8 +2,10 @@
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $capibaraUrl = app_asset('assets/img/capibara-login.png');
 ?>
+
 <div class="login-container">
   <div class="login-bg-pattern"></div>
+
   <div class="login-card animate-fade-up">
     <div class="login-brand">
       <div class="brand-icon">
@@ -12,6 +14,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
           <img src="<?= e($capibaraUrl) ?>" alt="Mascota" class="login-capibara">
         </div>
       </div>
+
       <h1 class="brand-title">Portal de Solicitudes</h1>
       <p class="brand-subtitle">Permisos e Incapacidades</p>
     </div>
@@ -22,28 +25,59 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
 
     <form method="post" action="<?= e(url_action('login')) ?>" id="loginForm" class="login-form">
       <?= csrf_input() ?>
+
       <div class="input-group">
         <label class="input-label" for="cedula">Numero de Documento</label>
+
         <div class="input-wrap">
           <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          <input type="text" id="cedula" name="cedula" class="input-field" placeholder="Ej: 11111111" required autocomplete="username">
+
+          <input 
+            type="text" 
+            id="cedula" 
+            name="cedula" 
+            class="input-field" 
+            placeholder="Documento" 
+            required 
+            autocomplete="username"
+          >
         </div>
       </div>
 
       <div class="input-group">
         <label class="input-label" for="password">Contrasena</label>
+
         <div class="input-wrap">
           <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
             <circle cx="12" cy="16" r="1"/>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
           </svg>
-          <input type="password" id="password" name="password" class="input-field" placeholder="Tu contrasena" required autocomplete="current-password">
-          <button type="button" class="input-toggle" onclick="togglePassword()" aria-label="Mostrar contrasena">
-            <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="input-field" 
+            placeholder="Tu contrasena" 
+            required 
+            autocomplete="current-password"
+          >
+
+          <button type="button" class="input-toggle" onclick="togglePassword(this)" aria-label="Mostrar contrasena">
+            <!-- OJO CERRADO -->
+            <svg class="toggle-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a20.29 20.29 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.26 20.26 0 0 1-3.17 4.41"/>
+              <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+
+            <!-- OJO ABIERTO -->
+            <svg class="toggle-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
@@ -59,6 +93,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
     <?php if (!empty($devUsuarios)): ?>
       <div class="dev-section">
         <p class="dev-title">Usuarios de Prueba <span class="dev-hint">pass: prueba123</span></p>
+
         <div class="dev-chips">
           <?php foreach ($devUsuarios as $ced => $u): ?>
             <button type="button" class="dev-chip" onclick="fillLogin('<?= e($ced) ?>')">
@@ -73,15 +108,26 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
 </div>
 
 <script>
-function togglePassword() {
+function togglePassword(button) {
   const pwd = document.getElementById('password');
-  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    button.classList.add('is-visible');
+    button.setAttribute('aria-label', 'Ocultar contrasena');
+  } else {
+    pwd.type = 'password';
+    button.classList.remove('is-visible');
+    button.setAttribute('aria-label', 'Mostrar contrasena');
+  }
 }
+
 function fillLogin(cedula) {
   document.getElementById('cedula').value = cedula;
   document.getElementById('password').value = 'prueba123';
   document.getElementById('btnLogin').focus();
 }
+
 document.getElementById('loginForm').addEventListener('submit', function() {
   const btn = document.getElementById('btnLogin');
   btn.classList.add('loading');

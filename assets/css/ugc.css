@@ -558,22 +558,56 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   color:#9ca89d;
 }
 
+.input-field{
+  flex:1;
+  width:100%;
+  border:none;
+  outline:none;
+  background:transparent;
+  box-shadow:none;
+}
+
+.input-field:focus{
+  border:none;
+  outline:none;
+  box-shadow:none;
+}
+
 .input-toggle{
   background:none;
   border:none;
-  padding:8px 10px;
+  padding:0;
+  margin:0;
   cursor:pointer;
   color:#7a877a;
   display:flex;
   align-items:center;
   justify-content:center;
-  border-radius:8px;
-  transition:all .2s ease;
+  border-radius:0;
+  transition:color .2s ease;
 }
 
 .input-toggle:hover{
-  background:#eef5ef;
+  background:none;
   color:#0a5a1f;
+}
+
+.toggle-icon{
+  width:20px;
+  height:20px;
+  display:block;
+}
+
+.eye-open{
+  display:none;
+}
+
+.input-toggle.is-visible .eye-closed{
+  display:none;
+}
+
+.input-toggle.is-visible .eye-open{
+  display:block;
 }
 
 .btn-login{
@@ -586,7 +620,7 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   margin-top:6px;
   border:none;
   border-radius:14px;
-  background:linear-gradient(135deg,#1a963a 0%,#0d7728 55%,#0a5a1f 100%);
+  background:linear-gradient(135deg,#0B5A2B 0%,#3b8659 55%,#0B5A2B 100%);
   color:#fff;
   font-size:16px;
   font-weight:700;
@@ -1686,4 +1720,139 @@ footer {
   background-repeat: no-repeat !important;
   background-size: cover !important;
   background-position: center center !important;
+}/* COLOR VERDE PARA BOTONES APROBAR */
+.btn-green,
+button.btn-green,
+a.btn-green{
+  background: #0B5A2B !important;
+  border: 1.5px solid #0B5A2B !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(11, 90, 43, 0.24) !important;
+}
+
+/* HOVER DE APROBAR: NO CAMBIA DE COLOR, SOLO SE MUEVE */
+.btn-green:hover,
+button.btn-green:hover,
+a.btn-green:hover{
+  background: #0B5A2B !important;
+  border-color: #0B5A2B !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 20px rgba(11, 90, 43, 0.28) !important;
+}
+
+
+/* BOTÓN VER: BLANCO CON BORDE VERDE */
+.btn-outline,
+a.btn-outline{
+  background: #ffffff !important;
+  border: 1.5px solid #0B5A2B !important;
+  color: #0B5A2B !important;
+  box-shadow: none !important;
+}
+
+/* HOVER DE VER: NO SE PONE VERDE, SOLO SE MUEVE */
+.btn-outline:hover,
+a.btn-outline:hover{
+  background: #ffffff !important;
+  border-color: #0B5A2B !important;
+  color: #0B5A2B !important;
+  transform: translateY(-1px) !important;
+  box-shadow: none !important;
+}
+
+
+/* BOTÓN EDITAR: SIEMPRE VERDE */
+.btn-editar,
+a.btn-editar,
+button.btn-editar{
+  background: #0B5A2B !important;
+  border: 1.5px solid #0B5A2B !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(11, 90, 43, 0.24) !important;
+}
+
+/* HOVER DE EDITAR: NO CAMBIA DE COLOR, SOLO SE MUEVE */
+.btn-editar:hover,
+a.btn-editar:hover,
+button.btn-editar:hover{
+  background: #0B5A2B !important;
+  border-color: #0B5A2B !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 20px rgba(11, 90, 43, 0.28) !important;
+}
+
+
+/* COLOR VERDE PARA ENCABEZADOS DE TABLAS */
+table thead,
+table thead tr,
+.table thead,
+.table thead tr{
+  background: #0B5A2B !important;
+}
+
+table thead th,
+.table thead th{
+  background: #0B5A2B !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+
+/* ACCIONES EN FILA SIN DAÑAR EL RESTO DE LA TABLA */
+.ugc-table td.actions-cell{
+  display: table-cell !important;
+  width: 1% !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* FORMULARIO DE APROBAR / ELIMINAR EN LA MISMA LÍNEA */
+.ugc-table td.actions-cell .inline-form{
+  display: inline-flex !important;
+  width: auto !important;
+  margin: 0 6px 0 0 !important;
+  vertical-align: middle !important;
+}
+
+/* BOTONES COMPACTOS EN ACCIONES */
+.ugc-table td.actions-cell .btn{
+  width: auto !important;
+  min-width: auto !important;
+  padding: 7px 13px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+/* SEPARACIÓN ENTRE BOTONES */
+.ugc-table td.actions-cell > .btn{
+  margin-right: 6px !important;
+}
+/* EDITAR SIEMPRE VERDE POR DENTRO */
+.ugc-table td.actions-cell .btn-editar,
+.ugc-table td.actions-cell a.btn-editar,
+.ugc-table td.actions-cell button.btn-editar,
+.ugc-table td.actions-cell a[href*="editar"],
+.ugc-table td.actions-cell a[href*="edit"]{
+  background: #0B5A2B !important;
+  background-color: #0B5A2B !important;
+  border: 1.5px solid #0B5A2B !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(11, 90, 43, 0.24) !important;
+}
+
+/* HOVER EDITAR: SOLO SE MUEVE, NO CAMBIA COLOR */
+.ugc-table td.actions-cell .btn-editar:hover,
+.ugc-table td.actions-cell a.btn-editar:hover,
+.ugc-table td.actions-cell button.btn-editar:hover,
+.ugc-table td.actions-cell a[href*="editar"]:hover,
+.ugc-table td.actions-cell a[href*="edit"]:hover{
+  background: #0B5A2B !important;
+  background-color: #0B5A2B !important;
+  border-color: #0B5A2B !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 20px rgba(11, 90, 43, 0.28) !important;
 }
