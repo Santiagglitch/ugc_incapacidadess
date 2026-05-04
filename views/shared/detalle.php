@@ -24,7 +24,7 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <?php if ($puedeModificarSolicitud): ?>
-      <a class="btn btn-outline" href="<?= e(url_view('solicitud_editar') . '&id=' . urlencode($idSolicitud) . '&return_to=' . urlencode($returnToDetalle)) ?>">Editar</a>
+      <a class="btn btn-sm btn-editar" href="<?= e($editarUrl) ?>">Editar</a>
       <form class="inline-form" method="post" action="<?= e(url_action('solicitud_delete')) ?>" onsubmit="return confirm('Seguro que deseas eliminar esta solicitud?')">
         <?= csrf_input() ?>
         <input type="hidden" name="return_to" value="<?= e(url_view('dashboard')) ?>">
