@@ -4,7 +4,7 @@ $solicitudes = $solicitudes ?? [];
 $user = $user ?? usuario_actual();
 $paginationParam = $paginationParam ?? 'pagina';
 $paginationLabel = $paginationLabel ?? 'solicitudes';
-$pagination = ugcPaginateRows($solicitudes, $paginationParam, 8);
+$pagination = ugcPaginateRows($solicitudes, $paginationParam, 6);
 $solicitudesPagina = $pagination['rows'];
 $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 ?>
@@ -92,13 +92,13 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
       <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
     </form>
 
-    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
-      <?= csrf_input() ?>
-      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
-      <input type="hidden" name="decision" value="rechazar">
-      <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
-    </form>
+    <a 
+      class="btn btn-red btn-sm"
+      href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode($idSolicitud) . '&accion=rechazar&return_to=' . urlencode($returnTo) . '#observacion_jefe') ?>"
+      onclick="alert('Para rechazar la solicitud es obligatorio ingresar una observación indicando el motivo.');"
+    >
+      Rechazar
+    </a>
   <?php endif; ?>
 
   <?php if ($esRrhhOAdmin && $estaAprobadaJefe): ?>
