@@ -83,7 +83,7 @@ ugcRenderPagination([
   'current' => $pagina ?? 1,
   'totalPages' => $totalPaginas ?? 1,
   'total' => $total ?? 0,
-  'perPage' => 12,
+  'perPage' => 6,
   'paramName' => 'pagina',
 ], 'empleados');
 ?>

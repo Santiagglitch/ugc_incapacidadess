@@ -16,7 +16,7 @@ class adminController
         $busqueda = mb_strtolower(limpiar_texto($_GET['q'] ?? ''), 'UTF-8');
         $filtroRol = limpiar_texto($_GET['rol'] ?? '');
         $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
-        $porPagina = 12;
+        $porPagina = 6;
 
         $empleadoModel = new empleadoModel();
         $adminRoles = new adminRolesModel();

@@ -4,7 +4,7 @@ $solicitudes = $solicitudes ?? [];
 $user = $user ?? usuario_actual();
 $paginationParam = $paginationParam ?? 'pagina';
 $paginationLabel = $paginationLabel ?? 'solicitudes';
-$pagination = ugcPaginateRows($solicitudes, $paginationParam, 8);
+$pagination = ugcPaginateRows($solicitudes, $paginationParam, 6);
 $solicitudesPagina = $pagination['rows'];
 $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 ?>

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 if (!function_exists('ugcPaginateRows')) {
-    function ugcPaginateRows(array $rows, string $paramName = 'pagina', int $perPage = 8): array
+    function ugcPaginateRows(array $rows, string $paramName = 'pagina', int $perPage = 6): array
     {
         $perPage = max(1, $perPage);
         $total = count($rows);
@@ -41,7 +41,7 @@ if (!function_exists('ugcRenderPagination')) {
 
         $current = (int) ($pagination['current'] ?? 1);
         $total = (int) ($pagination['total'] ?? 0);
-        $perPage = (int) ($pagination['perPage'] ?? 8);
+        $perPage = (int) ($pagination['perPage'] ?? 6);
         $paramName = (string) ($pagination['paramName'] ?? 'pagina');
         $start = max(2, min($current - 1, max(2, $totalPages - 3)));
         $end = min($totalPages, $start + 2);
