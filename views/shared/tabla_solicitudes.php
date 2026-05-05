@@ -101,23 +101,23 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     </a>
   <?php endif; ?>
 
-  <?php if ($esRrhhOAdmin && $estaAprobadaJefe): ?>
-    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
-      <?= csrf_input() ?>
-      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
-      <input type="hidden" name="decision" value="aprobar">
-      <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
-    </form>
+<?php if ($esRrhhOAdmin && $estaAprobadaJefe): ?>
+  <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
+    <?= csrf_input() ?>
+    <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <input type="hidden" name="decision" value="aprobar">
+    <button class="btn btn-green btn-sm" type="submit">Aprobar</button>
+  </form>
 
-    <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
-      <?= csrf_input() ?>
-      <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
-      <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
-      <input type="hidden" name="decision" value="rechazar">
-      <button class="btn btn-red btn-sm" type="submit">Rechazar</button>
-    </form>
-  <?php endif; ?>
+  <a 
+    class="btn btn-red btn-sm"
+    href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode($idSolicitud) . '&accion=rechazar_rrhh&return_to=' . urlencode($returnTo) . '#observacion_rrhh') ?>"
+    onclick="alert('Para rechazar la solicitud es obligatorio escribir una observación indicando el motivo.');"
+  >
+    Rechazar
+  </a>
+<?php endif; ?>
 </td>
         </tr>
       <?php endforeach; ?>

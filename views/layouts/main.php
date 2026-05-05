@@ -1,6 +1,7 @@
 <?php
 $cssUrl = app_asset('assets/css/ugc.css');
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
+$faviconUrl = app_asset('assets/img/favicon.png');
 
 $rolesLabel = [
   ROL_ADMIN => 'Administrador',
@@ -35,6 +36,8 @@ $csrfToken = csrf_token();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title><?= e(APP_NAME) ?></title>
+  <link rel="icon" type="image/png" href="<?= e($faviconUrl) ?>">
+  <link rel="shortcut icon" type="image/png" href="<?= e($faviconUrl) ?>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
