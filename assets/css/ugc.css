@@ -1094,6 +1094,104 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   }
 }
 
+/* Documento actual cargado - Mejora visual */
+.pdf-current-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.pdf-current-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.pdf-current-header .pdf-icon {
+  width: 24px;
+  height: 24px;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.pdf-current-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #166534;
+}
+
+.pdf-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pdf-view-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+.pdf-view-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pdf-current-file {
+    background: linear-gradient(135deg, #1a3a22 0%, #264d30 100%);
+    border-color: #2e7d32;
+  }
+
+  .pdf-current-header .pdf-icon {
+    color: #4ade80;
+  }
+
+  .pdf-current-label {
+    color: #86efac;
+  }
+
+  .pdf-view-btn {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+
+  .pdf-view-btn:hover {
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  }
+}
+
+@media (max-width: 768px) {
+  .pdf-current-file {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pdf-view-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ============================================
    SISTEMA DE NOTIFICACIONES
    ============================================ */

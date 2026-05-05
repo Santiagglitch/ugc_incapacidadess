@@ -145,18 +145,51 @@ $returnTo = $_GET['return_to'] ?? url_view('dashboard');
         <label>Documento PDF</label>
 
         <?php if ($rutaComprobante !== ''): ?>
-          <p style="margin:0 0 10px;color:var(--muted);font-size:14px">
-            Documento actual:
-            <a href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode($id)) ?>" target="_blank">
+          <div class="pdf-current-file">
+            <div class="pdf-current-header">
+              <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              <span class="pdf-current-label">Documento actual cargado</span>
+            </div>
+            <a href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode($id)) ?>" target="_blank" class="pdf-view-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
               Ver PDF cargado
             </a>
-          </p>
+          </div>
         <?php endif; ?>
 
-        <input type="file" name="documento_pdf" accept=".pdf">
+        <input type="file" id="documento_pdf" name="documento_pdf" accept=".pdf">
         <small style="display:block;margin-top:8px;color:var(--muted)">
           Si no seleccionas un nuevo PDF, se conserva el documento actual.
         </small>
+
+        <!-- Vista previa del nuevo PDF -->
+        <div id="pdf-preview-container" class="pdf-preview-container" style="display: none;">
+          <div class="pdf-preview-header">
+            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span class="pdf-filename" id="pdf-filename">documento.pdf</span>
+            <span class="pdf-size" id="pdf-size">0 KB</span>
+            <button type="button" class="remove-pdf-btn" id="remove-pdf" title="Eliminar archivo">×</button>
+          </div>
+          <div class="pdf-preview-content">
+            <iframe id="pdf-iframe" src="" title="Vista previa del PDF"></iframe>
+          </div>
+        </div>
+
+        <!-- Error de validación -->
+        <div id="pdf-error" class="file-error" style="display: none;"></div>
       </div>
 
     </div>
@@ -244,6 +277,86 @@ $returnTo = $_GET['return_to'] ?? url_view('dashboard');
   if (fin) {
     fin.addEventListener('change', calcularDuracion);
   }
+
+  // ===== VISTA PREVIA DEL PDF =====
+  var pdfInput = document.getElementById('documento_pdf');
+  var pdfPreviewContainer = document.getElementById('pdf-preview-container');
+  var pdfFilename = document.getElementById('pdf-filename');
+  var pdfSize = document.getElementById('pdf-size');
+  var pdfIframe = document.getElementById('pdf-iframe');
+  var removePdfBtn = document.getElementById('remove-pdf');
+  var pdfError = document.getElementById('pdf-error');
+  var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    var k = 1024;
+    var sizes = ['Bytes', 'KB', 'MB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function showPdfError(message) {
+    pdfError.textContent = message;
+    pdfError.style.display = 'block';
+    pdfPreviewContainer.style.display = 'none';
+    pdfInput.value = '';
+  }
+
+  function hidePdfError() {
+    pdfError.style.display = 'none';
+  }
+
+  function resetPdfPreview() {
+    pdfPreviewContainer.style.display = 'none';
+    pdfIframe.src = '';
+    pdfInput.value = '';
+    hidePdfError();
+  }
+
+  pdfInput.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+
+    if (!file) {
+      resetPdfPreview();
+      return;
+    }
+
+    // Validar tipo de archivo
+    if (file.type !== 'application/pdf') {
+      showPdfError('El archivo debe ser un PDF válido.');
+      return;
+    }
+
+    // Validar tamaño
+    if (file.size > MAX_FILE_SIZE) {
+      showPdfError('El archivo no puede superar 5MB.');
+      return;
+    }
+
+    hidePdfError();
+
+    // Mostrar información del archivo
+    pdfFilename.textContent = file.name;
+    pdfSize.textContent = formatFileSize(file.size);
+
+    // Crear URL para vista previa
+    var fileUrl = URL.createObjectURL(file);
+    pdfIframe.src = fileUrl;
+    pdfPreviewContainer.style.display = 'block';
+  });
+
+  // Eliminar archivo seleccionado
+  removePdfBtn.addEventListener('click', function() {
+    resetPdfPreview();
+  });
+
+  // Limpiar URL cuando se envíe el formulario o se abandone la página
+  window.addEventListener('beforeunload', function() {
+    if (pdfIframe.src && pdfIframe.src.startsWith('blob:')) {
+      URL.revokeObjectURL(pdfIframe.src);
+    }
+  });
 
 })();
 </script>
