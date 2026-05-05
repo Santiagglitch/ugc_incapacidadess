@@ -115,21 +115,74 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
 
 <?php if ($puedeGestionarJefe): ?>
 <div class="gestion-card">
-  <h3>Gestion de jefe inmediato</h3>
-  <form method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
+  <h3>Gestión de jefe inmediato</h3>
+
+  <form id="formGestionJefe" method="post" action="<?= e(url_action('solicitud_jefe')) ?>">
     <?= csrf_input() ?>
+
     <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
     <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+
     <div class="form-group">
-      <label>Observacion</label>
-      <textarea name="observacion_jefe" rows="3" maxlength="2000"></textarea>
+      <label>Observación</label>
+
+      <textarea 
+        id="observacion_jefe"
+        name="observacion_jefe" 
+        rows="3" 
+        maxlength="2000"
+        placeholder="Escribe la razón de la decisión..."
+      ></textarea>
+
+      <small id="errorObservacion" style="display:none; color:#b00020; font-weight:600; margin-top:6px;">
+        Para rechazar la solicitud es obligatorio escribir una observación indicando el motivo.
+      </small>
     </div>
+
     <div class="form-actions">
-      <button class="btn btn-green" type="submit" name="decision" value="aprobar">Aprobar</button>
-      <button class="btn btn-red" type="submit" name="decision" value="rechazar">Rechazar</button>
+      <button class="btn btn-green" type="submit" name="decision" value="aprobar">
+        Aprobar
+      </button>
+
+      <button class="btn btn-red" type="submit" name="decision" value="rechazar">
+        Rechazar
+      </button>
     </div>
   </form>
 </div>
+
+<script>
+document.getElementById('formGestionJefe').addEventListener('submit', function(e) {
+  const botonPresionado = e.submitter;
+  const observacion = document.getElementById('observacion_jefe');
+  const error = document.getElementById('errorObservacion');
+
+  if (botonPresionado && botonPresionado.value === 'rechazar') {
+    const textoObservacion = observacion.value.trim();
+
+    if (textoObservacion === '') {
+      e.preventDefault();
+
+      error.style.display = 'block';
+      observacion.style.border = '2px solid #b00020';
+      observacion.focus();
+
+      alert('Para rechazar la solicitud debes escribir obligatoriamente el motivo en la observación.');
+      return false;
+    }
+
+    const confirmar = confirm('¿Estás seguro de que quieres rechazar esta solicitud?');
+
+    if (!confirmar) {
+      e.preventDefault();
+      return false;
+    }
+  }
+
+  error.style.display = 'none';
+  observacion.style.border = '';
+});
+</script>
 <?php endif; ?>
 
 <?php if ($puedeGestionarRrhh): ?>
