@@ -184,24 +184,76 @@ document.getElementById('formGestionJefe').addEventListener('submit', function(e
 });
 </script>
 <?php endif; ?>
-
 <?php if ($puedeGestionarRrhh): ?>
 <div class="gestion-card">
-  <h3>Gestion de Talento Humano</h3>
-  <form method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
+  <h3>Gestión de Talento Humano</h3>
+
+  <form id="formGestionRrhh" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
     <?= csrf_input() ?>
+
     <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
     <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+
     <div class="form-group">
-      <label>Observacion</label>
-      <textarea name="observacion_rrhh" rows="3" maxlength="2000"></textarea>
+      <label>Observación</label>
+
+      <textarea 
+        id="observacion_rrhh"
+        name="observacion_rrhh" 
+        rows="3" 
+        maxlength="2000"
+        placeholder="Escribe la razón de la decisión..."
+      ></textarea>
+
+      <small id="errorObservacionRrhh" style="display:none; color:#b00020; font-weight:600; margin-top:6px;">
+        Para rechazar la solicitud es obligatorio escribir una observación indicando el motivo.
+      </small>
     </div>
+
     <div class="form-actions">
-      <button class="btn btn-green" type="submit" name="decision" value="aprobar">Aprobar RRHH</button>
-      <button class="btn btn-red" type="submit" name="decision" value="rechazar">Rechazar RRHH</button>
+      <button class="btn btn-green" type="submit" name="decision" value="aprobar">
+        Aprobar RRHH
+      </button>
+
+      <button class="btn btn-red" type="submit" name="decision" value="rechazar">
+        Rechazar RRHH
+      </button>
     </div>
   </form>
 </div>
+
+<script>
+document.getElementById('formGestionRrhh').addEventListener('submit', function(e) {
+  const botonPresionado = e.submitter;
+  const observacion = document.getElementById('observacion_rrhh');
+  const error = document.getElementById('errorObservacionRrhh');
+
+  if (botonPresionado && botonPresionado.value === 'rechazar') {
+    const textoObservacion = observacion.value.trim();
+
+    if (textoObservacion === '') {
+      e.preventDefault();
+
+      error.style.display = 'block';
+      observacion.style.border = '2px solid #b00020';
+      observacion.focus();
+
+      alert('Para rechazar la solicitud primero debes escribir el motivo en la observación.');
+      return false;
+    }
+
+    const confirmar = confirm('¿Estás seguro de que quieres rechazar esta solicitud?');
+
+    if (!confirmar) {
+      e.preventDefault();
+      return false;
+    }
+  }
+
+  error.style.display = 'none';
+  observacion.style.border = '';
+});
+</script>
 <?php endif; ?>
 
 <!-- Card de Documento Adjunto -->
