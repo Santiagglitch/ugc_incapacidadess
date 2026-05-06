@@ -102,6 +102,13 @@ function usuario_autenticado(): bool
     return !empty(usuario_actual());
 }
 
+function super_admin_modo_pendiente(): bool
+{
+    $usuario = usuario_actual();
+    return !empty($_SESSION['super_admin_modo_pendiente'])
+        && (($usuario['cedula'] ?? '') === SUPER_ADMIN_NIT);
+}
+
 function rol_actual(): string
 {
     $usuario = usuario_actual();
@@ -112,6 +119,11 @@ function requiere_login(): void
 {
     if (!usuario_autenticado()) {
         header('Location: ' . app_base_url('index.php?view=login'));
+        exit;
+    }
+
+    if (super_admin_modo_pendiente()) {
+        header('Location: ' . app_base_url('index.php?view=seleccionar_modo'));
         exit;
     }
 }
