@@ -23,16 +23,7 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
     <p style="color:var(--muted)"><?= e(TIPOS_SOLICITUD[$solicitud['TIPO_SOLICITUD'] ?? ''] ?? ($solicitud['TIPO_SOLICITUD'] ?? '')) ?></p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <?php if ($puedeModificarSolicitud): ?>
-      <a class="btn btn-sm btn-editar" href="<?= e($editarUrl) ?>" data-click-once>Editar</a>
-      <form class="inline-form" method="post" action="<?= e(url_action('solicitud_delete')) ?>" onsubmit="return confirm('Seguro que deseas eliminar esta solicitud?')">
-        <?= csrf_input() ?>
-        <input type="hidden" name="return_to" value="<?= e(url_view('dashboard')) ?>">
-        <input type="hidden" name="_method" value="DELETE">
-        <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
-        <button class="btn btn-red" type="submit">Eliminar</button>
-      </form>
-    <?php endif; ?>
+ 
     <a class="btn btn-outline" href="<?= e(url_view('dashboard')) ?>">Volver a inicio</a>
   </div>
 </section>
