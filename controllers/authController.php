@@ -121,6 +121,10 @@ class authController
             redirect_to(url_view('login'));
         }
 
+        if (super_admin_modo_pendiente()) {
+            redirect_to(url_view('seleccionar_modo'));
+        }
+
         $user = usuario_actual();
         if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
             http_response_code(403);
