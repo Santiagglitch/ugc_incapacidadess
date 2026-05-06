@@ -27,14 +27,16 @@ $statCardClass = static fn(string $rol = ''): string => 'stat-card stat-card-lin
   <a class="<?= e($statCardClass('empleado')) ?>" href="<?= e($empleadosUrl('empleado')) ?>"><div class="num"><?= e($stats['empleado'] ?? 0) ?></div><div class="lbl">Empleados</div></a>
 </div>
 
-<div class="form-card" style="margin-bottom:18px">
-  <form method="get" action="<?= e(app_base_url('index.php')) ?>" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
+<div class="form-card empleados-filter-card">
+  <form class="empleados-filter-form" method="get" action="<?= e(app_base_url('index.php')) ?>">
     <input type="hidden" name="view" value="admin_empleados">
-    <div class="form-group" style="flex:1;min-width:240px">
+
+    <div class="form-group">
       <label>Buscar</label>
       <input type="text" name="q" value="<?= e($busqueda ?? '') ?>" placeholder="Nombre o documento">
     </div>
-    <div class="form-group" style="min-width:180px">
+
+    <div class="form-group">
       <label>Rol</label>
       <select name="rol">
         <option value="">Todos</option>
@@ -44,6 +46,7 @@ $statCardClass = static fn(string $rol = ''): string => 'stat-card stat-card-lin
         <option value="empleado" <?= ($filtroRol ?? '') === 'empleado' ? 'selected' : '' ?>>Empleado</option>
       </select>
     </div>
+
     <button class="btn btn-green" type="submit">Filtrar</button>
     <a class="btn btn-gray" href="<?= e(url_view('admin_empleados')) ?>">Limpiar</a>
   </form>

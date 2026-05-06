@@ -1939,3 +1939,124 @@ table thead th,
   transform: translateY(-1px) !important;
   box-shadow: 0 10px 20px rgba(11, 90, 43, 0.28) !important;
 }
+/* ALINEAR TODAS LAS CELDAS DE LA TABLA */
+.ugc-table tbody td{
+  vertical-align: middle !important;
+}
+
+/* Estado centrado verticalmente */
+.ugc-table td[data-label="Estado"]{
+  vertical-align: middle !important;
+}
+
+/* Badge de estado */
+.ugc-table td[data-label="Estado"] .badge{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+}
+
+/* Celda acciones: NO usar display flex en el td */
+.ugc-table td.actions-cell{
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+/* Separación entre botones */
+.ugc-table td.actions-cell .btn,
+.ugc-table td.actions-cell .inline-form{
+  margin-right: 8px !important;
+}
+
+.ugc-table td.actions-cell .btn:last-child,
+.ugc-table td.actions-cell .inline-form:last-child{
+  margin-right: 0 !important;
+}
+
+/* Form del botón eliminar */
+.ugc-table td.actions-cell .inline-form{
+  display: inline-flex !important;
+  vertical-align: middle !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+}
+
+/* BOTONES DE ACCIONES: IGUALES PERO MÁS DELGADOS */
+.ugc-table td.actions-cell .btn,
+.ugc-table td.actions-cell a.btn,
+.ugc-table td.actions-cell button.btn,
+.ugc-table td.actions-cell .inline-form .btn{
+  width: 78px !important;
+  min-width: 78px !important;
+  max-width: 78px !important;
+
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+
+  padding: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+}
+/* BUSCADOR EMPLEADOS: MISMA ANCHURA QUE LA TABLA Y EN UNA LÍNEA */
+.empleados-filter-card{
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 0 24px 0 !important;
+  padding: 28px 32px !important;
+}
+
+/* Todo en una sola fila */
+.empleados-filter-form{
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr 220px 90px 90px !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+/* Quita espacios que bajan los campos */
+.empleados-filter-form .form-group{
+  margin-bottom: 0 !important;
+  min-width: 0 !important;
+}
+
+/* Inputs alineados */
+.empleados-filter-form input,
+.empleados-filter-form select{
+  height: 50px !important;
+}
+
+/* Botones al lado, alineados */
+.empleados-filter-form .btn{
+  height: 44px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Responsive: en celular sí baja en columna */
+@media(max-width: 768px){
+  .empleados-filter-form{
+    grid-template-columns: 1fr !important;
+  }
+
+  .empleados-filter-form .btn{
+    width: 100% !important;
+  }
+}
