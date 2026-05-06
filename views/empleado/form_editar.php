@@ -2,8 +2,6 @@
 $solicitud = $solicitud ?? [];
 $user = $user ?? usuario_actual();
 
-$esAprendiz = $esAprendiz ?? false;
-$puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes = $jefes ?? [];
 $hoy = $hoy ?? date('Y-m-d');
 
@@ -33,10 +31,6 @@ $returnTo = $_GET['return_to'] ?? url_view('dashboard');
     <input type="hidden" name="id" value="<?= e($id) ?>">
     <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
 
-    <?php if (empty($puedeSeleccionarJefe)): ?>
-      <input type="hidden" name="nit_jefe" value="<?= e($solicitud['NIT_JEFE'] ?? ($user['nit_jefe'] ?? '')) ?>">
-    <?php endif; ?>
-
     <div class="form-grid">
 
       <!-- TIPO -->
@@ -54,32 +48,21 @@ $returnTo = $_GET['return_to'] ?? url_view('dashboard');
       </div>
 
       <!-- JEFE -->
-      <?php if (!empty($puedeSeleccionarJefe)): ?>
-        <div class="form-group">
-          <label>Jefe que revisa</label>
-          <select name="nit_jefe_seleccionado" required>
-            <option value="">Selecciona...</option>
+      <div class="form-group">
+        <label>Jefe que revisa</label>
+        <select name="nit_jefe_seleccionado" required>
+          <option value="">Selecciona...</option>
 
-            <?php foreach (($jefes ?? []) as $jefe): ?>
-              <option
-                value="<?= e($jefe['NIT']) ?>"
-                <?= (string)($solicitud['NIT_JEFE'] ?? '') === (string)($jefe['NIT'] ?? '') ? 'selected' : '' ?>
-              >
-                <?= e($jefe['NOMBRE_COMPLETO']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      <?php else: ?>
-        <div class="form-group">
-          <label>Jefe que revisa</label>
-          <input
-            type="text"
-            value="<?= e((string)($solicitud['NIT_JEFE'] ?? ($user['nit_jefe'] ?? ''))) ?>"
-            readonly
-          >
-        </div>
-      <?php endif; ?>
+          <?php foreach (($jefes ?? []) as $jefe): ?>
+            <option
+              value="<?= e($jefe['NIT']) ?>"
+              <?= (string)($solicitud['NIT_JEFE'] ?? '') === (string)($jefe['NIT'] ?? '') ? 'selected' : '' ?>
+            >
+              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? '')) !== '' ? ($jefe['NOMBRE_COMPLETO'] . ' - ' . ($jefe['NIT'] ?? '')) : ($jefe['NIT'] ?? '')) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
 
       <!-- FECHAS -->
       <div class="form-row">

@@ -91,25 +91,11 @@ class solicitudController
 
         $user = usuario_actual();
         $empleadoModel = new empleadoModel();
-        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
-        $jefes = $puedeSeleccionarJefe ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
-
-        if (!$puedeSeleccionarJefe && empty($user['nit_jefe'])) {
-            $jefe = $empleadoModel->getJefeInmediato((string)($user['cedula'] ?? ''));
-            if (!empty($jefe['NIT_JEFE'])) {
-                $_SESSION['usuario']['nit_jefe'] = (string)$jefe['NIT_JEFE'];
-                $_SESSION['usuario']['nombre_jefe'] = (string)($jefe['NOMBRE_JEFE'] ?? '');
-                $user = usuario_actual();
-            } else {
-                render_view('empleado/sin_jefe', compact('user'));
-                return;
-            }
-        }
+        $jefes = $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? ''));
 
         $submitToken = $this->crearSubmitToken('solicitud_create');
 
-        render_view('empleado/form_crear', compact('user', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes', 'submitToken'));
+        render_view('empleado/form_crear', compact('user', 'jefes', 'submitToken'));
     }
 
     public function crearPost(): void
@@ -132,17 +118,7 @@ class solicitudController
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
 
         $empleadoModel = new empleadoModel();
-        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
-
-        $nitJefe = $puedeSeleccionarJefe
-            ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
-            : limpiar_texto($_POST['nit_jefe'] ?? ($user['nit_jefe'] ?? ''));
-
-        if ($nitJefe === '') {
-            $jefe = $empleadoModel->getJefeInmediato((string)($user['cedula'] ?? ''));
-            $nitJefe = (string)($jefe['NIT_JEFE'] ?? '');
-        }
+        $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
 
         $errores = $this->validarSolicitud(
             $tipoSolicitud,
@@ -154,9 +130,7 @@ class solicitudController
             $nitJefe
         );
 
-        if (normalizar_documento($nitJefe) === normalizar_documento($user['cedula'] ?? '')) {
-            $errores[] = 'No puedes seleccionarte a ti mismo como jefe revisor.';
-        }
+        $nitJefe = $this->validarJefeSeleccionado($empleadoModel, $nitJefe, (string)($user['cedula'] ?? ''), $errores);
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -232,11 +206,9 @@ class solicitudController
         }
 
         $empleadoModel = new empleadoModel();
-        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
-        $jefes = $puedeSeleccionarJefe ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
+        $jefes = $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? ''));
 
-        render_view('empleado/form_editar', compact('user', 'solicitud', 'esAprendiz', 'puedeSeleccionarJefe', 'jefes'));
+        render_view('empleado/form_editar', compact('user', 'solicitud', 'jefes'));
     }
 
     public function editarPost(int $id): void
@@ -259,11 +231,7 @@ class solicitudController
         $duracionDias = $this->numeroOpcional($_POST['duracion_dias'] ?? '');
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
         $empleadoModel = new empleadoModel();
-        $esAprendiz = $empleadoModel->esAprendiz((string)($user['centro_costo'] ?? ''));
-        $puedeSeleccionarJefe = $esAprendiz || ($user['rol'] ?? '') === ROL_JEFE;
-        $nitJefe = $puedeSeleccionarJefe
-            ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
-            : (string)($solicitud['NIT_JEFE'] ?? '');
+        $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
 
         $errores = $this->validarSolicitud(
             $tipoSolicitud,
@@ -275,9 +243,7 @@ class solicitudController
             $nitJefe
         );
 
-        if (normalizar_documento($nitJefe) === normalizar_documento($user['cedula'] ?? '')) {
-            $errores[] = 'No puedes seleccionarte a ti mismo como jefe revisor.';
-        }
+        $nitJefe = $this->validarJefeSeleccionado($empleadoModel, $nitJefe, (string)($user['cedula'] ?? ''), $errores);
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -525,7 +491,7 @@ class solicitudController
         }
 
         if ($nitJefe === '') {
-            $errores[] = 'No se encontro jefe inmediato para esta solicitud.';
+            $errores[] = 'Selecciona el jefe que revisara esta solicitud.';
         }
 
         return $errores;
@@ -660,6 +626,7 @@ class solicitudController
     {
         $jefes = $empleadoModel->getTodosLosJefes();
         $excluirNit = normalizar_documento($excluirNit);
+        $adminRolesModel = new adminRolesModel();
 
         if (APP_ENV === 'development') {
             foreach (USUARIOS_PRUEBA as $cedula => $datos) {
@@ -685,6 +652,10 @@ class solicitudController
                 continue;
             }
 
+            if (!$this->puedeActuarComoJefeRevisor($jefe, $adminRolesModel)) {
+                continue;
+            }
+
             $unicos[(string)$jefe['NIT']] = $jefe;
         }
 
@@ -694,6 +665,46 @@ class solicitudController
         );
 
         return array_values($unicos);
+    }
+
+    private function puedeActuarComoJefeRevisor(array $jefe, adminRolesModel $adminRolesModel): bool
+    {
+        $nit = (string)($jefe['NIT'] ?? '');
+
+        if ($nit === '') {
+            return false;
+        }
+
+        if ($nit === SUPER_ADMIN_NIT || $adminRolesModel->esAdminAdicional($nit)) {
+            return true;
+        }
+
+        return (int)($jefe['NIVEL'] ?? 0) >= NIVEL_MIN_JEFE
+            && !in_array((string)($jefe['CENTRO_COSTO'] ?? ''), CC_RRHH, true);
+    }
+
+    private function validarJefeSeleccionado(empleadoModel $empleadoModel, string $nitJefe, string $nitEmpleado, array &$errores): string
+    {
+        $nitJefeNormalizado = normalizar_documento($nitJefe);
+
+        if ($nitJefeNormalizado === '') {
+            return '';
+        }
+
+        if ($nitJefeNormalizado === normalizar_documento($nitEmpleado)) {
+            $errores[] = 'No puedes seleccionarte a ti mismo como jefe revisor.';
+            return $nitJefe;
+        }
+
+        foreach ($this->jefesDisponibles($empleadoModel, $nitEmpleado) as $jefe) {
+            if ($nitJefeNormalizado === normalizar_documento($jefe['NIT'] ?? '')) {
+                return (string)$jefe['NIT'];
+            }
+        }
+
+        $errores[] = 'Selecciona un jefe revisor valido.';
+
+        return $nitJefe;
     }
 
     private function validarPost(): void
