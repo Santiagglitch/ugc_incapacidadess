@@ -1,6 +1,4 @@
 <?php
-$esAprendiz = $esAprendiz ?? false;
-$puedeSeleccionarJefe = $puedeSeleccionarJefe ?? $esAprendiz;
 $jefes      = $jefes ?? [];
 $hoy        = $hoy ?? date('Y-m-d');
 ?>
@@ -17,10 +15,6 @@ $hoy        = $hoy ?? date('Y-m-d');
     <?= csrf_input() ?>
     <input type="hidden" name="_submit_token" value="<?= e($submitToken ?? '') ?>">
 
-    <?php if (empty($puedeSeleccionarJefe)): ?>
-      <input type="hidden" name="nit_jefe" value="<?= e($user['nit_jefe'] ?? '') ?>">
-    <?php endif; ?>
-
     <div class="form-grid">
 
       <!-- TIPO -->
@@ -35,31 +29,17 @@ $hoy        = $hoy ?? date('Y-m-d');
       </div>
 
       <!-- JEFE -->
-      <?php if (!empty($puedeSeleccionarJefe)): ?>
       <div class="form-group">
         <label>Jefe que revisa</label>
         <select name="nit_jefe_seleccionado" required>
           <option value="">Selecciona...</option>
           <?php foreach (($jefes ?? []) as $jefe): ?>
-            <option
-              value="<?= e($jefe['NIT']) ?>"
-              <?= (string)($user['nit_jefe'] ?? '') === (string)($jefe['NIT'] ?? '') ? 'selected' : '' ?>
-            >
-              <?= e($jefe['NOMBRE_COMPLETO']) ?>
+            <option value="<?= e($jefe['NIT']) ?>">
+              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? '')) !== '' ? ($jefe['NOMBRE_COMPLETO'] . ' - ' . ($jefe['NIT'] ?? '')) : ($jefe['NIT'] ?? '')) ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
-      <?php else: ?>
-      <div class="form-group">
-        <label>Jefe que revisa</label>
-        <input
-          type="text"
-          value="<?= e(trim((string)($user['nombre_jefe'] ?? '')) !== '' ? ($user['nombre_jefe'] . ' - ' . ($user['nit_jefe'] ?? '')) : ($user['nit_jefe'] ?? '')) ?>"
-          readonly
-        >
-      </div>
-      <?php endif; ?>
 
       <!-- FECHAS -->
       <div class="form-row">
