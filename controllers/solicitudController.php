@@ -19,6 +19,7 @@ class solicitudController
     public function listar(): void
     {
         requiere_login();
+
         $user = usuario_actual();
         $rol = $user['rol'] ?? '';
         $tipo = limpiar_texto($_GET['tipo'] ?? '');
@@ -28,54 +29,113 @@ class solicitudController
         if ($rol === ROL_ADMIN) {
             $solicitudes = $this->model->getAll(['estado' => $estado]);
             $titulo = 'Todas las solicitudes';
+
         } elseif ($rol === ROL_RRHH) {
             if ($tipo === 'aprobadas') {
                 $solicitudes = $this->model->getAll(['estado' => ESTADO_APROBADO_RRHH]);
                 $titulo = 'Aprobadas por Talento Humano';
+
             } elseif ($tipo === 'rechazadas') {
                 $solicitudes = $this->model->getAll(['estado' => ESTADO_RECHAZADO_RRHH]);
                 $titulo = 'Rechazadas por Talento Humano';
+
+            } elseif ($tipo === 'canceladas') {
+                $solicitudes = $this->model->getAll(['estado' => ESTADO_CANCELADO_AGENDA]);
+                $titulo = 'Agendas canceladas';
+
             } elseif ($tipo === 'historico') {
                 $solicitudes = $this->model->getHistoricoRRHH();
                 $titulo = 'Historial gestionado por Talento Humano';
+
             } elseif ($tipo === 'revision_jefe') {
                 $solicitudes = $this->model->getAll(['estado' => ESTADO_PENDIENTE_JEFE]);
                 $titulo = 'En revision de jefe';
+
             } else {
                 $solicitudes = $this->model->getPendientesRRHH();
                 $titulo = 'Pendientes de Talento Humano';
             }
+
         } elseif ($rol === ROL_JEFE) {
             $gestionadas = $this->model->getGestionadasByJefe($user['cedula']);
 
             if ($tipo === 'aprobadas') {
-                $solicitudes = array_values(array_filter($gestionadas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH], true)));
+                $solicitudes = array_values(array_filter(
+                    $gestionadas,
+                    fn($s) => in_array(
+                        ($s['ESTADO'] ?? ''),
+                        [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH],
+                        true
+                    )
+                ));
                 $titulo = 'Aprobadas por mi';
+
             } elseif ($tipo === 'rechazadas') {
-                $solicitudes = array_values(array_filter($gestionadas, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_RECHAZADO_JEFE));
+                $solicitudes = array_values(array_filter(
+                    $gestionadas,
+                    fn($s) => ($s['ESTADO'] ?? '') === ESTADO_RECHAZADO_JEFE
+                ));
                 $titulo = 'Rechazadas por mi';
+
+            } elseif ($tipo === 'canceladas') {
+                $solicitudes = array_values(array_filter(
+                    $gestionadas,
+                    fn($s) => ($s['ESTADO'] ?? '') === ESTADO_CANCELADO_AGENDA
+                ));
+                $titulo = 'Agendas canceladas';
+
             } elseif ($tipo === 'mis_solicitudes') {
                 $solicitudes = $this->model->getByEmpleado($user['cedula']);
                 $titulo = 'Mis solicitudes personales';
+
             } elseif ($tipo === 'gestionadas') {
                 $solicitudes = $gestionadas;
                 $titulo = 'Historial gestionado';
+
             } else {
                 $solicitudes = $this->model->getPendientesJefe($user['cedula']);
                 $titulo = 'Pendientes de aprobacion';
             }
+
         } else {
             $todas = $this->model->getByEmpleado($user['cedula']);
 
             if ($tipo === 'pendientes') {
-                $solicitudes = array_values(array_filter($todas, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE));
+                $solicitudes = array_values(array_filter(
+                    $todas,
+                    fn($s) => ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE
+                ));
                 $titulo = 'Mis solicitudes pendientes';
+
             } elseif ($tipo === 'aprobadas') {
-                $solicitudes = array_values(array_filter($todas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)));
+                $solicitudes = array_values(array_filter(
+                    $todas,
+                    fn($s) => in_array(
+                        ($s['ESTADO'] ?? ''),
+                        [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH],
+                        true
+                    )
+                ));
                 $titulo = 'Mis solicitudes aprobadas';
+
             } elseif ($tipo === 'rechazadas') {
-                $solicitudes = array_values(array_filter($todas, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH], true)));
+                $solicitudes = array_values(array_filter(
+                    $todas,
+                    fn($s) => in_array(
+                        ($s['ESTADO'] ?? ''),
+                        [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH],
+                        true
+                    )
+                ));
                 $titulo = 'Mis solicitudes rechazadas';
+
+            } elseif ($tipo === 'canceladas') {
+                $solicitudes = array_values(array_filter(
+                    $todas,
+                    fn($s) => ($s['ESTADO'] ?? '') === ESTADO_CANCELADO_AGENDA
+                ));
+                $titulo = 'Mis agendas canceladas';
+
             } else {
                 $solicitudes = $todas;
                 $titulo = 'Mis solicitudes';
@@ -130,7 +190,12 @@ class solicitudController
             $nitJefe
         );
 
-        $nitJefe = $this->validarJefeSeleccionado($empleadoModel, $nitJefe, (string)($user['cedula'] ?? ''), $errores);
+        $nitJefe = $this->validarJefeSeleccionado(
+            $empleadoModel,
+            $nitJefe,
+            (string)($user['cedula'] ?? ''),
+            $errores
+        );
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -166,8 +231,14 @@ class solicitudController
 
         if ($ok) {
             $idSolicitud = $this->model->getUltimoIdByEmpleado((string)$user['cedula']);
+
             $notificaciones = new notificacionService();
-            $notificaciones->notificarNuevaSolicitud($idSolicitud, (string)$user['cedula'], $nitJefe, $tipoSolicitud);
+            $notificaciones->notificarNuevaSolicitud(
+                $idSolicitud,
+                (string)$user['cedula'],
+                $nitJefe,
+                $tipoSolicitud
+            );
         }
 
         flash_set(
@@ -242,6 +313,7 @@ class solicitudController
         $duracionHoras = $this->numeroOpcional($_POST['duracion_horas'] ?? '');
         $duracionDias = $this->numeroOpcional($_POST['duracion_dias'] ?? '');
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
+
         $empleadoModel = new empleadoModel();
         $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
 
@@ -255,7 +327,12 @@ class solicitudController
             $nitJefe
         );
 
-        $nitJefe = $this->validarJefeSeleccionado($empleadoModel, $nitJefe, (string)($user['cedula'] ?? ''), $errores);
+        $nitJefe = $this->validarJefeSeleccionado(
+            $empleadoModel,
+            $nitJefe,
+            (string)($user['cedula'] ?? ''),
+            $errores
+        );
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));
@@ -264,7 +341,9 @@ class solicitudController
 
         $rutaPdfActual = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
         $rutaPdfNueva = null;
-        $hayNuevoPdf = isset($_FILES['documento_pdf']) && ($_FILES['documento_pdf']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+        $hayNuevoPdf = isset($_FILES['documento_pdf'])
+            && ($_FILES['documento_pdf']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
 
         if ($hayNuevoPdf) {
             $rutaPdfNueva = $this->procesarArchivoPDF((string)$user['cedula']);
@@ -324,7 +403,11 @@ class solicitudController
             redirect_to($this->returnTo(url_view('dashboard')));
         }
 
-        $this->validarObservacionGestion($accion, $obs, 'Para rechazar la solicitud debes escribir obligatoriamente el motivo.');
+        $this->validarObservacionGestion(
+            $accion,
+            $obs,
+            'Para rechazar la solicitud debes escribir obligatoriamente el motivo.'
+        );
 
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarJefe($id, $user['cedula'], $obs)
@@ -374,7 +457,11 @@ class solicitudController
             redirect_to($this->returnTo(url_view('dashboard')));
         }
 
-        $this->validarObservacionGestion($accion, $obs, 'Para rechazar la solicitud en Talento Humano debes escribir obligatoriamente el motivo.');
+        $this->validarObservacionGestion(
+            $accion,
+            $obs,
+            'Para rechazar la solicitud en Talento Humano debes escribir obligatoriamente el motivo.'
+        );
 
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarRRHH($id, $user['cedula'], $obs)
@@ -404,6 +491,55 @@ class solicitudController
         flash_set(
             $ok ? 'success' : 'error',
             $ok ? 'Gestion de RRHH guardada.' : 'No se pudo gestionar la solicitud.'
+        );
+
+        redirect_to($this->returnTo(url_view('dashboard')));
+    }
+
+    public function cancelarAgenda(?int $id = null): void
+    {
+        requiere_login();
+        $this->validarPost();
+
+        $id = $id ?? (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0) {
+            flash_set('error', 'Solicitud no valida.');
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
+
+        $user = usuario_actual();
+        $solicitud = $this->model->getById($id);
+
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeCancelarAgenda($solicitud, $user)) {
+            http_response_code(403);
+            exit('No tienes permisos para cancelar esta agenda.');
+        }
+
+        $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
+        $nitJefeSolicitud = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
+
+        $esJefeAsignado = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
+            && $nitJefeSolicitud === $cedulaUsuario;
+
+        $esGestor = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
+            || $esJefeAsignado;
+
+        $ok = $this->model->cancelarAgenda(
+            $id,
+            (string)($user['cedula'] ?? ''),
+            $esGestor
+        );
+
+        flash_set(
+            $ok ? 'success' : 'error',
+            $ok
+                ? 'Agenda cancelada correctamente. El permiso ya no queda vigente.'
+                : 'No se pudo cancelar la agenda. Verifica que la solicitud siga aprobada por jefe o Talento Humano.'
         );
 
         redirect_to($this->returnTo(url_view('dashboard')));
@@ -656,6 +792,26 @@ class solicitudController
             && $estado === ESTADO_PENDIENTE_JEFE;
     }
 
+    private function puedeCancelarAgenda(array $solicitud, array $user): bool
+    {
+        $estado = (string)($solicitud['ESTADO'] ?? '');
+        $rol = $user['rol'] ?? '';
+        $cedula = normalizar_documento($user['cedula'] ?? '');
+
+        $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+        $nitJefe = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
+
+        $esDuenoSolicitud = $nitEmpleado === $cedula;
+
+        $esJefeAsignado = in_array($rol, [ROL_JEFE, ROL_ADMIN], true)
+            && $nitJefe === $cedula;
+
+        $esRrhhOAdmin = in_array($rol, [ROL_RRHH, ROL_ADMIN], true);
+
+        return in_array($estado, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)
+            && ($esDuenoSolicitud || $esJefeAsignado || $esRrhhOAdmin);
+    }
+
     private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array
     {
         $jefes = $empleadoModel->getTodosLosJefes();
@@ -695,7 +851,10 @@ class solicitudController
 
         uasort(
             $unicos,
-            static fn($a, $b) => strcmp((string)($a['NOMBRE_COMPLETO'] ?? ''), (string)($b['NOMBRE_COMPLETO'] ?? ''))
+            static fn($a, $b) => strcmp(
+                (string)($a['NOMBRE_COMPLETO'] ?? ''),
+                (string)($b['NOMBRE_COMPLETO'] ?? '')
+            )
         );
 
         return array_values($unicos);
@@ -717,8 +876,12 @@ class solicitudController
             && !in_array((string)($jefe['CENTRO_COSTO'] ?? ''), CC_RRHH, true);
     }
 
-    private function validarJefeSeleccionado(empleadoModel $empleadoModel, string $nitJefe, string $nitEmpleado, array &$errores): string
-    {
+    private function validarJefeSeleccionado(
+        empleadoModel $empleadoModel,
+        string $nitJefe,
+        string $nitEmpleado,
+        array &$errores
+    ): string {
         $nitJefeNormalizado = normalizar_documento($nitJefe);
 
         if ($nitJefeNormalizado === '') {

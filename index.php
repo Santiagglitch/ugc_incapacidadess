@@ -12,7 +12,19 @@ require_once __DIR__ . '/controllers/notificacionController.php';
 iniciar_sesion_segura();
 aplicar_headers_seguridad();
 
-$action = $_GET['action'] ?? '';
+/*
+|--------------------------------------------------------------------------
+| Acción
+|--------------------------------------------------------------------------
+| Primero se lee desde POST porque algunos botones envían la acción
+| por input hidden, como Cancelar agenda.
+*/
+$action = trim((string)($_POST['action'] ?? ''));
+
+if ($action === '') {
+    $action = trim((string)($_GET['action'] ?? ''));
+}
+
 $view = trim((string) ($_GET['view'] ?? 'login'), '/');
 $method = strtoupper((string) ($_POST['_method'] ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET')));
 
@@ -28,10 +40,6 @@ if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
 
         case 'seleccionar_modo':
             (new authController())->seleccionarModoPost();
-            break;
-            
-case 'cambiar_modo':
-            (new authController())->cambiarModo();
             break;
 
         case 'cambiar_modo':
@@ -52,6 +60,10 @@ case 'cambiar_modo':
 
         case 'solicitud_rrhh':
             (new solicitudController())->gestionRrhhPost((int) ($_POST['id'] ?? 0));
+            break;
+
+        case 'solicitud_cancelar_agenda':
+            (new solicitudController())->cancelarAgenda((int) ($_POST['id'] ?? 0));
             break;
 
         case 'solicitud_delete':
@@ -78,6 +90,8 @@ case 'cambiar_modo':
             http_response_code(404);
             exit('Accion no encontrada.');
     }
+
+    exit;
 }
 
 switch ($view) {
