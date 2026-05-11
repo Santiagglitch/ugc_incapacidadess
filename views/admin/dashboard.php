@@ -37,4 +37,4 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
   <a href="<?= e($historialUrl('rechazado_rrhh')) ?>" class="<?= e($historialCardClass('rechazado_rrhh')) ?>"><div class="stat-icon">&times;</div><div class="num"><?= e($stats[ESTADO_RECHAZADO_RRHH] ?? 0) ?></div><div class="lbl">Rechazadas RRHH</div></a>
 </div>
 <div id="historial-admin" class="section-header"><h2><?= e($historialTitulo) ?></h2></div>
-<?php $solicitudes = $historialSolicitudes ?? []; $paginationParam = 'pag_admin'; $paginationLabel = 'solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
+<?php $solicitudes = $historialSolicitudes ?? []; $paginationData = $historialPaginationData ?? null; $paginationParam = 'pag_admin'; $paginationLabel = 'solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>

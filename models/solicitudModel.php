@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/mainModel.php';
+require_once __DIR__ . '/../config/app.php';
 
 class solicitudModel extends mainModel
 {
@@ -138,41 +139,79 @@ class solicitudModel extends mainModel
 
     public function getAll(array $filtros = []): array
     {
-        $where = ['ACTIVO=1'];
-        $binds = [];
-
-        if (!empty($filtros['estado'])) {
-            $where[] = 'ESTADO=:estado';
-            $binds[':estado'] = $filtros['estado'];
-        }
-
-        if (!empty($filtros['tipo'])) {
-            $where[] = 'TIPO_SOLICITUD=:tipo';
-            $binds[':tipo'] = $filtros['tipo'];
-        }
-
-        if (!empty($filtros['nit'])) {
-            $where[] = '(NIT_EMPLEADO=:nit_emp OR NIT_JEFE=:nit_jefe)';
-            $binds[':nit_emp'] = $filtros['nit'];
-            $binds[':nit_jefe'] = $filtros['nit'];
-        }
+        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
 
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE " . implode(' AND ', $where) . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql
              ORDER BY FECHA_CREACION DESC",
             $binds
         );
     }
 
-    public function contarPorEstado(): array
+    public function getAllPaginado(array $filtros = [], int $pagina = 1, int $porPagina = 6, string $orden = 'FECHA_CREACION DESC'): array
     {
+        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
+
+        return $this->paginar(
+            "SELECT " . self::LIST_SELECT . "
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql",
+            $binds,
+            $orden,
+            $pagina,
+            $porPagina
+        );
+    }
+
+    public function getByEmpleadoPaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
+    {
+        $filtros['nit_empleado'] = $nit;
+
+        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_CREACION DESC');
+    }
+
+    public function getPendientesJefePaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
+    {
+        $filtros['nit_jefe'] = $nit;
+        $filtros['excluir_empleado'] = $nit;
+        $filtros['estado'] = ESTADO_PENDIENTE_JEFE;
+
+        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_CREACION ASC');
+    }
+
+    public function getGestionadasByJefePaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
+    {
+        $filtros['nit_jefe'] = $nit;
+        $filtros['excluir_empleado'] = $nit;
+        $filtros['estados'] = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
+
+        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_GESTION_JEFE DESC');
+    }
+
+    public function contarTotal(array $filtros = []): int
+    {
+        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
+        $row = $this->consultarUno(
+            "SELECT COUNT(*) AS TOTAL
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql",
+            $binds
+        );
+
+        return (int)($row['TOTAL'] ?? 0);
+    }
+
+    public function contarPorEstado(array $filtros = []): array
+    {
+        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
         $rows = $this->consultarTodo(
             "SELECT ESTADO, COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE ACTIVO=1
-             GROUP BY ESTADO"
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql
+             GROUP BY ESTADO",
+            $binds
         );
 
         $result = [];
@@ -207,9 +246,17 @@ class solicitudModel extends mainModel
     public function getResumenJefe(string $nit): array
     {
         return [
-            'pendientes' => count($this->getPendientesJefe($nit)),
-            'gestionadas' => count($this->getGestionadasByJefe($nit)),
-            'misSolicitudes' => count($this->getByEmpleado($nit)),
+            'pendientes' => $this->contarTotal([
+                'nit_jefe' => $nit,
+                'excluir_empleado' => $nit,
+                'estado' => ESTADO_PENDIENTE_JEFE,
+            ]),
+            'gestionadas' => $this->contarTotal([
+                'nit_jefe' => $nit,
+                'excluir_empleado' => $nit,
+                'estados' => [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH],
+            ]),
+            'misSolicitudes' => $this->contarTotal(['nit_empleado' => $nit]),
         ];
     }
 
@@ -254,6 +301,197 @@ class solicitudModel extends mainModel
                 ':permitir_aprobado_jefe' => $permitirAprobadoJefe,
             ]
         );
+    }
+
+    private function buildSolicitudWhere(array $filtros): array
+    {
+        $where = ['s.ACTIVO=1'];
+        $binds = [];
+
+        if (!empty($filtros['estado'])) {
+            $where[] = 's.ESTADO=:estado';
+            $binds[':estado'] = $filtros['estado'];
+        }
+
+        if (!empty($filtros['estados']) && is_array($filtros['estados'])) {
+            $estados = array_values(array_unique(array_filter(
+                array_map('strval', $filtros['estados']),
+                static fn(string $estado): bool => $estado !== ''
+            )));
+
+            if (!empty($estados)) {
+                [$inClause, $estadoBinds] = $this->buildInClause($estados, 'estado_');
+                $where[] = "s.ESTADO IN ($inClause)";
+                $binds += $estadoBinds;
+            }
+        }
+
+        if (!empty($filtros['tipo'])) {
+            $where[] = 's.TIPO_SOLICITUD=:tipo';
+            $binds[':tipo'] = $filtros['tipo'];
+        }
+
+        if (!empty($filtros['nit'])) {
+            $where[] = '(s.NIT_EMPLEADO=:nit_emp OR s.NIT_JEFE=:nit_jefe)';
+            $binds[':nit_emp'] = $filtros['nit'];
+            $binds[':nit_jefe'] = $filtros['nit'];
+        }
+
+        if (!empty($filtros['nit_empleado'])) {
+            $where[] = 's.NIT_EMPLEADO=:nit_empleado';
+            $binds[':nit_empleado'] = $filtros['nit_empleado'];
+        }
+
+        if (!empty($filtros['nit_jefe'])) {
+            $where[] = 's.NIT_JEFE=:nit_jefe_directo';
+            $binds[':nit_jefe_directo'] = $filtros['nit_jefe'];
+        }
+
+        if (!empty($filtros['excluir_empleado'])) {
+            $where[] = 's.NIT_EMPLEADO<>:excluir_empleado';
+            $binds[':excluir_empleado'] = $filtros['excluir_empleado'];
+        }
+
+        $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
+        if ($busqueda !== '') {
+            $like = '%' . $this->escapeLike(mb_strtoupper($busqueda, 'UTF-8')) . '%';
+            $condicionesBusqueda = [
+                "TO_CHAR(s.ID) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.NIT_EMPLEADO) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.NIT_JEFE) LIKE :q_like ESCAPE '\\'",
+                "UPPER(NVL(s.NIT_RRHH, '')) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.TIPO_SOLICITUD) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.ESTADO) LIKE :q_like ESCAPE '\\'",
+                "UPPER(NVL(s.OBSERVACIONES, '')) LIKE :q_like ESCAPE '\\'",
+                "EXISTS (
+                    SELECT 1
+                    FROM EMPLEADO emp
+                    WHERE emp.EMPRESA='BA2'
+                      AND emp.ESTADO='A'
+                      AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
+                      AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
+                )",
+            ];
+            $binds[':q_like'] = $like;
+
+            $tipos = $this->tiposSolicitudCoincidentes($busqueda);
+            if (!empty($tipos)) {
+                [$inClause, $tipoBinds] = $this->buildInClause($tipos, 'tipo_busqueda_');
+                $condicionesBusqueda[] = "s.TIPO_SOLICITUD IN ($inClause)";
+                $binds += $tipoBinds;
+            }
+
+            $where[] = '(' . implode(' OR ', $condicionesBusqueda) . ')';
+        }
+
+        return [implode(' AND ', $where), $binds];
+    }
+
+    private function normalizarFiltroBusqueda(string $busqueda): string
+    {
+        $busqueda = trim(preg_replace('/\s+/', ' ', $busqueda) ?? '');
+
+        if ($busqueda === '') {
+            return '';
+        }
+
+        return function_exists('mb_substr') ? mb_substr($busqueda, 0, 100, 'UTF-8') : substr($busqueda, 0, 100);
+    }
+
+    private function escapeLike(string $valor): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $valor);
+    }
+
+    private function tiposSolicitudCoincidentes(string $busqueda): array
+    {
+        $needle = $this->normalizarTextoBusqueda($busqueda);
+
+        if ($needle === '') {
+            return [];
+        }
+
+        $tipos = [];
+
+        foreach (TIPOS_SOLICITUD as $key => $label) {
+            $texto = $this->normalizarTextoBusqueda((string)$key . ' ' . (string)$label);
+            if ($texto !== '' && str_contains($texto, $needle)) {
+                $tipos[] = (string)$key;
+            }
+        }
+
+        return $tipos;
+    }
+
+    private function normalizarTextoBusqueda(string $texto): string
+    {
+        $texto = trim($texto);
+
+        if ($texto === '') {
+            return '';
+        }
+
+        $texto = function_exists('mb_strtolower') ? mb_strtolower($texto, 'UTF-8') : strtolower($texto);
+
+        if (function_exists('iconv')) {
+            $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+            if ($ascii !== false) {
+                $texto = $ascii;
+            }
+        }
+
+        $texto = strtolower($texto);
+        $texto = preg_replace('/[^a-z0-9]+/i', ' ', $texto) ?? '';
+
+        return trim(preg_replace('/\s+/', ' ', $texto) ?? '');
+    }
+
+    private function paginar(string $sqlBase, array $binds, string $orden, int $pagina, int $porPagina): array
+    {
+        $porPagina = max(1, $porPagina);
+        $total = $this->contarSqlBase($sqlBase, $binds);
+        $totalPaginas = max(1, (int)ceil($total / $porPagina));
+        $pagina = max(1, min($totalPaginas, $pagina));
+        $offset = ($pagina - 1) * $porPagina;
+
+        $orden = $this->ordenSeguro($orden);
+        $rows = $this->consultarTodo(
+            "$sqlBase
+             ORDER BY $orden
+             OFFSET $offset ROWS FETCH NEXT $porPagina ROWS ONLY",
+            $binds
+        );
+
+        return [
+            'rows' => $rows,
+            'pagination' => [
+                'current' => $pagina,
+                'totalPages' => $totalPaginas,
+                'total' => $total,
+                'perPage' => $porPagina,
+            ],
+        ];
+    }
+
+    private function contarSqlBase(string $sqlBase, array $binds): int
+    {
+        $row = $this->consultarUno(
+            "SELECT COUNT(*) AS TOTAL FROM ($sqlBase)",
+            $binds
+        );
+
+        return (int)($row['TOTAL'] ?? 0);
+    }
+
+    private function ordenSeguro(string $orden): string
+    {
+        $permitidos = [
+            'FECHA_CREACION DESC',
+            'FECHA_CREACION ASC',
+            'FECHA_GESTION_JEFE DESC',
+        ];
+
+        return in_array($orden, $permitidos, true) ? $orden : 'FECHA_CREACION DESC';
     }
 
     public function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data, bool $permitirAprobadoJefe = false): bool

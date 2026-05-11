@@ -17,6 +17,8 @@ function iniciar_sesion_segura(): void
     if ($sessionPath !== '' && is_dir($sessionPath) && is_writable($sessionPath)) {
         ini_set('session.save_path', $sessionPath);
     }
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.lazy_write', '1');
     session_name('UGC_SOL');
     session_set_cookie_params([
         'lifetime' => 0,

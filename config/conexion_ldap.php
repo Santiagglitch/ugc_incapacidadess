@@ -17,6 +17,9 @@ function ldap_conectar()
 
     ldap_set_option($conexion, LDAP_OPT_PROTOCOL_VERSION, 3);
     ldap_set_option($conexion, LDAP_OPT_REFERRALS, 0);
+    if (defined('LDAP_NETWORK_TIMEOUT')) {
+        @ldap_set_option($conexion, LDAP_OPT_NETWORK_TIMEOUT, (int) LDAP_NETWORK_TIMEOUT);
+    }
 
     if (!@ldap_bind($conexion, LDAP_USER, LDAP_PASSWORD)) {
         @ldap_unbind($conexion);
@@ -47,7 +50,15 @@ function ldap_autenticar_usuario(string $cedula, string $password): ?array
 
         $filtro = '(uid=' . $cedulaEscapada . ')';
         $attrs = ['cn', 'mail', 'telephonenumber', 'department', 'title'];
-        $busqueda = @ldap_search($conexion, LDAP_TREE, $filtro, $attrs);
+        $busqueda = @ldap_search(
+            $conexion,
+            LDAP_TREE,
+            $filtro,
+            $attrs,
+            0,
+            1,
+            defined('LDAP_SEARCH_TIMEOUT') ? (int) LDAP_SEARCH_TIMEOUT : 0
+        );
 
         if (!$busqueda) {
             return null;

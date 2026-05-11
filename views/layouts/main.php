@@ -261,6 +261,14 @@ $csrfToken = csrf_token();
 
 <script>
 (function () {
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+})();
+
+(function () {
   var flashes = document.querySelectorAll('[data-flash-message]');
 
   if (!flashes.length) {
@@ -624,14 +632,31 @@ $csrfToken = csrf_token();
       return;
     }
 
+    if (item.dataset.loading === 'true') {
+      return;
+    }
+
+    item.dataset.loading = 'true';
+    item.disabled = true;
+
     post(urls.read, {
       id: item.dataset.id
     }).then(function () {
       window.location.href = urls.detail + '&id=' + encodeURIComponent(item.dataset.solicitud);
+    }).catch(function () {
+      item.dataset.loading = 'false';
+      item.disabled = false;
     });
   });
 
   readAll.addEventListener('click', function () {
+    if (readAll.dataset.loading === 'true') {
+      return;
+    }
+
+    readAll.dataset.loading = 'true';
+    readAll.disabled = true;
+
     post(urls.readAll, {}).then(function () {
       lastNotifCount = 0;
       firstCountLoad = false;
@@ -639,6 +664,11 @@ $csrfToken = csrf_token();
 
       setCount(0);
       loadList();
+    }).catch(function () {
+      // Mantiene la campana usable si falla la peticion.
+    }).then(function () {
+      readAll.dataset.loading = 'false';
+      readAll.disabled = false;
     });
   });
 

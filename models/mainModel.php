@@ -23,6 +23,10 @@ class mainModel
                 return false;
             }
 
+            if (function_exists('oci_set_prefetch')) {
+                @oci_set_prefetch($stmt, 100);
+            }
+
             foreach ($params as $nombre => &$valor) {
                 if ($nombre === '' || $nombre[0] !== ':') {
                     $nombre = ':' . $nombre;
@@ -62,8 +66,15 @@ class mainModel
 
     protected function consultarUno(string $sql, array $params = []): ?array
     {
-        $rows = $this->consultarTodo($sql, $params);
-        return $rows[0] ?? null;
+        $stmt = $this->ejecutarConsulta($sql, $params);
+        if (!$stmt) {
+            return null;
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return is_array($row) ? $row : null;
     }
 
     protected function ejecutar(string $sql, array $params = []): bool
@@ -72,8 +83,11 @@ class mainModel
         if (!$stmt) {
             return false;
         }
+
+        $affectedRows = oci_num_rows($stmt);
         oci_free_statement($stmt);
-        return true;
+
+        return $affectedRows > 0;
     }
 
     protected function buildInClause(array $values, string $prefix): array
