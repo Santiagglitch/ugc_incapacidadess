@@ -51,19 +51,21 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 
     <tbody>
       <?php foreach ($solicitudesPagina as $s): ?>
+        <?php
+          $nombreEmpleado = trim((string)($s['NOMBRE_EMPLEADO'] ?? ''));
+          $nombreJefe = trim((string)($s['NOMBRE_JEFE'] ?? ''));
+        ?>
         <tr>
           <td data-label="ID">
             #<?= e($s['ID'] ?? '') ?>
           </td>
 
           <td data-label="Empleado">
-            <strong><?= e($s['NOMBRE_EMPLEADO'] ?? ($s['NIT_EMPLEADO'] ?? '')) ?></strong>
-            <span class="table-subtext"><?= e($s['NIT_EMPLEADO'] ?? '') ?></span>
+            <strong><?= e($nombreEmpleado) ?></strong>
           </td>
 
           <td data-label="Jefe">
-            <strong><?= e($s['NOMBRE_JEFE'] ?? ($s['NIT_JEFE'] ?? '')) ?></strong>
-            <span class="table-subtext"><?= e($s['NIT_JEFE'] ?? '') ?></span>
+            <strong><?= e($nombreJefe) ?></strong>
           </td>
 
           <td data-label="Tipo">
