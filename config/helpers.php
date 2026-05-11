@@ -24,6 +24,59 @@ function redirect_to(string $url): void
     exit;
 }
 
+function app_url_interna(string $url): bool
+{
+    $url = trim($url);
+
+    if ($url === '' || preg_match('/[\x00-\x1F\x7F]/', $url)) {
+        return false;
+    }
+
+    $parts = parse_url($url);
+    if ($parts === false) {
+        return false;
+    }
+
+    if (!empty($parts['scheme']) || !empty($parts['host'])) {
+        $scheme = strtolower((string)($parts['scheme'] ?? ''));
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        $host = strtolower((string)($parts['host'] ?? ''));
+        $requestHost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+        if ($requestHost !== '') {
+            $hostWithPort = $host . (isset($parts['port']) ? ':' . (int)$parts['port'] : '');
+            if ($host !== preg_replace('/:\d+$/', '', $requestHost) && $hostWithPort !== $requestHost) {
+                return false;
+            }
+        } elseif ($host !== '') {
+            return false;
+        }
+    }
+
+    $basePath = '/' . trim((string)(parse_url(app_base_url(''), PHP_URL_PATH) ?: '/'), '/');
+    $basePath = $basePath === '/' ? '/' : rtrim($basePath, '/');
+    $path = (string)($parts['path'] ?? '');
+
+    if ($path === '') {
+        return false;
+    }
+
+    if ($basePath === '/') {
+        return str_starts_with($path, '/');
+    }
+
+    return $path === $basePath || str_starts_with($path, $basePath . '/');
+}
+
+function url_retorno_segura(?string $url, string $fallback): string
+{
+    $url = (string)($url ?? '');
+
+    return app_url_interna($url) ? $url : $fallback;
+}
+
 function flash_set(string $type, string $message): void
 {
     iniciar_sesion_segura();

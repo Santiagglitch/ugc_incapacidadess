@@ -14,7 +14,7 @@ $duracionDias = (string)($solicitud['DURACION_DIAS'] ?? '');
 $observaciones = (string)($solicitud['OBSERVACIONES'] ?? '');
 $rutaComprobante = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
 
-$returnTo = $_GET['return_to'] ?? url_view('dashboard');
+$returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard'));
 ?>
 
 <section class="page-header animate-fade-down">

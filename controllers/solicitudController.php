@@ -185,7 +185,11 @@ class solicitudController
         $user = usuario_actual();
         $solicitud = $this->model->getById($id);
 
-        if (!$solicitud || !$this->puedeVer($solicitud, $user)) {
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeVer($solicitud, $user)) {
             http_response_code(403);
             exit('Sin permiso para ver esta solicitud.');
         }
@@ -200,7 +204,11 @@ class solicitudController
         $user = usuario_actual();
         $solicitud = $this->model->getById($id);
 
-        if (!$solicitud || !$this->puedeEditar($solicitud, $user)) {
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeEditar($solicitud, $user)) {
             http_response_code(403);
             exit('No tienes permisos para editar esta solicitud.');
         }
@@ -219,7 +227,11 @@ class solicitudController
         $user = usuario_actual();
         $solicitud = $this->model->getById($id);
 
-        if (!$solicitud || !$this->puedeEditar($solicitud, $user)) {
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeEditar($solicitud, $user)) {
             http_response_code(403);
             exit('No tienes permisos para editar esta solicitud.');
         }
@@ -401,7 +413,11 @@ class solicitudController
         $user = usuario_actual();
         $solicitud = $this->model->getById($id);
 
-        if (!$solicitud || !$this->puedeEditar($solicitud, $user)) {
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeEditar($solicitud, $user)) {
             http_response_code(403);
             exit('No tienes permisos para eliminar esta solicitud.');
         }
@@ -589,18 +605,25 @@ class solicitudController
     private function returnTo(string $fallback): string
     {
         $returnTo = (string)($_POST['return_to'] ?? '');
+        $returnTo = $returnTo !== '' ? $returnTo : (string)($_GET['return_to'] ?? '');
 
-        if ($returnTo !== '' && str_starts_with($returnTo, app_base_url(''))) {
+        if (app_url_interna($returnTo)) {
             return $returnTo;
         }
 
         $referer = (string)($_SERVER['HTTP_REFERER'] ?? '');
 
-        if ($referer !== '' && str_contains($referer, BASE_URL)) {
+        if (app_url_interna($referer)) {
             return $referer;
         }
 
         return $fallback;
+    }
+
+    private function redirigirSolicitudBorrada(): void
+    {
+        flash_set('error', 'Esta solicitud ha sido borrada y ya no esta disponible.');
+        redirect_to($this->returnTo(url_view('dashboard')));
     }
 
     private function puedeVer(array $solicitud, array $user): bool

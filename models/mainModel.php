@@ -72,8 +72,11 @@ class mainModel
         if (!$stmt) {
             return false;
         }
+
+        $affectedRows = oci_num_rows($stmt);
         oci_free_statement($stmt);
-        return true;
+
+        return $affectedRows > 0;
     }
 
     protected function buildInClause(array $values, string $prefix): array

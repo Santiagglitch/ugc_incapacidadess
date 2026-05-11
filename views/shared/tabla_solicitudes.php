@@ -54,7 +54,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 
   <a 
     class="btn btn-outline btn-sm" 
-    href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode($idSolicitud)) ?>"
+    href="<?= e(url_view('solicitud_ver') . '&id=' . urlencode($idSolicitud) . '&return_to=' . urlencode($returnTo)) ?>"
     data-click-once
   >
     Ver

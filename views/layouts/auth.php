@@ -20,6 +20,14 @@ $faviconUrl = app_asset('assets/img/favicon.png');
 <?= $content ?>
 <script>
 (function () {
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+})();
+
+(function () {
   document.addEventListener('click', function (event) {
     var link = event.target.closest('a[data-click-once], a.stat-card-link, a.logo-link, a.btn');
 
