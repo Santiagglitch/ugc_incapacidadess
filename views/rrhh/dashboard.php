@@ -18,6 +18,9 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
     <a href="Export/RRHH/ExportController.php?download=1" class="btn btn-green">
       + Exportar datos
     </a>
+    <a href="<?= e(url_view('solicitud_crear')) ?>" class="btn btn-green">
+    + Nueva solicitud
+  </a>
   </div>
 
 </section>
