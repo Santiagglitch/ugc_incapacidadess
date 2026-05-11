@@ -26,8 +26,12 @@ class authController
     public function loginPost(): void
     {
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            $_SESSION['login_error'] = 'Token de seguridad invalido. Recarga la pagina.';
-            redirect_to(url_view('login'));
+            http_response_code(422);
+            render_view('auth/login', [
+                'error' => 'Token de seguridad invalido. Recarga la pagina.',
+                'devUsuarios' => APP_ENV === 'development' ? USUARIOS_PRUEBA : [],
+            ], 'auth');
+            return;
         }
 
         $cedula = limpiar_texto($_POST['cedula'] ?? '');
@@ -41,6 +45,7 @@ class authController
 
         session_regenerate_id(true);
         $_SESSION['usuario'] = $result['user'];
+        $_SESSION['last_activity'] = time();
 
         // Si es Super Admin, redirigir a selección de modo
         if (($result['user']['cedula'] ?? '') === SUPER_ADMIN_NIT) {

@@ -16,6 +16,7 @@ define('APP_ENV', 'development'); // development | production
 define('BASE_URL', '/ugc_incapacidadess');
 define('APP_TIMEZONE', 'America/Bogota');
 define('SESSION_SAVE_PATH', ''); // Vacio usa el directorio temporal configurado por PHP
+define('SESSION_IDLE_TIMEOUT', 1800); // 30 minutos de inactividad
 define('APP_ROWS_PER_PAGE', 6);
 
 /*
