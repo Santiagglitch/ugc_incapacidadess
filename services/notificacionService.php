@@ -10,14 +10,13 @@ require_once __DIR__ . '/../config/app.php';
 class notificacionService
 {
     private notificacionModel $model;
-    private empleadoModel $empleadoModel;
+    private ?empleadoModel $empleadoModel = null;
     private array $nombreEmpleadoCache = [];
     private ?array $usuariosRrhhCache = null;
 
     public function __construct()
     {
         $this->model = new notificacionModel();
-        $this->empleadoModel = new empleadoModel();
     }
 
     public function notificarNuevaSolicitud(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
@@ -103,7 +102,7 @@ class notificacionService
         }
 
         $rrhh = [];
-        foreach ($this->empleadoModel->getPorCentrosCosto(CC_RRHH) as $emp) {
+        foreach ($this->empleadoModel()->getPorCentrosCosto(CC_RRHH) as $emp) {
             if (!empty($emp['NIT'])) { $rrhh[] = (string)$emp['NIT']; }
         }
         if (APP_ENV === 'development') {
@@ -132,11 +131,20 @@ class notificacionService
             return $nombre !== '' ? $nombre : $fallback;
         }
 
-        $empleado = $this->empleadoModel->getByNit($nit);
+        $empleado = $this->empleadoModel()->getByNit($nit);
         $nombre = trim((string)($empleado['NOMBRE_COMPLETO'] ?? ''));
         $this->nombreEmpleadoCache[$nit] = $nombre;
 
         return $nombre !== '' ? $nombre : $fallback;
+    }
+
+    private function empleadoModel(): empleadoModel
+    {
+        if ($this->empleadoModel === null) {
+            $this->empleadoModel = new empleadoModel();
+        }
+
+        return $this->empleadoModel;
     }
 
     private function tipoLabel(string $tipo): string

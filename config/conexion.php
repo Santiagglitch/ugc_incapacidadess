@@ -18,8 +18,16 @@ class Conexion
             throw new RuntimeException('La extension OCI8 no esta habilitada en PHP.');
         }
 
+        if (defined('ORACLE_STATEMENT_CACHE_SIZE')) {
+            @ini_set('oci8.statement_cache_size', (string) ORACLE_STATEMENT_CACHE_SIZE);
+        }
+
         $cadenaConexion = ORACLE_HOST . ':' . ORACLE_PORT . '/' . ORACLE_SERVICE;
-        self::$conexion = @oci_connect(ORACLE_USER, ORACLE_PASS, $cadenaConexion, ORACLE_CHARSET);
+        $conectar = (defined('ORACLE_PERSISTENT') && ORACLE_PERSISTENT && function_exists('oci_pconnect'))
+            ? 'oci_pconnect'
+            : 'oci_connect';
+
+        self::$conexion = @$conectar(ORACLE_USER, ORACLE_PASS, $cadenaConexion, ORACLE_CHARSET);
 
         if (!self::$conexion) {
             $error = oci_error();
@@ -44,7 +52,9 @@ class Conexion
     public static function cerrar(): void
     {
         if (self::$conexion) {
-            @oci_close(self::$conexion);
+            if (!(defined('ORACLE_PERSISTENT') && ORACLE_PERSISTENT)) {
+                @oci_close(self::$conexion);
+            }
             self::$conexion = null;
         }
     }

@@ -9,7 +9,7 @@ class adminRolesModel
 
     public function __construct()
     {
-        $this->path = __DIR__ . '/../data/admins_adicionales.json';
+        $this->path = __DIR__ . '/../storage/private/admins_adicionales.json';
     }
 
     public function getAdminsAdicionales(): array

@@ -119,12 +119,15 @@ function app_base_url(string $path = ''): string
 
 function app_asset(string $path): string
 {
+    static $versionCache = [];
+
     $relative = ltrim($path, '/');
     $absolute = dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
     $url = app_base_url($relative);
 
     if (is_file($absolute)) {
-        return $url . '?v=' . filemtime($absolute);
+        $versionCache[$absolute] ??= filemtime($absolute);
+        return $url . '?v=' . $versionCache[$absolute];
     }
 
     return $url;

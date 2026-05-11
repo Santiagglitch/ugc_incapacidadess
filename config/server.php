@@ -16,6 +16,7 @@ define('APP_ENV', 'development'); // development | production
 define('BASE_URL', '/ugc_incapacidadess');
 define('APP_TIMEZONE', 'America/Bogota');
 define('SESSION_SAVE_PATH', ''); // Vacio usa el directorio temporal configurado por PHP
+define('APP_ROWS_PER_PAGE', 6);
 
 /*
  * Oracle ICEBERG / RH.
@@ -27,6 +28,8 @@ define('ORACLE_USER', 'iceberg');
 define('ORACLE_PASS', 'iceberg0');
 define('ORACLE_SERVICE', 'UGC');
 define('ORACLE_CHARSET', 'AL32UTF8');
+define('ORACLE_PERSISTENT', true);
+define('ORACLE_STATEMENT_CACHE_SIZE', 40);
 
 /*
  * LDAP Universidad.
@@ -44,3 +47,5 @@ define('LDAP_PORT', 389);
 define('LDAP_USER', 'cn=Manager,dc=ugc.edu,dc=co');
 define('LDAP_PASSWORD', 'Sl4pdU6Cn3W');
 define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
+define('LDAP_NETWORK_TIMEOUT', 3);
+define('LDAP_SEARCH_TIMEOUT', 3);

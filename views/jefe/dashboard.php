@@ -32,8 +32,8 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
   <a href="<?= e($historialUrl('gestionadas')) ?>" class="<?= e($historialCardClass('gestionadas')) ?>"><div class="stat-icon">&#8635;</div><div class="num"><?= e($stats['gestionadas'] ?? 0) ?></div><div class="lbl">Historial Gestionado</div></a>
 </div>
 <div class="section-header"><h2>Solicitudes pendientes de tu aprobacion</h2></div>
-<?php $solicitudes = $pendientes ?? []; $paginationParam = 'pag_pendientes'; $paginationLabel = 'pendientes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
+<?php $solicitudes = $pendientes ?? []; $paginationData = $pendientesPaginationData ?? null; $paginationParam = 'pag_pendientes'; $paginationLabel = 'pendientes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
 <div id="historial-gestionado" class="section-header section-header--spaced"><h2><?= e($historialTitulo) ?></h2></div>
-<?php $solicitudes = $historialSolicitudes ?? []; $paginationParam = 'pag_historial'; $paginationLabel = 'historial'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
+<?php $solicitudes = $historialSolicitudes ?? []; $paginationData = $historialPaginationData ?? null; $paginationParam = 'pag_historial'; $paginationLabel = 'historial'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
 <div class="section-header section-header--spaced"><h2>Mis solicitudes personales</h2></div>
-<?php $solicitudes = $misSolicitudes ?? []; $paginationParam = 'pag_mis'; $paginationLabel = 'mis solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
+<?php $solicitudes = $misSolicitudes ?? []; $paginationData = $misPaginationData ?? null; $paginationParam = 'pag_mis'; $paginationLabel = 'mis solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>

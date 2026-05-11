@@ -18,6 +18,7 @@ class notificacionController
     {
         requiere_login();
         $user = usuario_actual();
+        session_write_close();
         $this->json(['contador' => $this->service->contarNoLeidas((string)$user['cedula'])]);
     }
 
@@ -25,6 +26,7 @@ class notificacionController
     {
         requiere_login();
         $user = usuario_actual();
+        session_write_close();
         $this->json(['notificaciones' => $this->service->getNoLeidas((string)$user['cedula'])]);
     }
 
@@ -33,6 +35,7 @@ class notificacionController
         requiere_login();
         $this->validarAjaxCsrf();
         $user = usuario_actual();
+        session_write_close();
         $this->json(['success' => $this->service->marcarLeida($id, (string)$user['cedula'])]);
     }
 
@@ -41,6 +44,7 @@ class notificacionController
         requiere_login();
         $this->validarAjaxCsrf();
         $user = usuario_actual();
+        session_write_close();
         $this->json(['success' => $this->service->marcarTodasLeidas((string)$user['cedula'])]);
     }
 

@@ -4,8 +4,23 @@ $solicitudes = $solicitudes ?? [];
 $user = $user ?? usuario_actual();
 $paginationParam = $paginationParam ?? 'pagina';
 $paginationLabel = $paginationLabel ?? 'solicitudes';
-$pagination = ugcPaginateRows($solicitudes, $paginationParam, 6);
-$solicitudesPagina = $pagination['rows'];
+$paginationData = $paginationData ?? null;
+
+if (is_array($paginationData)) {
+  $pagination = $paginationData + [
+    'current' => 1,
+    'totalPages' => 1,
+    'total' => count($solicitudes),
+    'perPage' => APP_ROWS_PER_PAGE,
+  ];
+  $pagination['paramName'] = $paginationParam;
+  $solicitudesPagina = $solicitudes;
+} else {
+  $pagination = ugcPaginateRows($solicitudes, $paginationParam, APP_ROWS_PER_PAGE);
+  $solicitudesPagina = $pagination['rows'];
+}
+
+$paginationData = null;
 $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 ?>
 <?php if (empty($solicitudes)): ?>
