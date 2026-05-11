@@ -5,6 +5,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/mainModel.php';
 require_once __DIR__ . '/../config/app.php';
 
+if (!defined('ESTADO_CANCELADO_AGENDA')) {
+    define('ESTADO_CANCELADO_AGENDA', 'CANCELADO_AGENDA');
+}
+
 class solicitudModel extends mainModel
 {
     private const LIST_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
@@ -110,7 +114,7 @@ class solicitudModel extends mainModel
              WHERE NIT_JEFE=:nit
                AND NIT_EMPLEADO<>:nit
                AND ACTIVO=1
-               AND ESTADO IN ('APROBADO_JEFE','RECHAZADO_JEFE','APROBADO_RRHH','RECHAZADO_RRHH')
+               AND ESTADO IN ('APROBADO_JEFE','RECHAZADO_JEFE','APROBADO_RRHH','RECHAZADO_RRHH','CANCELADO_AGENDA')
              ORDER BY FECHA_GESTION_JEFE DESC",
             [':nit' => $nit]
         );
@@ -185,7 +189,13 @@ class solicitudModel extends mainModel
     {
         $filtros['nit_jefe'] = $nit;
         $filtros['excluir_empleado'] = $nit;
-        $filtros['estados'] = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
+        $filtros['estados'] = [
+            ESTADO_APROBADO_JEFE,
+            ESTADO_RECHAZADO_JEFE,
+            ESTADO_APROBADO_RRHH,
+            ESTADO_RECHAZADO_RRHH,
+            ESTADO_CANCELADO_AGENDA,
+        ];
 
         return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_GESTION_JEFE DESC');
     }
@@ -193,6 +203,7 @@ class solicitudModel extends mainModel
     public function contarTotal(array $filtros = []): int
     {
         [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
+
         $row = $this->consultarUno(
             "SELECT COUNT(*) AS TOTAL
              FROM ICEBERG.SOLICITUDES_PERMISOS s
@@ -206,6 +217,7 @@ class solicitudModel extends mainModel
     public function contarPorEstado(array $filtros = []): array
     {
         [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
+
         $rows = $this->consultarTodo(
             "SELECT ESTADO, COUNT(*) AS TOTAL
              FROM ICEBERG.SOLICITUDES_PERMISOS s
@@ -217,7 +229,7 @@ class solicitudModel extends mainModel
         $result = [];
 
         foreach ($rows as $row) {
-            $result[$row['ESTADO']] = (int) $row['TOTAL'];
+            $result[$row['ESTADO']] = (int)$row['TOTAL'];
         }
 
         return $result;
@@ -229,17 +241,19 @@ class solicitudModel extends mainModel
             "SELECT COUNT(*) AS TOTAL,
                     SUM(CASE WHEN ESTADO='PENDIENTE_JEFE' THEN 1 ELSE 0 END) AS PENDIENTES,
                     SUM(CASE WHEN ESTADO IN ('APROBADO_JEFE','APROBADO_RRHH') THEN 1 ELSE 0 END) AS APROBADAS,
-                    SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS
+                    SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS,
+                    SUM(CASE WHEN ESTADO='CANCELADO_AGENDA' THEN 1 ELSE 0 END) AS CANCELADAS
              FROM ICEBERG.SOLICITUDES_PERMISOS
              WHERE NIT_EMPLEADO=:nit AND ACTIVO=1",
             [':nit' => $nit]
         ) ?? [];
 
         return [
-            'total' => (int) ($row['TOTAL'] ?? 0),
-            'pendientes' => (int) ($row['PENDIENTES'] ?? 0),
-            'aprobadas' => (int) ($row['APROBADAS'] ?? 0),
-            'rechazadas' => (int) ($row['RECHAZADAS'] ?? 0),
+            'total' => (int)($row['TOTAL'] ?? 0),
+            'pendientes' => (int)($row['PENDIENTES'] ?? 0),
+            'aprobadas' => (int)($row['APROBADAS'] ?? 0),
+            'rechazadas' => (int)($row['RECHAZADAS'] ?? 0),
+            'canceladas' => (int)($row['CANCELADAS'] ?? 0),
         ];
     }
 
@@ -254,7 +268,13 @@ class solicitudModel extends mainModel
             'gestionadas' => $this->contarTotal([
                 'nit_jefe' => $nit,
                 'excluir_empleado' => $nit,
-                'estados' => [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH],
+                'estados' => [
+                    ESTADO_APROBADO_JEFE,
+                    ESTADO_RECHAZADO_JEFE,
+                    ESTADO_APROBADO_RRHH,
+                    ESTADO_RECHAZADO_RRHH,
+                    ESTADO_CANCELADO_AGENDA,
+                ],
             ]),
             'misSolicitudes' => $this->contarTotal(['nit_empleado' => $nit]),
         ];
@@ -278,6 +298,29 @@ class solicitudModel extends mainModel
     public function rechazarRRHH(int $id, string $nit, string $obs): bool
     {
         return $this->gestionarRRHH($id, $nit, $obs, 'RECHAZADO_RRHH');
+    }
+
+    public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false): bool
+    {
+        return $this->ejecutar(
+            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+             SET ESTADO=:estado,
+                 FECHA_MODIFICACION=SYSDATE
+             WHERE ID=:id
+               AND ACTIVO=1
+               AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH')
+               AND (
+                    NIT_EMPLEADO=:nit_usuario
+                    OR NIT_JEFE=:nit_usuario
+                    OR :es_gestor=1
+               )",
+            [
+                ':estado' => ESTADO_CANCELADO_AGENDA,
+                ':id' => $id,
+                ':nit_usuario' => $nitUsuario,
+                ':es_gestor' => $esGestor ? 1 : 0,
+            ]
+        );
     }
 
     public function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool
@@ -353,8 +396,10 @@ class solicitudModel extends mainModel
         }
 
         $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
+
         if ($busqueda !== '') {
             $like = '%' . $this->escapeLike(mb_strtoupper($busqueda, 'UTF-8')) . '%';
+
             $condicionesBusqueda = [
                 "TO_CHAR(s.ID) LIKE :q_like ESCAPE '\\'",
                 "UPPER(s.NIT_EMPLEADO) LIKE :q_like ESCAPE '\\'",
@@ -372,9 +417,11 @@ class solicitudModel extends mainModel
                       AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
                 )",
             ];
+
             $binds[':q_like'] = $like;
 
             $tipos = $this->tiposSolicitudCoincidentes($busqueda);
+
             if (!empty($tipos)) {
                 [$inClause, $tipoBinds] = $this->buildInClause($tipos, 'tipo_busqueda_');
                 $condicionesBusqueda[] = "s.TIPO_SOLICITUD IN ($inClause)";
@@ -395,7 +442,9 @@ class solicitudModel extends mainModel
             return '';
         }
 
-        return function_exists('mb_substr') ? mb_substr($busqueda, 0, 100, 'UTF-8') : substr($busqueda, 0, 100);
+        return function_exists('mb_substr')
+            ? mb_substr($busqueda, 0, 100, 'UTF-8')
+            : substr($busqueda, 0, 100);
     }
 
     private function escapeLike(string $valor): string
@@ -415,6 +464,7 @@ class solicitudModel extends mainModel
 
         foreach (TIPOS_SOLICITUD as $key => $label) {
             $texto = $this->normalizarTextoBusqueda((string)$key . ' ' . (string)$label);
+
             if ($texto !== '' && str_contains($texto, $needle)) {
                 $tipos[] = (string)$key;
             }
@@ -431,10 +481,13 @@ class solicitudModel extends mainModel
             return '';
         }
 
-        $texto = function_exists('mb_strtolower') ? mb_strtolower($texto, 'UTF-8') : strtolower($texto);
+        $texto = function_exists('mb_strtolower')
+            ? mb_strtolower($texto, 'UTF-8')
+            : strtolower($texto);
 
         if (function_exists('iconv')) {
             $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+
             if ($ascii !== false) {
                 $texto = $ascii;
             }
@@ -455,6 +508,7 @@ class solicitudModel extends mainModel
         $offset = ($pagina - 1) * $porPagina;
 
         $orden = $this->ordenSeguro($orden);
+
         $rows = $this->consultarTodo(
             "$sqlBase
              ORDER BY $orden
