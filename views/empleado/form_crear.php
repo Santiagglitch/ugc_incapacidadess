@@ -302,7 +302,7 @@ $hoy   = $hoy ?? date('Y-m-d');
           <option value="">Selecciona...</option>
           <?php foreach (($jefes ?? []) as $jefe): ?>
             <option value="<?= e($jefe['NIT']) ?>">
-              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? '')) !== '' ? ($jefe['NOMBRE_COMPLETO'] . ' - ' . ($jefe['NIT'] ?? '')) : ($jefe['NIT'] ?? '')) ?>
+              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? ''))) ?>
             </option>
           <?php endforeach; ?>
         </select>

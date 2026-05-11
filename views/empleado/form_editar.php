@@ -58,7 +58,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
               value="<?= e($jefe['NIT']) ?>"
               <?= (string)($solicitud['NIT_JEFE'] ?? '') === (string)($jefe['NIT'] ?? '') ? 'selected' : '' ?>
             >
-              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? '')) !== '' ? ($jefe['NOMBRE_COMPLETO'] . ' - ' . ($jefe['NIT'] ?? '')) : ($jefe['NIT'] ?? '')) ?>
+              <?= e(trim((string)($jefe['NOMBRE_COMPLETO'] ?? ''))) ?>
             </option>
           <?php endforeach; ?>
         </select>
