@@ -324,6 +324,8 @@ class solicitudController
             redirect_to($this->returnTo(url_view('dashboard')));
         }
 
+        $this->validarObservacionGestion($accion, $obs, 'Para rechazar la solicitud debes escribir obligatoriamente el motivo.');
+
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarJefe($id, $user['cedula'], $obs)
             : $this->model->rechazarJefe($id, $user['cedula'], $obs);
@@ -371,6 +373,8 @@ class solicitudController
             flash_set('error', 'Selecciona una decision valida.');
             redirect_to($this->returnTo(url_view('dashboard')));
         }
+
+        $this->validarObservacionGestion($accion, $obs, 'Para rechazar la solicitud en Talento Humano debes escribir obligatoriamente el motivo.');
 
         $ok = $accion === 'aprobar'
             ? $this->model->aprobarRRHH($id, $user['cedula'], $obs)
@@ -735,6 +739,19 @@ class solicitudController
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
             http_response_code(422);
             exit('Token de seguridad invalido.');
+        }
+    }
+
+    private function validarObservacionGestion(string $accion, string $observacion, string $mensajeRechazo): void
+    {
+        if ($accion === 'rechazar' && $observacion === '') {
+            flash_set('error', $mensajeRechazo);
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
+
+        if (mb_strlen($observacion, 'UTF-8') > 2000) {
+            flash_set('error', 'La observacion no puede superar 2000 caracteres.');
+            redirect_to($this->returnTo(url_view('dashboard')));
         }
     }
 
