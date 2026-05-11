@@ -117,12 +117,33 @@ function rol_actual(): string
     return $usuario['rol'] ?? '';
 }
 
+function validar_vigencia_sesion(): void
+{
+    iniciar_sesion_segura();
+
+    $now = time();
+    $lastActivity = (int)($_SESSION['last_activity'] ?? $now);
+    $idleTimeout = defined('SESSION_IDLE_TIMEOUT') ? (int)SESSION_IDLE_TIMEOUT : 1800;
+
+    if ($idleTimeout > 0 && ($now - $lastActivity) > $idleTimeout) {
+        cerrar_sesion();
+        iniciar_sesion_segura();
+        $_SESSION['login_error'] = 'Tu sesion expiro por inactividad. Ingresa nuevamente.';
+        header('Location: ' . app_base_url('index.php?view=login'));
+        exit;
+    }
+
+    $_SESSION['last_activity'] = $now;
+}
+
 function requiere_login(): void
 {
     if (!usuario_autenticado()) {
         header('Location: ' . app_base_url('index.php?view=login'));
         exit;
     }
+
+    validar_vigencia_sesion();
 
     if (super_admin_modo_pendiente()) {
         header('Location: ' . app_base_url('index.php?view=seleccionar_modo'));

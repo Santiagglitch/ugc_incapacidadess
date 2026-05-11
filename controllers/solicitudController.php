@@ -443,9 +443,14 @@ class solicitudController
         $user = usuario_actual();
         $solicitud = $this->model->getById($id);
 
-        if (!$solicitud || !$this->puedeVer($solicitud, $user) || empty($solicitud['RUTA_COMPROBANTE'])) {
+        if (!$solicitud || empty($solicitud['RUTA_COMPROBANTE'])) {
             http_response_code(404);
             exit('Archivo no encontrado.');
+        }
+
+        if (!$this->puedeVer($solicitud, $user)) {
+            http_response_code(403);
+            exit('Sin permiso para ver este archivo.');
         }
 
         $nombre = basename((string)$solicitud['RUTA_COMPROBANTE']);
@@ -464,7 +469,9 @@ class solicitudController
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="' . $nombre . '"');
         header('Content-Length: ' . filesize($ruta));
-        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         header('X-Content-Type-Options: nosniff');
 
         readfile($ruta);
