@@ -143,7 +143,7 @@ class solicitudModel extends mainModel
 
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
              WHERE $whereSql
              ORDER BY FECHA_CREACION DESC",
             $binds
@@ -156,7 +156,7 @@ class solicitudModel extends mainModel
 
         return $this->paginar(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
              WHERE $whereSql",
             $binds,
             $orden,
@@ -195,7 +195,7 @@ class solicitudModel extends mainModel
         [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
         $row = $this->consultarUno(
             "SELECT COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
              WHERE $whereSql",
             $binds
         );
@@ -208,7 +208,7 @@ class solicitudModel extends mainModel
         [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
         $rows = $this->consultarTodo(
             "SELECT ESTADO, COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
              WHERE $whereSql
              GROUP BY ESTADO",
             $binds
@@ -305,11 +305,11 @@ class solicitudModel extends mainModel
 
     private function buildSolicitudWhere(array $filtros): array
     {
-        $where = ['ACTIVO=1'];
+        $where = ['s.ACTIVO=1'];
         $binds = [];
 
         if (!empty($filtros['estado'])) {
-            $where[] = 'ESTADO=:estado';
+            $where[] = 's.ESTADO=:estado';
             $binds[':estado'] = $filtros['estado'];
         }
 
@@ -321,38 +321,129 @@ class solicitudModel extends mainModel
 
             if (!empty($estados)) {
                 [$inClause, $estadoBinds] = $this->buildInClause($estados, 'estado_');
-                $where[] = "ESTADO IN ($inClause)";
+                $where[] = "s.ESTADO IN ($inClause)";
                 $binds += $estadoBinds;
             }
         }
 
         if (!empty($filtros['tipo'])) {
-            $where[] = 'TIPO_SOLICITUD=:tipo';
+            $where[] = 's.TIPO_SOLICITUD=:tipo';
             $binds[':tipo'] = $filtros['tipo'];
         }
 
         if (!empty($filtros['nit'])) {
-            $where[] = '(NIT_EMPLEADO=:nit_emp OR NIT_JEFE=:nit_jefe)';
+            $where[] = '(s.NIT_EMPLEADO=:nit_emp OR s.NIT_JEFE=:nit_jefe)';
             $binds[':nit_emp'] = $filtros['nit'];
             $binds[':nit_jefe'] = $filtros['nit'];
         }
 
         if (!empty($filtros['nit_empleado'])) {
-            $where[] = 'NIT_EMPLEADO=:nit_empleado';
+            $where[] = 's.NIT_EMPLEADO=:nit_empleado';
             $binds[':nit_empleado'] = $filtros['nit_empleado'];
         }
 
         if (!empty($filtros['nit_jefe'])) {
-            $where[] = 'NIT_JEFE=:nit_jefe_directo';
+            $where[] = 's.NIT_JEFE=:nit_jefe_directo';
             $binds[':nit_jefe_directo'] = $filtros['nit_jefe'];
         }
 
         if (!empty($filtros['excluir_empleado'])) {
-            $where[] = 'NIT_EMPLEADO<>:excluir_empleado';
+            $where[] = 's.NIT_EMPLEADO<>:excluir_empleado';
             $binds[':excluir_empleado'] = $filtros['excluir_empleado'];
         }
 
+        $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
+        if ($busqueda !== '') {
+            $like = '%' . $this->escapeLike(mb_strtoupper($busqueda, 'UTF-8')) . '%';
+            $condicionesBusqueda = [
+                "TO_CHAR(s.ID) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.NIT_EMPLEADO) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.NIT_JEFE) LIKE :q_like ESCAPE '\\'",
+                "UPPER(NVL(s.NIT_RRHH, '')) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.TIPO_SOLICITUD) LIKE :q_like ESCAPE '\\'",
+                "UPPER(s.ESTADO) LIKE :q_like ESCAPE '\\'",
+                "UPPER(NVL(s.OBSERVACIONES, '')) LIKE :q_like ESCAPE '\\'",
+                "EXISTS (
+                    SELECT 1
+                    FROM EMPLEADO emp
+                    WHERE emp.EMPRESA='BA2'
+                      AND emp.ESTADO='A'
+                      AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
+                      AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
+                )",
+            ];
+            $binds[':q_like'] = $like;
+
+            $tipos = $this->tiposSolicitudCoincidentes($busqueda);
+            if (!empty($tipos)) {
+                [$inClause, $tipoBinds] = $this->buildInClause($tipos, 'tipo_busqueda_');
+                $condicionesBusqueda[] = "s.TIPO_SOLICITUD IN ($inClause)";
+                $binds += $tipoBinds;
+            }
+
+            $where[] = '(' . implode(' OR ', $condicionesBusqueda) . ')';
+        }
+
         return [implode(' AND ', $where), $binds];
+    }
+
+    private function normalizarFiltroBusqueda(string $busqueda): string
+    {
+        $busqueda = trim(preg_replace('/\s+/', ' ', $busqueda) ?? '');
+
+        if ($busqueda === '') {
+            return '';
+        }
+
+        return function_exists('mb_substr') ? mb_substr($busqueda, 0, 100, 'UTF-8') : substr($busqueda, 0, 100);
+    }
+
+    private function escapeLike(string $valor): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $valor);
+    }
+
+    private function tiposSolicitudCoincidentes(string $busqueda): array
+    {
+        $needle = $this->normalizarTextoBusqueda($busqueda);
+
+        if ($needle === '') {
+            return [];
+        }
+
+        $tipos = [];
+
+        foreach (TIPOS_SOLICITUD as $key => $label) {
+            $texto = $this->normalizarTextoBusqueda((string)$key . ' ' . (string)$label);
+            if ($texto !== '' && str_contains($texto, $needle)) {
+                $tipos[] = (string)$key;
+            }
+        }
+
+        return $tipos;
+    }
+
+    private function normalizarTextoBusqueda(string $texto): string
+    {
+        $texto = trim($texto);
+
+        if ($texto === '') {
+            return '';
+        }
+
+        $texto = function_exists('mb_strtolower') ? mb_strtolower($texto, 'UTF-8') : strtolower($texto);
+
+        if (function_exists('iconv')) {
+            $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
+            if ($ascii !== false) {
+                $texto = $ascii;
+            }
+        }
+
+        $texto = strtolower($texto);
+        $texto = preg_replace('/[^a-z0-9]+/i', ' ', $texto) ?? '';
+
+        return trim(preg_replace('/\s+/', ' ', $texto) ?? '');
     }
 
     private function paginar(string $sqlBase, array $binds, string $orden, int $pagina, int $porPagina): array
