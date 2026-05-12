@@ -28,6 +28,50 @@ $faviconUrl = app_asset('assets/img/favicon.png');
 })();
 
 (function () {
+  var nonDraggableSelector = [
+    'a',
+    'button',
+    'img',
+    'input[type="button"]',
+    'input[type="submit"]',
+    'input[type="reset"]',
+    '[role="button"]',
+    '.btn',
+    '.btn-login',
+    '.btn-link',
+    '.stat-card',
+    '.stat-card-link',
+    '.dev-chip'
+  ].join(',');
+
+  function closest(target, selector) {
+    return target && target.closest ? target.closest(selector) : null;
+  }
+
+  function isProtectedDropTarget(target) {
+    var field = closest(target, 'input, textarea, [contenteditable="true"]');
+
+    return !!field && !field.matches('input[type="file"]');
+  }
+
+  document.querySelectorAll(nonDraggableSelector).forEach(function (element) {
+    element.setAttribute('draggable', 'false');
+  });
+
+  document.addEventListener('dragstart', function (event) {
+    if (closest(event.target, nonDraggableSelector)) {
+      event.preventDefault();
+    }
+  });
+
+  document.addEventListener('drop', function (event) {
+    if (isProtectedDropTarget(event.target)) {
+      event.preventDefault();
+    }
+  });
+})();
+
+(function () {
   document.addEventListener('click', function (event) {
     var link = event.target.closest('a[data-click-once], a.stat-card-link, a.logo-link, a.btn');
 
