@@ -11,19 +11,20 @@ $hoy   = $hoy ?? date('Y-m-d');
 
 <style>
   .page-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
 
-.page-header > div {
-  width: 100%;
-}
+  .page-header > div {
+    width: 100%;
+  }
 
-.page-title {
-  text-align: center;
-}
+  .page-title {
+    text-align: center;
+  }
+
   :root {
     --ugreen: #005c2b;
     --ugreen-dark: #00451f;
@@ -377,12 +378,13 @@ $hoy   = $hoy ?? date('Y-m-d');
             <div class="form-group" id="grupo_duracion_horas">
               <label id="label_duracion_horas">Duración en horas *</label>
               <input type="number" id="duracion_horas" name="duracion_horas"
-                     min="0.5" step="0.5" placeholder="Ej: 2.5">
+                     min="0.5" max="8" step="0.5" placeholder="Ej: 4">
             </div>
 
             <div class="form-group" id="grupo_duracion_dias">
               <label>Duración en días</label>
-              <input type="number" id="duracion_dias" name="duracion_dias" readonly placeholder="Se calcula automáticamente">
+              <input type="number" id="duracion_dias" name="duracion_dias"
+                     readonly placeholder="Se calcula automáticamente">
             </div>
           </div>
 
@@ -494,6 +496,38 @@ $hoy   = $hoy ?? date('Y-m-d');
     return formatoISO(f);
   }
 
+  function esSabadoODomingo(fecha) {
+    var diaSemana = fecha.getDay();
+
+    return diaSemana === 0 || diaSemana === 6;
+  }
+
+  function calcularDiasHabiles(fechaInicio, fechaFin) {
+    if (!fechaInicio || !fechaFin) {
+      return 0;
+    }
+
+    var inicio = parseFechaLocal(fechaInicio);
+    var final = parseFechaLocal(fechaFin);
+
+    if (final < inicio) {
+      return 0;
+    }
+
+    var total = 0;
+    var actual = new Date(inicio);
+
+    while (actual <= final) {
+      if (!esSabadoODomingo(actual)) {
+        total++;
+      }
+
+      actual.setDate(actual.getDate() + 1);
+    }
+
+    return total;
+  }
+
   var maxFecha = sumarMeses(hoy, 5);
 
   ini.min = hoy;
@@ -511,9 +545,37 @@ $hoy   = $hoy ?? date('Y-m-d');
 
   function limpiarDuracion() {
     horas.value = '';
+    horas.setCustomValidity('');
+
     dias.value = '';
+
     resumenDuracion.style.display = 'none';
     resumenDuracion.innerHTML = '';
+  }
+
+  function validarMensajeHorasNativo() {
+    var valorHoras = parseFloat(horas.value);
+
+    horas.setCustomValidity('');
+
+    if (!horas.value) {
+      return;
+    }
+
+    if (isNaN(valorHoras)) {
+      horas.setCustomValidity('Ingresa un valor válido en horas.');
+      return;
+    }
+
+    if (valorHoras <= 0) {
+      horas.setCustomValidity('El valor debe ser mayor a 0 horas.');
+      return;
+    }
+
+    if (valorHoras > 8) {
+      horas.setCustomValidity('El valor debe ser inferior a 9 horas. Máximo permitido: 8 horas.');
+      return;
+    }
   }
 
   function actualizarEstiloOpciones() {
@@ -542,12 +604,12 @@ $hoy   = $hoy ?? date('Y-m-d');
 
     if (modo === 'DIAS' && dias.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) completo(s)</strong>.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong>. No se cuentan sábados ni domingos.';
     }
 
     if (modo === 'AMBAS' && dias.value && horas.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) completo(s)</strong> más <strong>' + horas.value + ' hora(s) adicional(es)</strong>.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong> más <strong>' + horas.value + ' hora(s) adicional(es)</strong>. No se cuentan sábados ni domingos.';
     }
   }
 
@@ -560,7 +622,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     fin.required = false;
     horas.required = false;
 
-    horas.placeholder = 'Ej: 2.5';
+    horas.placeholder = 'Ej: 4';
     labelDuracionHoras.textContent = 'Duración en horas *';
 
     if (!tipoSolicitud.value) {
@@ -591,7 +653,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     ini.required = true;
 
     if (modo === 'HORAS') {
-      subtituloFechas.textContent = 'Selecciona la fecha del permiso e ingresa la cantidad de horas solicitadas.';
+      subtituloFechas.textContent = 'Selecciona la fecha del permiso e ingresa la cantidad de horas solicitadas. Debe ser mayor a 0 y máximo 8 horas.';
 
       labelFechaInicio.textContent = 'Fecha del permiso *';
       labelDuracionHoras.textContent = 'Duración en horas *';
@@ -612,7 +674,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     }
 
     if (modo === 'DIAS') {
-      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calculará automáticamente la duración en días completos.';
+      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calculará automáticamente solo los días hábiles, sin contar sábados ni domingos.';
 
       labelFechaInicio.textContent = 'Fecha inicio *';
 
@@ -624,12 +686,13 @@ $hoy   = $hoy ?? date('Y-m-d');
       horas.required = false;
 
       horas.value = '';
+      horas.setCustomValidity('');
 
       calcularDuracionDias();
     }
 
     if (modo === 'AMBAS') {
-      subtituloFechas.textContent = 'Selecciona los días completos de ausencia y agrega las horas adicionales. Ejemplo: 1 día completo + 4 horas adicionales.';
+      subtituloFechas.textContent = 'Selecciona los días hábiles de ausencia y agrega las horas adicionales. No se cuentan sábados ni domingos. Ejemplo: 1 día hábil completo + 4 horas adicionales.';
 
       labelFechaInicio.textContent = 'Fecha inicio *';
       labelDuracionHoras.textContent = 'Horas adicionales *';
@@ -645,6 +708,7 @@ $hoy   = $hoy ?? date('Y-m-d');
       calcularDuracionDias();
     }
 
+    validarMensajeHorasNativo();
     actualizarResumen();
   }
 
@@ -681,19 +745,52 @@ $hoy   = $hoy ?? date('Y-m-d');
         fin.value = ini.value;
       }
 
-      var d1 = parseFechaLocal(ini.value);
-      var d2 = parseFechaLocal(fin.value);
+      var diasHabiles = calcularDiasHabiles(ini.value, fin.value);
 
-      var diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-
-      dias.value = diffDays > 0 ? diffDays : '';
+      dias.value = diasHabiles > 0 ? diasHabiles : '';
     }
 
     if (modo === 'DIAS') {
       horas.value = '';
+      horas.setCustomValidity('');
     }
 
     actualizarResumen();
+  }
+
+  function validarHorasPermitidas(mensajeVacio) {
+    var valorHoras = parseFloat(horas.value);
+
+    validarMensajeHorasNativo();
+
+    if (!horas.value || isNaN(valorHoras)) {
+      alert(mensajeVacio);
+      horas.focus();
+      return false;
+    }
+
+    if (valorHoras <= 0 || valorHoras > 8) {
+      alert('No se puede registrar la solicitud. La duración debe ser mayor a 0 e inferior a 9 horas. Máximo permitido: 8 horas.');
+      horas.value = '';
+      horas.setCustomValidity('');
+      actualizarResumen();
+      horas.focus();
+      return false;
+    }
+
+    return true;
+  }
+
+  function validarDiasPermitidos() {
+    var valorDias = parseInt(dias.value, 10);
+
+    if (!dias.value || isNaN(valorDias) || valorDias <= 0) {
+      alert('No se puede registrar la solicitud porque el rango seleccionado no tiene días hábiles. Los sábados y domingos no cuentan.');
+      fin.focus();
+      return false;
+    }
+
+    return true;
   }
 
   tipoSolicitud.addEventListener('change', function () {
@@ -746,7 +843,17 @@ $hoy   = $hoy ?? date('Y-m-d');
   });
 
   horas.addEventListener('input', function () {
+    validarMensajeHorasNativo();
     actualizarResumen();
+  });
+
+  horas.addEventListener('change', function () {
+    validarMensajeHorasNativo();
+    actualizarResumen();
+  });
+
+  horas.addEventListener('invalid', function () {
+    validarMensajeHorasNativo();
   });
 
   form.addEventListener('submit', function (e) {
@@ -776,16 +883,15 @@ $hoy   = $hoy ?? date('Y-m-d');
       fin.value = ini.value;
       dias.value = '';
 
-      if (!horas.value || parseFloat(horas.value) <= 0) {
+      if (!validarHorasPermitidas('Ingresa la duración en horas.')) {
         e.preventDefault();
-        alert('Ingresa la duración en horas.');
-        horas.focus();
         return;
       }
     }
 
     if (modo === 'DIAS') {
       horas.value = '';
+      horas.setCustomValidity('');
 
       if (!fin.value) {
         e.preventDefault();
@@ -796,10 +902,8 @@ $hoy   = $hoy ?? date('Y-m-d');
 
       calcularDuracionDias();
 
-      if (!dias.value || parseInt(dias.value, 10) <= 0) {
+      if (!validarDiasPermitidos()) {
         e.preventDefault();
-        alert('No se pudo calcular la duración en días. Revisa las fechas.');
-        fin.focus();
         return;
       }
     }
@@ -814,17 +918,13 @@ $hoy   = $hoy ?? date('Y-m-d');
 
       calcularDuracionDias();
 
-      if (!dias.value || parseInt(dias.value, 10) <= 0) {
+      if (!validarDiasPermitidos()) {
         e.preventDefault();
-        alert('No se pudo calcular la duración en días. Revisa las fechas.');
-        fin.focus();
         return;
       }
 
-      if (!horas.value || parseFloat(horas.value) <= 0) {
+      if (!validarHorasPermitidas('Ingresa las horas adicionales.')) {
         e.preventDefault();
-        alert('Ingresa las horas adicionales.');
-        horas.focus();
         return;
       }
     }
