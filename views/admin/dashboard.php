@@ -1,6 +1,6 @@
 <?php
 $historialTipo = $historialTipo ?? 'total';
-$historialTitulo = $historialTitulo ?? 'Solicitudes recientes';
+$historialTitulo = $historialTitulo ?? 'Historial completo';
 $historialSolicitudes = $historialSolicitudes ?? ($todas ?? []);
 $q = $q ?? '';
 $tipoFiltro = $tipoFiltro ?? '';
@@ -30,11 +30,12 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
   </div>
  </section>
 <div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-  <a href="<?= e($historialUrl('total')) ?>" class="<?= e($historialCardClass('total')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['TOTAL'] ?? 0) ?></div><div class="lbl">Total solicitudes</div></a>
+  <a href="<?= e($historialUrl('total')) ?>" class="<?= e($historialCardClass('total')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['TOTAL'] ?? 0) ?></div><div class="lbl">Historial completo</div></a>
   <a href="<?= e($historialUrl('pendiente_jefe')) ?>" class="<?= e($historialCardClass('pendiente_jefe')) ?>"><div class="stat-icon">&#9201;</div><div class="num"><?= e($stats[ESTADO_PENDIENTE_JEFE] ?? 0) ?></div><div class="lbl">Pendientes jefe</div></a>
   <a href="<?= e($historialUrl('aprobado_jefe')) ?>" class="<?= e($historialCardClass('aprobado_jefe')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats[ESTADO_APROBADO_JEFE] ?? 0) ?></div><div class="lbl">Pendientes RRHH</div></a>
   <a href="<?= e($historialUrl('aprobado_rrhh')) ?>" class="<?= e($historialCardClass('aprobado_rrhh')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats[ESTADO_APROBADO_RRHH] ?? 0) ?></div><div class="lbl">Aprobadas RRHH</div></a>
   <a href="<?= e($historialUrl('rechazado_rrhh')) ?>" class="<?= e($historialCardClass('rechazado_rrhh')) ?>"><div class="stat-icon">&times;</div><div class="num"><?= e($stats[ESTADO_RECHAZADO_RRHH] ?? 0) ?></div><div class="lbl">Rechazadas RRHH</div></a>
+  <a href="<?= e($historialUrl('canceladas')) ?>" class="<?= e($historialCardClass('canceladas')) ?>"><div class="stat-icon">&#8856;</div><div class="num"><?= e($stats[ESTADO_CANCELADO_AGENDA] ?? 0) ?></div><div class="lbl">Cancelado por el usuario</div></a>
 </div>
 <div id="historial-admin" class="section-header"><h2><?= e($historialTitulo) ?></h2></div>
 <?php $solicitudes = $historialSolicitudes ?? []; $paginationData = $historialPaginationData ?? null; $paginationParam = 'pag_admin'; $paginationLabel = 'solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>

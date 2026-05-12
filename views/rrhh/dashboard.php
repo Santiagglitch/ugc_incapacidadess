@@ -25,11 +25,12 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
 
 </section>
 <div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+  <a href="<?= e($historialUrl('historico')) ?>" class="<?= e($historialCardClass('historico')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['historico'] ?? 0) ?></div><div class="lbl">Historial completo</div></a>
   <a href="<?= e($historialUrl('pendientes')) ?>" class="<?= e($historialCardClass('pendientes')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats['pendientes'] ?? 0) ?></div><div class="lbl">Pendientes RRHH</div></a>
+  <a href="<?= e($historialUrl('revision_jefe')) ?>" class="<?= e($historialCardClass('revision_jefe')) ?>"><div class="stat-icon">&#9201;</div><div class="num"><?= e($stats['revisionJefe'] ?? 0) ?></div><div class="lbl">En Revision Jefe</div></a>
   <a href="<?= e($historialUrl('aprobadas')) ?>" class="<?= e($historialCardClass('aprobadas')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats['aprobadas'] ?? 0) ?></div><div class="lbl">Aprobadas RRHH</div></a>
   <a href="<?= e($historialUrl('rechazadas')) ?>" class="<?= e($historialCardClass('rechazadas')) ?>"><div class="stat-icon">&times;</div><div class="num"><?= e($stats['rechazadas'] ?? 0) ?></div><div class="lbl">Rechazadas RRHH</div></a>
-  <a href="<?= e($historialUrl('historico')) ?>" class="<?= e($historialCardClass('historico')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['historico'] ?? 0) ?></div><div class="lbl">Total Historico</div></a>
-  <a href="<?= e($historialUrl('revision_jefe')) ?>" class="<?= e($historialCardClass('revision_jefe')) ?>"><div class="stat-icon">&#9201;</div><div class="num"><?= e($stats['revisionJefe'] ?? 0) ?></div><div class="lbl">En Revision Jefe</div></a>
+  <a href="<?= e($historialUrl('canceladas')) ?>" class="<?= e($historialCardClass('canceladas')) ?>"><div class="stat-icon">&#8856;</div><div class="num"><?= e($stats['canceladas'] ?? 0) ?></div><div class="lbl">Cancelado por el usuario</div></a>
 </div>
 <div class="section-header"><h2>Aprobadas por jefe pendientes de RRHH</h2></div>
 <?php $solicitudes = $pendientes ?? []; $paginationData = $pendientesPaginationData ?? null; $paginationParam = 'pag_pendientes'; $paginationLabel = 'pendientes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>

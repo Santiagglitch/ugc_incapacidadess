@@ -300,7 +300,7 @@ class solicitudModel extends mainModel
         return $this->gestionarRRHH($id, $nit, $obs, 'RECHAZADO_RRHH');
     }
 
-    public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false): bool
+    public function cancelarAgenda(int $id, string $nitEmpleado): bool
     {
         return $this->ejecutar(
             "UPDATE ICEBERG.SOLICITUDES_PERMISOS
@@ -309,16 +309,11 @@ class solicitudModel extends mainModel
              WHERE ID=:id
                AND ACTIVO=1
                AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH')
-               AND (
-                    NIT_EMPLEADO=:nit_usuario
-                    OR NIT_JEFE=:nit_usuario
-                    OR :es_gestor=1
-               )",
+               AND NIT_EMPLEADO=:nit_empleado",
             [
                 ':estado' => ESTADO_CANCELADO_AGENDA,
                 ':id' => $id,
-                ':nit_usuario' => $nitUsuario,
-                ':es_gestor' => $esGestor ? 1 : 0,
+                ':nit_empleado' => $nitEmpleado,
             ]
         );
     }
@@ -543,6 +538,7 @@ class solicitudModel extends mainModel
             'FECHA_CREACION DESC',
             'FECHA_CREACION ASC',
             'FECHA_GESTION_JEFE DESC',
+            'FECHA_MODIFICACION DESC',
         ];
 
         return in_array($orden, $permitidos, true) ? $orden : 'FECHA_CREACION DESC';
