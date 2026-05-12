@@ -2127,3 +2127,87 @@ table thead th,
   color: #ffffff;
   border-color: #b91c1c;
 }
+/* ================================
+   BADGES DE ESTADO
+================================ */
+
+.badge-estado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-width: 142px;
+  height: 32px;
+  padding: 0 14px;
+
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+
+  letter-spacing: -0.01em;
+  box-shadow: 0 6px 14px rgba(15, 35, 25, 0.06);
+}
+
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.75;
+  flex: 0 0 auto;
+}
+
+/* Pendiente jefe */
+.badge-pendiente {
+  color: #9a6500;
+  background: #fff7e6;
+  border-color: #f2c66d;
+}
+
+/* Pendiente RRHH */
+.badge-rrhh {
+  color: #075985;
+  background: #edf7ff;
+  border-color: #b9dcf5;
+}
+
+/* Aprobado RRHH */
+.badge-aprobado {
+  color: #0b6b2e;
+  background: #eaf8ef;
+  border-color: #9bd7ad;
+}
+
+/* Rechazado */
+.badge-rechazado {
+  color: #9f1239;
+  background: #fff1f2;
+  border-color: #fda4af;
+}
+
+/* Cancelado */
+.badge-cancelado-agenda {
+  color: #374151;
+  background: #f3f6fa;
+  border-color: #cbd5e1;
+}
+
+/* Estado general */
+.badge-info {
+  color: #334155;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Para que la columna Estado tenga mejor aire */
+.ugc-table th:nth-child(7),
+.ugc-table td:nth-child(7) {
+  width: 180px;
+  min-width: 180px;
+  text-align: center;
+}
