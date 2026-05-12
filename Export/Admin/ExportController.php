@@ -52,24 +52,213 @@ final class ExportController
         \requiere_rol([\ROL_ADMIN]);
 
         $model = new \solicitudModel();
-        $todas = $model->getAll();
 
+        $todasBase = $model->getAll();
+
+        $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todasBase);
+
+        /*
+            Historial completo debe traer todo, incluyendo canceladas.
+            Si getAll ya las trae, no se duplican.
+        */
+        $historialCompleto = $this->unirFilasUnicas(
+            $todasBase,
+            $canceladoPorUsuario
+        );
+
+        $pendientesJefe = $this->ordenarPorFechaCreacionAsc(
+            $this->filtrarPorEstados($historialCompleto, [
+                $this->constante('ESTADO_PENDIENTE_JEFE', 'PENDIENTE_JEFE'),
+            ])
+        );
+
+        $pendientesRRHH = $this->ordenarPorFechaCreacionAsc(
+            $this->filtrarPorEstados($historialCompleto, [
+                $this->constante('ESTADO_APROBADO_JEFE', 'APROBADO_JEFE'),
+            ])
+        );
+
+        $aprobadasRRHH = $this->filtrarPorEstados($historialCompleto, [
+            $this->constante('ESTADO_APROBADO_RRHH', 'APROBADO_RRHH'),
+        ]);
+
+        $rechazadasRRHH = $this->filtrarPorEstados($historialCompleto, [
+            $this->constante('ESTADO_RECHAZADO_RRHH', 'RECHAZADO_RRHH'),
+        ]);
+
+        /*
+            MISMO ORDEN Y MISMOS NOMBRES DE LAS TARJETAS DEL PANEL ADMIN
+        */
         $data = [
-            'Total Solicitudes' => $todas,
-            'Pendiente Jefe' => $this->filtrarPorEstado($todas, \ESTADO_PENDIENTE_JEFE),
-            'Pendientes RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_JEFE),
-            'Aprobado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_APROBADO_RRHH),
-            'Rechazado RRHH' => $this->filtrarPorEstado($todas, \ESTADO_RECHAZADO_RRHH),
+            'Historial completo' => $historialCompleto,
+            'Pendientes jefe' => $pendientesJefe,
+            'Pendientes RRHH' => $pendientesRRHH,
+            'Aprobadas RRHH' => $aprobadasRRHH,
+            'Rechazadas RRHH' => $rechazadasRRHH,
+            'Cancelado por el usuario' => $canceladoPorUsuario,
         ];
 
         $this->generarExcelPorHojas($data, 'reporte_admin');
     }
 
+    private function obtenerCanceladasPorUsuario(object $model, array $todas): array
+    {
+        /*
+            Estados posibles de cancelación.
+            El principal en tu sistema es CANCELADO_AGENDA.
+        */
+        $estadosCancelados = [
+            $this->constante('ESTADO_CANCELADO_AGENDA', 'CANCELADO_AGENDA'),
+            $this->constante('ESTADO_CANCELADO_USUARIO', 'CANCELADO_USUARIO'),
+            $this->constante('ESTADO_CANCELADA_USUARIO', 'CANCELADA_USUARIO'),
+            $this->constante('ESTADO_CANCELADO_POR_USUARIO', 'CANCELADO_POR_USUARIO'),
+            $this->constante('ESTADO_CANCELADA_POR_USUARIO', 'CANCELADA_POR_USUARIO'),
+            'CANCELADO_AGENDA',
+            'CANCELADO_USUARIO',
+            'CANCELADA_USUARIO',
+            'CANCELADO_POR_USUARIO',
+            'CANCELADA_POR_USUARIO',
+            'CANCELADO',
+            'CANCELADA',
+        ];
+
+        /*
+            1. Primero busca dentro de getAll().
+        */
+        $canceladas = $this->filtrarPorEstados($todas, $estadosCancelados);
+
+        if (!empty($canceladas)) {
+            return $this->unirFilasUnicas($canceladas);
+        }
+
+        /*
+            2. Si getAll() no las trae, intenta métodos posibles del modelo.
+            No rompe el sistema si alguno no existe.
+        */
+        $metodosPosibles = [
+            'getCanceladasPorUsuario',
+            'getCanceladasUsuario',
+            'getCanceladas',
+            'getCanceladasAgenda',
+            'getCanceladasAdmin',
+            'getCanceladasPorAdmin',
+        ];
+
+        $resultado = [];
+
+        foreach ($metodosPosibles as $metodo) {
+            if (method_exists($model, $metodo)) {
+                try {
+                    $rows = $model->{$metodo}();
+
+                    if (is_array($rows)) {
+                        $rows = $this->filtrarPorEstados($rows, $estadosCancelados);
+                        $resultado = $this->unirFilasUnicas($resultado, $rows);
+                    }
+                } catch (\Throwable $e) {
+                    /*
+                        Si el método existe pero necesita parámetros,
+                        no detenemos la descarga del Excel.
+                    */
+                }
+            }
+        }
+
+        if (!empty($resultado)) {
+            return $resultado;
+        }
+
+        /*
+            3. Último respaldo:
+            intenta getAll filtrando por estado.
+            Esto sirve si tu modelo acepta filtros.
+        */
+        if (method_exists($model, 'getAll')) {
+            foreach ($estadosCancelados as $estado) {
+                try {
+                    $rows = $model->getAll([
+                        'estado' => $estado,
+                    ]);
+
+                    if (is_array($rows)) {
+                        $rows = $this->filtrarPorEstados($rows, [$estado]);
+                        $resultado = $this->unirFilasUnicas($resultado, $rows);
+                    }
+                } catch (\Throwable $e) {
+                    /*
+                        Si getAll no acepta filtros, seguimos sin romper.
+                    */
+                }
+            }
+        }
+
+        return $resultado;
+    }
+
     private function filtrarPorEstado(array $rows, string $estado): array
     {
-        return array_values(array_filter($rows, static function (array $row) use ($estado): bool {
-            return (string)($row['ESTADO'] ?? '') === $estado;
+        return $this->filtrarPorEstados($rows, [$estado]);
+    }
+
+    private function filtrarPorEstados(array $rows, array $estados): array
+    {
+        $estadosNormalizados = array_values(array_unique(array_map(
+            fn($estado) => $this->normalizarEstado((string)$estado),
+            $estados
+        )));
+
+        return array_values(array_filter($rows, function (array $row) use ($estadosNormalizados): bool {
+            $estadoFila = $this->normalizarEstado((string)($row['ESTADO'] ?? ''));
+
+            return in_array($estadoFila, $estadosNormalizados, true);
         }));
+    }
+
+    private function ordenarPorFechaCreacionAsc(array $rows): array
+    {
+        usort($rows, static function (array $a, array $b): int {
+            $fecha = strcmp(
+                (string)($a['FECHA_CREACION'] ?? ''),
+                (string)($b['FECHA_CREACION'] ?? '')
+            );
+
+            if ($fecha !== 0) {
+                return $fecha;
+            }
+
+            return (int)($a['ID'] ?? 0) <=> (int)($b['ID'] ?? 0);
+        });
+
+        return $rows;
+    }
+
+    private function unirFilasUnicas(array ...$grupos): array
+    {
+        $resultado = [];
+        $idsUsados = [];
+
+        foreach ($grupos as $rows) {
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $id = (string)($row['ID'] ?? '');
+
+                if ($id === '') {
+                    $id = md5(json_encode($row));
+                }
+
+                if (isset($idsUsados[$id])) {
+                    continue;
+                }
+
+                $idsUsados[$id] = true;
+                $resultado[] = $row;
+            }
+        }
+
+        return $resultado;
     }
 
     private function generarExcelPorHojas(array $data, string $nombreArchivo): void
@@ -77,7 +266,10 @@ final class ExportController
         $xlsx = new SimpleXLSXGen();
 
         foreach ($data as $tituloHoja => $rows) {
-            $xlsx->addSheet($this->prepararFilas($rows), $this->limpiarTituloHoja($tituloHoja));
+            $xlsx->addSheet(
+                $this->prepararFilas($rows),
+                $this->limpiarTituloHoja($tituloHoja)
+            );
         }
 
         while (ob_get_level() > 0) {
@@ -94,17 +286,35 @@ final class ExportController
 
         foreach ($rows as $row) {
             $fila = [];
+
             foreach ($this->campos as $campo) {
                 $valor = $row[$campo] ?? '';
-                if ($campo === 'TIPO_SOLICITUD' && defined('TIPOS_SOLICITUD') && isset(\TIPOS_SOLICITUD[$valor])) {
+
+                if (
+                    $campo === 'TIPO_SOLICITUD'
+                    && defined('TIPOS_SOLICITUD')
+                    && isset(\TIPOS_SOLICITUD[$valor])
+                ) {
                     $valor = \TIPOS_SOLICITUD[$valor];
                 }
+
                 $fila[] = $this->normalizarValor($valor);
             }
+
             $filas[] = $fila;
         }
 
         return $filas;
+    }
+
+    private function constante(string $nombre, string $valorDefecto): string
+    {
+        return defined($nombre) ? (string)constant($nombre) : $valorDefecto;
+    }
+
+    private function normalizarEstado(string $estado): string
+    {
+        return strtoupper(trim($estado));
     }
 
     private function normalizarValor($valor): string
@@ -119,7 +329,14 @@ final class ExportController
     private function limpiarTituloHoja(string $titulo): string
     {
         $titulo = trim(str_replace(['\\', '/', '*', '[', ']', ':', '?'], ' ', $titulo));
-        return substr($titulo !== '' ? $titulo : 'Hoja', 0, 31);
+
+        if ($titulo === '') {
+            $titulo = 'Hoja';
+        }
+
+        return function_exists('mb_substr')
+            ? mb_substr($titulo, 0, 31)
+            : substr($titulo, 0, 31);
     }
 }
 
