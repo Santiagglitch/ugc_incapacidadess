@@ -576,6 +576,9 @@ $hoy   = $hoy ?? date('Y-m-d');
       horas.setCustomValidity('El valor debe ser inferior a 9 horas. Máximo permitido: 8 horas.');
       return;
     }
+    if (Math.abs((valorHoras * 2) - Math.round(valorHoras * 2)) > 0.00001) {
+      horas.setCustomValidity('Usa incrementos de media hora.');
+    }
   }
 
   function actualizarEstiloOpciones() {
@@ -778,6 +781,12 @@ $hoy   = $hoy ?? date('Y-m-d');
       return false;
     }
 
+    if (Math.abs((valorHoras * 2) - Math.round(valorHoras * 2)) > 0.00001) {
+      alert('La duracion en horas debe registrarse en incrementos de media hora.');
+      horas.focus();
+      return false;
+    }
+
     return true;
   }
 
@@ -927,6 +936,15 @@ $hoy   = $hoy ?? date('Y-m-d');
         e.preventDefault();
         return;
       }
+    }
+
+    var errorPdfActual = document.getElementById('pdf-error');
+
+    if (errorPdfActual && errorPdfActual.style.display !== 'none' && errorPdfActual.textContent.trim() !== '') {
+      e.preventDefault();
+      alert('Corrige el archivo PDF antes de enviar la solicitud.');
+      document.getElementById('documento_pdf').focus();
+      return;
     }
   });
 

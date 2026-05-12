@@ -173,9 +173,12 @@ class solicitudController
         $tipoSolicitud = limpiar_texto($_POST['tipo_solicitud'] ?? '');
         $fechaInicio = limpiar_texto($_POST['fecha_inicio'] ?? '');
         $fechaFin = limpiar_texto($_POST['fecha_fin'] ?? '');
+        $tipoDuracion = limpiar_texto($_POST['tipo_duracion'] ?? '');
         $duracionHoras = $this->numeroOpcional($_POST['duracion_horas'] ?? '');
         $duracionDias = $this->numeroOpcional($_POST['duracion_dias'] ?? '');
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
+
+        $this->normalizarDuracionSolicitud($tipoDuracion, $fechaInicio, $fechaFin, $duracionHoras, $duracionDias);
 
         $empleadoModel = new empleadoModel();
         $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
@@ -184,6 +187,7 @@ class solicitudController
             $tipoSolicitud,
             $fechaInicio,
             $fechaFin,
+            $tipoDuracion,
             $duracionHoras,
             $duracionDias,
             $observaciones,
@@ -310,9 +314,12 @@ class solicitudController
         $tipoSolicitud = limpiar_texto($_POST['tipo_solicitud'] ?? '');
         $fechaInicio = limpiar_texto($_POST['fecha_inicio'] ?? '');
         $fechaFin = limpiar_texto($_POST['fecha_fin'] ?? '');
+        $tipoDuracion = limpiar_texto($_POST['tipo_duracion'] ?? '');
         $duracionHoras = $this->numeroOpcional($_POST['duracion_horas'] ?? '');
         $duracionDias = $this->numeroOpcional($_POST['duracion_dias'] ?? '');
         $observaciones = limpiar_texto($_POST['observaciones'] ?? '');
+
+        $this->normalizarDuracionSolicitud($tipoDuracion, $fechaInicio, $fechaFin, $duracionHoras, $duracionDias);
 
         $empleadoModel = new empleadoModel();
         $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
@@ -321,6 +328,7 @@ class solicitudController
             $tipoSolicitud,
             $fechaInicio,
             $fechaFin,
+            $tipoDuracion,
             $duracionHoras,
             $duracionDias,
             $observaciones,
@@ -403,6 +411,15 @@ class solicitudController
             redirect_to($this->returnTo(url_view('dashboard')));
         }
 
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeGestionarJefe($solicitud, $user)) {
+            flash_set('error', 'La solicitud no se puede gestionar como jefe en este momento.');
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
+
         $this->validarObservacionGestion(
             $accion,
             $obs,
@@ -454,6 +471,15 @@ class solicitudController
 
         if (!in_array($accion, ['aprobar', 'rechazar'], true)) {
             flash_set('error', 'Selecciona una decision valida.');
+            redirect_to($this->returnTo(url_view('dashboard')));
+        }
+
+        if (!$solicitud) {
+            $this->redirigirSolicitudBorrada();
+        }
+
+        if (!$this->puedeGestionarRrhh($solicitud, $user)) {
+            flash_set('error', 'La solicitud no se puede gestionar por Talento Humano en este momento.');
             redirect_to($this->returnTo(url_view('dashboard')));
         }
 
@@ -608,6 +634,7 @@ class solicitudController
         string $tipo,
         string $inicio,
         string $fin,
+        string $tipoDuracion,
         ?float $horas,
         ?float $dias,
         string $obs,
@@ -631,12 +658,38 @@ class solicitudController
             $errores[] = 'La fecha fin debe ser igual o posterior a la fecha de inicio.';
         }
 
-        if ($horas !== null && ($horas < 0 || $horas > 999)) {
+        if (!in_array($tipoDuracion, ['HORAS', 'DIAS', 'AMBAS'], true)) {
+            $errores[] = 'Selecciona si la solicitud se registra por horas, por dias o por dias mas horas adicionales.';
+        }
+
+        if ($horas !== null && ($horas <= 0 || $horas > 8)) {
             $errores[] = 'La duracion en horas no es valida.';
         }
 
-        if ($dias !== null && ($dias < 0 || $dias > 365)) {
+        if ($horas !== null && abs(($horas * 2) - round($horas * 2)) > 0.00001) {
+            $errores[] = 'La duracion en horas debe registrarse en incrementos de media hora.';
+        }
+
+        if ($dias !== null && ($dias <= 0 || $dias > 365)) {
             $errores[] = 'La duracion en dias no es valida.';
+        }
+
+        if ($tipoDuracion === 'HORAS' && $horas === null) {
+            $errores[] = 'Ingresa la duracion en horas.';
+        }
+
+        if ($tipoDuracion === 'DIAS' && $dias === null) {
+            $errores[] = 'Selecciona un rango con al menos un dia habil.';
+        }
+
+        if ($tipoDuracion === 'AMBAS') {
+            if ($dias === null) {
+                $errores[] = 'Selecciona un rango con al menos un dia habil.';
+            }
+
+            if ($horas === null) {
+                $errores[] = 'Ingresa las horas adicionales.';
+            }
         }
 
         if (mb_strlen($obs, 'UTF-8') > 2000) {
@@ -648,6 +701,53 @@ class solicitudController
         }
 
         return $errores;
+    }
+
+    private function normalizarDuracionSolicitud(
+        string $tipoDuracion,
+        string $fechaInicio,
+        string &$fechaFin,
+        ?float &$horas,
+        ?float &$dias
+    ): void {
+        if ($tipoDuracion === 'HORAS') {
+            $fechaFin = $fechaInicio;
+            $dias = null;
+            return;
+        }
+
+        if ($tipoDuracion === 'DIAS') {
+            $horas = null;
+        }
+
+        if (
+            in_array($tipoDuracion, ['DIAS', 'AMBAS'], true)
+            && $this->fechaValida($fechaInicio)
+            && $this->fechaValida($fechaFin)
+        ) {
+            $diasHabiles = $this->calcularDiasHabiles($fechaInicio, $fechaFin);
+            $dias = $diasHabiles > 0 ? (float)$diasHabiles : null;
+        }
+    }
+
+    private function calcularDiasHabiles(string $inicio, string $fin): int
+    {
+        $fechaInicio = DateTimeImmutable::createFromFormat('Y-m-d', $inicio);
+        $fechaFin = DateTimeImmutable::createFromFormat('Y-m-d', $fin);
+
+        if (!$fechaInicio || !$fechaFin || $fechaFin < $fechaInicio) {
+            return 0;
+        }
+
+        $dias = 0;
+
+        for ($fecha = $fechaInicio; $fecha <= $fechaFin; $fecha = $fecha->modify('+1 day')) {
+            if ((int)$fecha->format('N') <= 5) {
+                $dias++;
+            }
+        }
+
+        return $dias;
     }
 
     private function procesarArchivoPDF(string $nitEmpleado)
@@ -792,6 +892,22 @@ class solicitudController
 
         return in_array($estado, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)
             && $esDuenoSolicitud;
+    }
+
+    private function puedeGestionarJefe(array $solicitud, array $user): bool
+    {
+        $cedula = normalizar_documento($user['cedula'] ?? '');
+
+        return $cedula !== ''
+            && normalizar_documento($solicitud['NIT_JEFE'] ?? '') === $cedula
+            && normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '') !== $cedula
+            && (string)($solicitud['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE;
+    }
+
+    private function puedeGestionarRrhh(array $solicitud, array $user): bool
+    {
+        return in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
+            && (string)($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
     }
 
     private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array
