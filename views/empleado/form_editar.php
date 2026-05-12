@@ -14,6 +14,21 @@ $duracionDias = (string)($solicitud['DURACION_DIAS'] ?? '');
 $observaciones = (string)($solicitud['OBSERVACIONES'] ?? '');
 $rutaComprobante = (string)($solicitud['RUTA_COMPROBANTE'] ?? '');
 
+$duracionHorasNumero = is_numeric($duracionHoras) ? (float)$duracionHoras : 0.0;
+$duracionDiasNumero = is_numeric($duracionDias) ? (float)$duracionDias : 0.0;
+$modoDuracion = '';
+
+if ($duracionHorasNumero > 0 && $duracionDiasNumero > 0) {
+    $modoDuracion = 'AMBAS';
+} elseif ($duracionDiasNumero > 0) {
+    $modoDuracion = 'DIAS';
+} elseif ($duracionHorasNumero > 0) {
+    $modoDuracion = 'HORAS';
+}
+
+$minFechaInicio = $fechaInicio !== '' && $fechaInicio < $hoy ? $fechaInicio : $hoy;
+$minFechaFin = $fechaFin !== '' && $fechaFin < $hoy ? $fechaFin : $hoy;
+
 $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard'));
 ?>
 
@@ -36,7 +51,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
       <!-- TIPO -->
       <div class="form-group">
         <label>Tipo de solicitud</label>
-        <select name="tipo_solicitud" required>
+        <select id="tipo_solicitud" name="tipo_solicitud" required>
           <option value="">Selecciona...</option>
 
           <?php foreach (TIPOS_SOLICITUD as $key => $label): ?>
@@ -64,56 +79,108 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
         </select>
       </div>
 
-      <!-- FECHAS -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>Fecha inicio *</label>
-          <input
-            type="date"
-            id="fecha_inicio"
-            name="fecha_inicio"
-            value="<?= e($fechaInicio) ?>"
-            min="<?= e($hoy) ?>"
-            required
-          />
-        </div>
+      <!-- SELECCION DE DURACION -->
+      <div class="form-group duration-type-box" id="control_tipo_duracion">
+        <div class="form-section-box">
+          <div class="duration-header-line">
+            <div class="duration-header-text">
+              <div class="form-section-title">Tipo de duracion</div>
+              <div class="form-section-subtitle">
+                Ajusta si la solicitud se registra por horas, por dias completos o por dias mas horas adicionales.
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label>Fecha fin *</label>
-          <input
-            type="date"
-            id="fecha_fin"
-            name="fecha_fin"
-            value="<?= e($fechaFin) ?>"
-            min="<?= e($hoy) ?>"
-            required
-          />
+            <div class="hd-toggle-wrap">
+              <span class="hd-toggle-label">Dias + horas adicionales</span>
+              <label class="hd-switch" title="Registrar dias completos mas horas adicionales">
+                <input type="checkbox" id="toggle_tipo_ambas" <?= $modoDuracion === 'AMBAS' ? 'checked' : '' ?>>
+                <span class="hd-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="duration-options">
+            <label class="duration-option" id="card_tipo_horas">
+              <input type="radio" id="tipo_duracion_horas" name="tipo_duracion" value="HORAS" <?= $modoDuracion === 'HORAS' ? 'checked' : '' ?>>
+              <span class="duration-icon">H</span>
+              <span class="duration-option-title">Por horas</span>
+              <span class="duration-option-text">Para permisos cortos dentro del mismo dia.</span>
+            </label>
+
+            <label class="duration-option" id="card_tipo_dias">
+              <input type="radio" id="tipo_duracion_dias" name="tipo_duracion" value="DIAS" <?= $modoDuracion === 'DIAS' ? 'checked' : '' ?>>
+              <span class="duration-icon">D</span>
+              <span class="duration-option-title">Por dias</span>
+              <span class="duration-option-text">Para ausencias de uno o varios dias completos.</span>
+            </label>
+
+            <input type="radio" id="tipo_duracion_ambas" name="tipo_duracion" value="AMBAS" <?= $modoDuracion === 'AMBAS' ? 'checked' : '' ?> hidden>
+          </div>
+
+          <div class="duration-help" id="ayuda_duracion"></div>
         </div>
       </div>
 
-      <!-- DURACIÓN -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>Duración en horas</label>
-          <input
-            type="number"
-            id="duracion_horas"
-            name="duracion_horas"
-            value="<?= e($duracionHoras) ?>"
-            min="0"
-            step="0.5"
-          >
-        </div>
+      <!-- FECHAS Y DURACION -->
+      <div class="form-group field-hidden" id="bloque_fechas_duracion">
+        <div class="form-section-box">
+          <div class="form-section-title">Fechas y duracion</div>
+          <div class="form-section-subtitle" id="subtitulo_fechas">
+            Selecciona el tipo de duracion para habilitar los campos correspondientes.
+          </div>
 
-        <div class="form-group">
-          <label>Duración en días</label>
-          <input
-            type="number"
-            id="duracion_dias"
-            name="duracion_dias"
-            value="<?= e($duracionDias) ?>"
-            readonly
-          >
+          <div class="smart-form-row">
+            <div class="form-group" id="grupo_fecha_inicio">
+              <label id="label_fecha_inicio">Fecha inicio *</label>
+              <input
+                type="date"
+                id="fecha_inicio"
+                name="fecha_inicio"
+                value="<?= e($fechaInicio) ?>"
+                min="<?= e($minFechaInicio) ?>"
+              >
+            </div>
+
+            <div class="form-group" id="grupo_fecha_fin">
+              <label>Fecha fin *</label>
+              <input
+                type="date"
+                id="fecha_fin"
+                name="fecha_fin"
+                value="<?= e($fechaFin) ?>"
+                min="<?= e($minFechaFin) ?>"
+              >
+            </div>
+          </div>
+
+          <div class="smart-form-row" style="margin-top: 14px;">
+            <div class="form-group" id="grupo_duracion_horas">
+              <label id="label_duracion_horas">Duracion en horas *</label>
+              <input
+                type="number"
+                id="duracion_horas"
+                name="duracion_horas"
+                value="<?= e($duracionHoras) ?>"
+                min="0.5"
+                step="0.5"
+                placeholder="Ej: 2.5"
+              >
+            </div>
+
+            <div class="form-group" id="grupo_duracion_dias">
+              <label>Duracion en dias</label>
+              <input
+                type="number"
+                id="duracion_dias"
+                name="duracion_dias"
+                value="<?= e($duracionDias) ?>"
+                readonly
+                placeholder="Se calcula automaticamente"
+              >
+            </div>
+          </div>
+
+          <div class="duration-summary" id="resumen_duracion"></div>
         </div>
       </div>
 
@@ -189,77 +256,373 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
 (function () {
 
   var hoy = <?= json_encode($hoy) ?>;
-  var HORAS_POR_DIA = 8;
+  var minFechaPermitida = <?= json_encode($minFechaInicio) ?>;
+
+  var form = document.getElementById('formSolicitud');
+  var tipoSolicitud = document.getElementById('tipo_solicitud');
+
+  var controlTipoDuracion = document.getElementById('control_tipo_duracion');
+  var bloqueFechasDuracion = document.getElementById('bloque_fechas_duracion');
+
+  var radioHoras = document.getElementById('tipo_duracion_horas');
+  var radioDias = document.getElementById('tipo_duracion_dias');
+  var radioAmbas = document.getElementById('tipo_duracion_ambas');
+  var toggleAmbas = document.getElementById('toggle_tipo_ambas');
+
+  var cardHoras = document.getElementById('card_tipo_horas');
+  var cardDias = document.getElementById('card_tipo_dias');
+
+  var ayudaDuracion = document.getElementById('ayuda_duracion');
+  var subtituloFechas = document.getElementById('subtitulo_fechas');
+  var resumenDuracion = document.getElementById('resumen_duracion');
+
+  var grupoFechaFin = document.getElementById('grupo_fecha_fin');
+  var labelFechaInicio = document.getElementById('label_fecha_inicio');
 
   var ini = document.getElementById('fecha_inicio');
   var fin = document.getElementById('fecha_fin');
+  var grupoHoras = document.getElementById('grupo_duracion_horas');
+  var grupoDias = document.getElementById('grupo_duracion_dias');
+  var labelDuracionHoras = document.getElementById('label_duracion_horas');
   var horas = document.getElementById('duracion_horas');
   var dias = document.getElementById('duracion_dias');
 
+  function parseFechaLocal(valor) {
+    var partes = valor.split('-');
+
+    return new Date(
+      parseInt(partes[0], 10),
+      parseInt(partes[1], 10) - 1,
+      parseInt(partes[2], 10)
+    );
+  }
+
+  function formatoISO(fecha) {
+    var y = fecha.getFullYear();
+    var m = String(fecha.getMonth() + 1).padStart(2, '0');
+    var d = String(fecha.getDate()).padStart(2, '0');
+
+    return y + '-' + m + '-' + d;
+  }
+
   function sumarMeses(fecha, meses) {
-    var f = new Date(fecha + 'T00:00:00');
+    var f = parseFechaLocal(fecha);
     f.setMonth(f.getMonth() + meses);
-    return f.toISOString().split('T')[0];
+
+    return formatoISO(f);
   }
 
   var maxFecha = sumarMeses(hoy, 5);
 
-  if (ini) {
-    ini.max = maxFecha;
+  ini.min = minFechaPermitida;
+  ini.max = maxFecha;
+  fin.min = minFechaPermitida;
+  fin.max = maxFecha;
+
+  function obtenerModoSeleccionado() {
+    if (radioAmbas.checked) return 'AMBAS';
+    if (radioHoras.checked) return 'HORAS';
+    if (radioDias.checked) return 'DIAS';
+    return '';
   }
 
-  if (fin) {
-    fin.max = maxFecha;
+  function limpiarDuracion() {
+    horas.value = '';
+    dias.value = '';
+    resumenDuracion.style.display = 'none';
+    resumenDuracion.innerHTML = '';
   }
 
-  function calcularDuracion() {
-    var fechaInicio = ini.value;
-    var fechaFin = fin.value;
+  function actualizarEstiloOpciones() {
+    var modo = obtenerModoSeleccionado();
 
-    if (!fechaInicio) {
-      dias.value = '';
-      horas.value = '';
+    cardHoras.classList.toggle('is-selected', modo === 'HORAS' || modo === 'AMBAS');
+    cardDias.classList.toggle('is-selected', modo === 'DIAS' || modo === 'AMBAS');
+    toggleAmbas.checked = modo === 'AMBAS';
+  }
+
+  function actualizarResumen() {
+    var modo = obtenerModoSeleccionado();
+
+    resumenDuracion.style.display = 'none';
+    resumenDuracion.innerHTML = '';
+
+    if (!modo || !ini.value) {
       return;
     }
 
-    fin.min = fechaInicio;
+    if (modo === 'HORAS' && horas.value) {
+      resumenDuracion.style.display = 'block';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + horas.value + ' hora(s)</strong>.';
+    }
+
+    if (modo === 'DIAS' && dias.value) {
+      resumenDuracion.style.display = 'block';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) completo(s)</strong>.';
+    }
+
+    if (modo === 'AMBAS' && dias.value && horas.value) {
+      resumenDuracion.style.display = 'block';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) completo(s)</strong> mas <strong>' + horas.value + ' hora(s) adicional(es)</strong>.';
+    }
+  }
+
+  function calcularDuracionDias() {
+    var modo = obtenerModoSeleccionado();
+
+    if (!ini.value) {
+      dias.value = '';
+
+      if (modo === 'HORAS') {
+        fin.value = '';
+      }
+
+      actualizarResumen();
+      return;
+    }
+
+    fin.min = ini.value;
     fin.max = maxFecha;
 
-    if (!fechaFin) {
-      fin.value = fechaInicio;
-      fechaFin = fechaInicio;
+    if (modo === 'HORAS') {
+      fin.value = ini.value;
+      dias.value = '';
+      actualizarResumen();
+      return;
     }
 
-    if (fechaFin < fechaInicio) {
-      fin.value = fechaInicio;
-      fechaFin = fechaInicio;
+    if (modo === 'DIAS' || modo === 'AMBAS') {
+      if (!fin.value) {
+        fin.value = ini.value;
+      }
+
+      if (fin.value < ini.value) {
+        fin.value = ini.value;
+      }
+
+      var d1 = parseFechaLocal(ini.value);
+      var d2 = parseFechaLocal(fin.value);
+      var diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+
+      dias.value = diffDays > 0 ? diffDays : '';
     }
 
-    var d1 = new Date(fechaInicio + 'T00:00:00');
-    var d2 = new Date(fechaFin + 'T00:00:00');
-
-    var diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-
-    dias.value = diffDays;
-
-    if (!horas.dataset.editado) {
-      horas.value = diffDays * HORAS_POR_DIA;
+    if (modo === 'DIAS') {
+      horas.value = '';
     }
+
+    actualizarResumen();
   }
 
-  if (horas) {
-    horas.addEventListener('input', function () {
-      horas.dataset.editado = "true";
-    });
+  function actualizarVistaDuracion() {
+    var modo = obtenerModoSeleccionado();
+
+    actualizarEstiloOpciones();
+
+    ini.required = false;
+    fin.required = false;
+    horas.required = false;
+
+    horas.placeholder = 'Ej: 2.5';
+    labelDuracionHoras.textContent = 'Duracion en horas *';
+
+    if (!tipoSolicitud.value) {
+      controlTipoDuracion.style.display = 'none';
+      bloqueFechasDuracion.classList.add('field-hidden');
+      limpiarDuracion();
+      return;
+    }
+
+    controlTipoDuracion.style.display = 'block';
+
+    if (!modo) {
+      bloqueFechasDuracion.classList.add('field-hidden');
+      ayudaDuracion.style.display = 'block';
+      ayudaDuracion.textContent = 'Selecciona una opcion o activa dias + horas adicionales para completar la duracion.';
+      return;
+    }
+
+    bloqueFechasDuracion.classList.remove('field-hidden');
+    ayudaDuracion.style.display = 'none';
+    ini.required = true;
+
+    if (modo === 'HORAS') {
+      subtituloFechas.textContent = 'Selecciona la fecha del permiso e ingresa la cantidad de horas solicitadas.';
+      labelFechaInicio.textContent = 'Fecha del permiso *';
+      labelDuracionHoras.textContent = 'Duracion en horas *';
+      horas.placeholder = 'Ej: 4';
+
+      grupoFechaFin.classList.add('field-hidden');
+      grupoHoras.classList.remove('field-hidden');
+      grupoDias.classList.add('field-hidden');
+
+      fin.required = false;
+      horas.required = true;
+      dias.value = '';
+
+      if (ini.value) {
+        fin.value = ini.value;
+      }
+    }
+
+    if (modo === 'DIAS') {
+      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calcula automaticamente la duracion en dias completos.';
+      labelFechaInicio.textContent = 'Fecha inicio *';
+
+      grupoFechaFin.classList.remove('field-hidden');
+      grupoHoras.classList.add('field-hidden');
+      grupoDias.classList.remove('field-hidden');
+
+      fin.required = true;
+      horas.required = false;
+      horas.value = '';
+      calcularDuracionDias();
+    }
+
+    if (modo === 'AMBAS') {
+      subtituloFechas.textContent = 'Selecciona los dias completos de ausencia y agrega las horas adicionales.';
+      labelFechaInicio.textContent = 'Fecha inicio *';
+      labelDuracionHoras.textContent = 'Horas adicionales *';
+      horas.placeholder = 'Ej: 4';
+
+      grupoFechaFin.classList.remove('field-hidden');
+      grupoHoras.classList.remove('field-hidden');
+      grupoDias.classList.remove('field-hidden');
+
+      fin.required = true;
+      horas.required = true;
+      calcularDuracionDias();
+    }
+
+    actualizarResumen();
   }
 
-  if (ini) {
-    ini.addEventListener('change', calcularDuracion);
-  }
+  tipoSolicitud.addEventListener('change', function () {
+    actualizarVistaDuracion();
+  });
 
-  if (fin) {
-    fin.addEventListener('change', calcularDuracion);
-  }
+  radioHoras.addEventListener('change', function () {
+    radioAmbas.checked = false;
+    toggleAmbas.checked = false;
+    limpiarDuracion();
+    actualizarVistaDuracion();
+  });
+
+  radioDias.addEventListener('change', function () {
+    radioAmbas.checked = false;
+    toggleAmbas.checked = false;
+    limpiarDuracion();
+    actualizarVistaDuracion();
+  });
+
+  toggleAmbas.addEventListener('change', function () {
+    if (toggleAmbas.checked) {
+      radioHoras.checked = false;
+      radioDias.checked = false;
+      radioAmbas.checked = true;
+    } else {
+      radioAmbas.checked = false;
+    }
+
+    limpiarDuracion();
+    actualizarVistaDuracion();
+  });
+
+  ini.addEventListener('change', function () {
+    calcularDuracionDias();
+    actualizarVistaDuracion();
+  });
+
+  fin.addEventListener('change', function () {
+    calcularDuracionDias();
+  });
+
+  horas.addEventListener('input', function () {
+    actualizarResumen();
+  });
+
+  form.addEventListener('submit', function (e) {
+    var modo = obtenerModoSeleccionado();
+
+    if (!tipoSolicitud.value) {
+      e.preventDefault();
+      alert('Selecciona el tipo de solicitud.');
+      tipoSolicitud.focus();
+      return;
+    }
+
+    if (!modo) {
+      e.preventDefault();
+      alert('Selecciona si la solicitud se registra por horas, por dias o por dias mas horas adicionales.');
+      return;
+    }
+
+    if (!ini.value) {
+      e.preventDefault();
+      alert('Selecciona la fecha de inicio.');
+      ini.focus();
+      return;
+    }
+
+    if (modo === 'HORAS') {
+      fin.value = ini.value;
+      dias.value = '';
+
+      if (!horas.value || parseFloat(horas.value) <= 0) {
+        e.preventDefault();
+        alert('Ingresa la duracion en horas.');
+        horas.focus();
+        return;
+      }
+    }
+
+    if (modo === 'DIAS') {
+      horas.value = '';
+
+      if (!fin.value) {
+        e.preventDefault();
+        alert('Selecciona la fecha fin.');
+        fin.focus();
+        return;
+      }
+
+      calcularDuracionDias();
+
+      if (!dias.value || parseInt(dias.value, 10) <= 0) {
+        e.preventDefault();
+        alert('No se pudo calcular la duracion en dias. Revisa las fechas.');
+        fin.focus();
+        return;
+      }
+    }
+
+    if (modo === 'AMBAS') {
+      if (!fin.value) {
+        e.preventDefault();
+        alert('Selecciona la fecha fin.');
+        fin.focus();
+        return;
+      }
+
+      calcularDuracionDias();
+
+      if (!dias.value || parseInt(dias.value, 10) <= 0) {
+        e.preventDefault();
+        alert('No se pudo calcular la duracion en dias. Revisa las fechas.');
+        fin.focus();
+        return;
+      }
+
+      if (!horas.value || parseFloat(horas.value) <= 0) {
+        e.preventDefault();
+        alert('Ingresa las horas adicionales.');
+        horas.focus();
+        return;
+      }
+    }
+  });
+
+  actualizarVistaDuracion();
 
   // ===== VISTA PREVIA DEL PDF =====
   var pdfInput = document.getElementById('documento_pdf');

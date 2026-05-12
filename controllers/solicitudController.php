@@ -41,7 +41,7 @@ class solicitudController
 
             } elseif ($tipo === 'canceladas') {
                 $solicitudes = $this->model->getAll(['estado' => ESTADO_CANCELADO_AGENDA]);
-                $titulo = 'Agendas canceladas';
+                $titulo = 'Canceladas por el usuario';
 
             } elseif ($tipo === 'historico') {
                 $solicitudes = $this->model->getHistoricoRRHH();
@@ -82,7 +82,7 @@ class solicitudController
                     $gestionadas,
                     fn($s) => ($s['ESTADO'] ?? '') === ESTADO_CANCELADO_AGENDA
                 ));
-                $titulo = 'Agendas canceladas';
+                $titulo = 'Canceladas por el usuario';
 
             } elseif ($tipo === 'mis_solicitudes') {
                 $solicitudes = $this->model->getByEmpleado($user['cedula']);
@@ -134,7 +134,7 @@ class solicitudController
                     $todas,
                     fn($s) => ($s['ESTADO'] ?? '') === ESTADO_CANCELADO_AGENDA
                 ));
-                $titulo = 'Mis agendas canceladas';
+                $titulo = 'Canceladas por mi';
 
             } else {
                 $solicitudes = $todas;
@@ -517,29 +517,19 @@ class solicitudController
 
         if (!$this->puedeCancelarAgenda($solicitud, $user)) {
             http_response_code(403);
-            exit('No tienes permisos para cancelar esta agenda.');
+            exit('No tienes permisos para cancelar esta solicitud.');
         }
-
-        $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
-        $nitJefeSolicitud = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
-
-        $esJefeAsignado = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
-            && $nitJefeSolicitud === $cedulaUsuario;
-
-        $esGestor = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
-            || $esJefeAsignado;
 
         $ok = $this->model->cancelarAgenda(
             $id,
-            (string)($user['cedula'] ?? ''),
-            $esGestor
+            (string)($solicitud['NIT_EMPLEADO'] ?? '')
         );
 
         flash_set(
             $ok ? 'success' : 'error',
             $ok
-                ? 'Agenda cancelada correctamente. El permiso ya no queda vigente.'
-                : 'No se pudo cancelar la agenda. Verifica que la solicitud siga aprobada por jefe o Talento Humano.'
+                ? 'Solicitud cancelada correctamente. El permiso ya no queda vigente.'
+                : 'No se pudo cancelar la solicitud. Verifica que siga aprobada por jefe o Talento Humano.'
         );
 
         redirect_to($this->returnTo(url_view('dashboard')));
@@ -795,21 +785,13 @@ class solicitudController
     private function puedeCancelarAgenda(array $solicitud, array $user): bool
     {
         $estado = (string)($solicitud['ESTADO'] ?? '');
-        $rol = $user['rol'] ?? '';
         $cedula = normalizar_documento($user['cedula'] ?? '');
 
         $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
-        $nitJefe = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
-
         $esDuenoSolicitud = $nitEmpleado === $cedula;
 
-        $esJefeAsignado = in_array($rol, [ROL_JEFE, ROL_ADMIN], true)
-            && $nitJefe === $cedula;
-
-        $esRrhhOAdmin = in_array($rol, [ROL_RRHH, ROL_ADMIN], true);
-
         return in_array($estado, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)
-            && ($esDuenoSolicitud || $esJefeAsignado || $esRrhhOAdmin);
+            && $esDuenoSolicitud;
     }
 
     private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array

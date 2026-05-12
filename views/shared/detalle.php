@@ -9,6 +9,8 @@ $estadoSolicitud = (string)($solicitud['ESTADO'] ?? '');
 $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
 $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
 $puedeModificarSolicitud = $esDuenoSolicitud && $estaPendienteJefe;
+$puedeCancelarSolicitud = $esDuenoSolicitud
+  && in_array($estadoSolicitud, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true);
 $puedeGestionarJefe = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
   && $estaPendienteJefe
   && $nitJefeSolicitud === $cedulaUsuario
@@ -23,7 +25,20 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
     <p style="color:var(--muted)"><?= e(TIPOS_SOLICITUD[$solicitud['TIPO_SOLICITUD'] ?? ''] ?? ($solicitud['TIPO_SOLICITUD'] ?? '')) ?></p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
- 
+    <?php if ($puedeCancelarSolicitud): ?>
+      <form
+        class="inline-form form-cancelar-agenda"
+        method="post"
+        action="<?= e(url_action('solicitud_cancelar_agenda')) ?>"
+        onsubmit="return confirm('Seguro que deseas cancelar esta solicitud? El permiso dejara de estar vigente.');"
+      >
+        <?= csrf_input() ?>
+        <input type="hidden" name="_method" value="POST">
+        <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+        <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+        <button class="btn btn-cancelar-agenda" type="submit">Cancelar</button>
+      </form>
+    <?php endif; ?>
     <a class="btn btn-outline" href="<?= e(url_view('dashboard')) ?>">Volver a inicio</a>
   </div>
 </section>

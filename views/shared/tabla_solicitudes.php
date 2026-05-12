@@ -101,6 +101,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 
               $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
               $estaAprobadaJefe = $estadoSolicitud === ESTADO_APROBADO_JEFE;
+              $estaAprobada = in_array($estadoSolicitud, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true);
 
               $puedeModificarSolicitud = $esDuenoSolicitud && $estaPendienteJefe;
 
@@ -110,18 +111,10 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
               $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
 
               /*
-                El botón Cancelar sale apenas:
-                - El jefe aprueba: APROBADO_JEFE
-                - O Talento Humano aprueba: APROBADO_RRHH
-
-                Lo pueden ver:
-                - El empleado dueño
-                - El jefe asignado
-                - RRHH
-                - Admin
+                Cancelar queda disponible para el empleado dueno cuando la
+                solicitud ya fue aprobada por jefe o por Talento Humano.
               */
-              $puedeCancelarAgenda = in_array($estadoSolicitud, [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true)
-                && ($esDuenoSolicitud || $esJefeAsignado || $esRrhhOAdmin);
+              $puedeCancelarAgenda = $estaAprobada && $esDuenoSolicitud;
             ?>
 
             <a 
@@ -137,7 +130,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
                 class="inline-form form-cancelar-agenda" 
                 method="post" 
                 action="<?= e(app_base_url('index.php')) ?>"
-                onsubmit="return confirm('¿Seguro que deseas cancelar esta agenda? El permiso dejará de estar vigente.');"
+                onsubmit="return confirm('Seguro que deseas cancelar esta solicitud? El permiso dejara de estar vigente.');"
               >
                 <?= csrf_input() ?>
                 <input type="hidden" name="action" value="solicitud_cancelar_agenda">
@@ -145,7 +138,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
                 <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">
                 <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
 
-                <button class="btn btn-cancelar-agenda btn-sm" type="submit" title="Cancelar agenda">
+                <button class="btn btn-cancelar-agenda btn-sm" type="submit" title="Cancelar solicitud">
                   Cancelar
                 </button>
               </form>

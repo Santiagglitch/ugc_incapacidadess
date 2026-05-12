@@ -25,11 +25,12 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
 </div>
 </section>
 <div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+  <a href="<?= e($historialUrl('gestionadas')) ?>" class="<?= e($historialCardClass('gestionadas')) ?>"><div class="stat-icon">&#8635;</div><div class="num"><?= e($stats['gestionadas'] ?? 0) ?></div><div class="lbl">Historial Gestionado</div></a>
   <a href="<?= e($historialUrl('pendientes')) ?>" class="<?= e($historialCardClass('pendientes')) ?>"><div class="stat-icon">&#9201;</div><div class="num"><?= e($stats['pendientes'] ?? 0) ?></div><div class="lbl">Pendientes de Aprobacion</div></a>
   <a href="<?= e($historialUrl('aprobadas')) ?>" class="<?= e($historialCardClass('aprobadas')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats['aprobadas'] ?? 0) ?></div><div class="lbl">Aprobadas por ti</div></a>
   <a href="<?= e($historialUrl('rechazadas')) ?>" class="<?= e($historialCardClass('rechazadas')) ?>"><div class="stat-icon">&times;</div><div class="num"><?= e($stats['rechazadas'] ?? 0) ?></div><div class="lbl">Rechazadas por ti</div></a>
+  <a href="<?= e($historialUrl('canceladas')) ?>" class="<?= e($historialCardClass('canceladas')) ?>"><div class="stat-icon">&#8856;</div><div class="num"><?= e($stats['canceladas'] ?? 0) ?></div><div class="lbl">Cancelado por el usuario</div></a>
   <a href="<?= e($historialUrl('mis_solicitudes')) ?>" class="<?= e($historialCardClass('mis_solicitudes')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['misSolicitudes'] ?? 0) ?></div><div class="lbl">Mis Solicitudes</div></a>
-  <a href="<?= e($historialUrl('gestionadas')) ?>" class="<?= e($historialCardClass('gestionadas')) ?>"><div class="stat-icon">&#8635;</div><div class="num"><?= e($stats['gestionadas'] ?? 0) ?></div><div class="lbl">Historial Gestionado</div></a>
 </div>
 <div class="section-header"><h2>Solicitudes pendientes de tu aprobacion</h2></div>
 <?php $solicitudes = $pendientes ?? []; $paginationData = $pendientesPaginationData ?? null; $paginationParam = 'pag_pendientes'; $paginationLabel = 'pendientes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
