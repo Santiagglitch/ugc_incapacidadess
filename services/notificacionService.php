@@ -34,6 +34,13 @@ class notificacionService
         $this->notificarRevisionRRHH($idSolicitud, $nitEmpleado, $tipoSolicitud);
     }
 
+    public function notificarAprobacionFinalJefeTalentoHumano(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
+    {
+        $nombre = $this->nombreEmpleado($nitJefe, 'Tu jefe');
+        $mensaje = $nombre . ' aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud) . '. La solicitud quedo aprobada.';
+        $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_FINAL', $mensaje, $idSolicitud);
+    }
+
     public function notificarRechazoJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
     {
         $nombre = $this->nombreEmpleado($nitJefe, 'Tu jefe');

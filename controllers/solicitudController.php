@@ -426,20 +426,40 @@ class solicitudController
             'Para rechazar la solicitud debes escribir obligatoriamente el motivo.'
         );
 
-        $ok = $accion === 'aprobar'
-            ? $this->model->aprobarJefe($id, $user['cedula'], $obs)
-            : $this->model->rechazarJefe($id, $user['cedula'], $obs);
+        $esSolicitudTalentoHumano = $accion === 'aprobar'
+            && $this->solicitudEsDeTalentoHumano($solicitud);
+
+        if ($accion === 'aprobar') {
+            $ok = $esSolicitudTalentoHumano
+                ? $this->model->aprobarJefeTalentoHumano(
+                    $id,
+                    (string)$user['cedula'],
+                    $obs
+                )
+                : $this->model->aprobarJefe($id, $user['cedula'], $obs);
+        } else {
+            $ok = $this->model->rechazarJefe($id, $user['cedula'], $obs);
+        }
 
         if ($ok && $solicitud) {
             $notificaciones = new notificacionService();
 
             if ($accion === 'aprobar') {
-                $notificaciones->notificarAprobacionJefe(
-                    $id,
-                    (string)$solicitud['NIT_EMPLEADO'],
-                    (string)$user['cedula'],
-                    (string)$solicitud['TIPO_SOLICITUD']
-                );
+                if ($esSolicitudTalentoHumano) {
+                    $notificaciones->notificarAprobacionFinalJefeTalentoHumano(
+                        $id,
+                        (string)$solicitud['NIT_EMPLEADO'],
+                        (string)$user['cedula'],
+                        (string)$solicitud['TIPO_SOLICITUD']
+                    );
+                } else {
+                    $notificaciones->notificarAprobacionJefe(
+                        $id,
+                        (string)$solicitud['NIT_EMPLEADO'],
+                        (string)$user['cedula'],
+                        (string)$solicitud['TIPO_SOLICITUD']
+                    );
+                }
             } else {
                 $notificaciones->notificarRechazoJefe(
                     $id,
@@ -453,7 +473,9 @@ class solicitudController
 
         flash_set(
             $ok ? 'success' : 'error',
-            $ok ? 'Gestion de jefe guardada.' : 'No se pudo gestionar la solicitud.'
+            $ok
+                ? ($accion === 'aprobar' ? 'Solicitud aprobada con exito.' : 'Solicitud rechazada con exito.')
+                : ($accion === 'aprobar' ? 'No se pudo aprobar la solicitud.' : 'No se pudo rechazar la solicitud.')
         );
 
         redirect_to($this->returnTo(url_view('dashboard')));
@@ -516,7 +538,9 @@ class solicitudController
 
         flash_set(
             $ok ? 'success' : 'error',
-            $ok ? 'Gestion de RRHH guardada.' : 'No se pudo gestionar la solicitud.'
+            $ok
+                ? ($accion === 'aprobar' ? 'Solicitud aprobada con exito.' : 'Solicitud rechazada con exito.')
+                : ($accion === 'aprobar' ? 'No se pudo aprobar la solicitud.' : 'No se pudo rechazar la solicitud.')
         );
 
         redirect_to($this->returnTo(url_view('dashboard')));
@@ -906,8 +930,38 @@ class solicitudController
 
     private function puedeGestionarRrhh(array $solicitud, array $user): bool
     {
+        $cedula = normalizar_documento($user['cedula'] ?? '');
+        $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+
         return in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
+            && $cedula !== ''
+            && $nitEmpleado !== $cedula
             && (string)($solicitud['ESTADO'] ?? '') === ESTADO_APROBADO_JEFE;
+    }
+
+    private function solicitudEsDeTalentoHumano(array $solicitud): bool
+    {
+        $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
+
+        if ($nitEmpleado === '') {
+            return false;
+        }
+
+        if (APP_ENV === 'development') {
+            foreach (USUARIOS_PRUEBA as $cedula => $datos) {
+                if (normalizar_documento((string)$cedula) !== $nitEmpleado) {
+                    continue;
+                }
+
+                return ($datos['rol'] ?? '') === ROL_RRHH
+                    || in_array((string)($datos['centro_costo'] ?? ''), CC_RRHH, true);
+            }
+        }
+
+        $empleadoModel = new empleadoModel();
+        $empleado = $empleadoModel->getByNit($nitEmpleado);
+
+        return in_array((string)($empleado['CENTRO_COSTO'] ?? ''), CC_RRHH, true);
     }
 
     private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array

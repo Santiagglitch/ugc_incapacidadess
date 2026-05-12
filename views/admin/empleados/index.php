@@ -27,7 +27,7 @@ $statCardClass = static fn(string $rol = ''): string => 'stat-card stat-card-lin
   <a class="<?= e($statCardClass('empleado')) ?>" href="<?= e($empleadosUrl('empleado')) ?>"><div class="num"><?= e($stats['empleado'] ?? 0) ?></div><div class="lbl">Empleados</div></a>
 </div>
 
-<div class="form-card empleados-filter-card">
+<div id="empleados-listado" class="form-card empleados-filter-card">
   <form class="empleados-filter-form" method="get" action="<?= e(app_base_url('index.php')) ?>">
     <input type="hidden" name="view" value="admin_empleados">
 

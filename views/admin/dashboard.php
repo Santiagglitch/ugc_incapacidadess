@@ -5,11 +5,15 @@ $historialSolicitudes = $historialSolicitudes ?? ($todas ?? []);
 $q = $q ?? '';
 $tipoFiltro = $tipoFiltro ?? '';
 
-$historialUrl = static fn(string $tipo): string => url_view('dashboard') . '&' . http_build_query(array_filter([
-  'historial' => $tipo,
-  'q' => $q,
-  'tipo_solicitud' => $tipoFiltro,
-], static fn($value): bool => $value !== '' && $value !== null));
+$historialUrl = static function (string $tipo) use ($q, $tipoFiltro): string {
+  $params = array_filter([
+    'historial' => $tipo,
+    'q' => $q,
+    'tipo_solicitud' => $tipoFiltro,
+  ], static fn($value): bool => $value !== '' && $value !== null);
+
+  return url_view('dashboard') . ($params ? '&' . http_build_query($params) : '');
+};
 $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-link' . ($historialTipo === $tipo ? ' is-active' : '');
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">

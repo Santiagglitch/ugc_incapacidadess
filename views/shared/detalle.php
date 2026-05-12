@@ -16,8 +16,9 @@ $puedeGestionarJefe = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
   && $nitJefeSolicitud === $cedulaUsuario
   && !$esDuenoSolicitud;
 $puedeGestionarRrhh = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
-  && $estadoSolicitud === ESTADO_APROBADO_JEFE;
-$returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
+  && $estadoSolicitud === ESTADO_APROBADO_JEFE
+  && !$esDuenoSolicitud;
+$returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard'));
 ?>
 <section class="page-header">
   <div>
@@ -39,7 +40,7 @@ $returnToDetalle = app_base_url('index.php') . '?' . http_build_query($_GET);
         <button class="btn btn-cancelar-agenda" type="submit">Cancelar</button>
       </form>
     <?php endif; ?>
-    <a class="btn btn-outline" href="<?= e(url_view('dashboard')) ?>">Volver a inicio</a>
+    <a class="btn btn-outline" href="<?= e($returnToDetalle) ?>">Volver</a>
   </div>
 </section>
 

@@ -109,6 +109,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
                 && $nitJefeSolicitud === $cedulaUsuario;
 
               $esRrhhOAdmin = in_array($rolUsuario, [ROL_RRHH, ROL_ADMIN], true);
+              $puedeGestionarRrhh = $esRrhhOAdmin && !$esDuenoSolicitud && $estaAprobadaJefe;
 
               /*
                 Cancelar queda disponible para el empleado dueno cuando la
@@ -191,7 +192,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
               </a>
             <?php endif; ?>
 
-            <?php if ($esRrhhOAdmin && $estaAprobadaJefe): ?>
+            <?php if ($puedeGestionarRrhh): ?>
               <form class="inline-form" method="post" action="<?= e(url_action('solicitud_rrhh')) ?>">
                 <?= csrf_input() ?>
                 <input type="hidden" name="return_to" value="<?= e($returnTo) ?>">

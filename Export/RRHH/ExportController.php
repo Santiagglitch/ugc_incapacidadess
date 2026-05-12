@@ -53,6 +53,8 @@ final class ExportController
         \iniciar_sesion_segura();
         \requiere_rol([\ROL_RRHH, \ROL_ADMIN]);
 
+        $user = \usuario_actual();
+        $nitRrhh = (string)($user['cedula'] ?? '');
         $model = new \solicitudModel();
 
         $todas = $model->getAll();
@@ -80,6 +82,7 @@ final class ExportController
         ]);
 
         $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todas);
+        $misSolicitudes = $model->getByEmpleado($nitRrhh);
 
         /*
             MISMO ORDEN Y MISMOS NOMBRES DE LAS TARJETAS DEL PANEL RRHH
@@ -91,6 +94,7 @@ final class ExportController
             'Aprobadas RRHH' => $aprobadasRRHH,
             'Rechazadas RRHH' => $rechazadasRRHH,
             'Cancelado por el usuario' => $canceladoPorUsuario,
+            'Mis Solicitudes' => $misSolicitudes,
         ];
 
         $this->generarExcelPorHojas($data, 'reporte_rrhh');

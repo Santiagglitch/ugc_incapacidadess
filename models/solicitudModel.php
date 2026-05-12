@@ -101,7 +101,7 @@ class solicitudModel extends mainModel
                AND NIT_EMPLEADO<>:nit
                AND ESTADO='PENDIENTE_JEFE'
                AND ACTIVO=1
-             ORDER BY FECHA_CREACION ASC",
+             ORDER BY ID ASC",
             [':nit' => $nit]
         );
     }
@@ -127,7 +127,7 @@ class solicitudModel extends mainModel
              FROM ICEBERG.SOLICITUDES_PERMISOS
              WHERE ACTIVO=1
                AND ESTADO='APROBADO_JEFE'
-             ORDER BY FECHA_CREACION ASC"
+             ORDER BY ID ASC"
         );
     }
 
@@ -182,7 +182,7 @@ class solicitudModel extends mainModel
         $filtros['excluir_empleado'] = $nit;
         $filtros['estado'] = ESTADO_PENDIENTE_JEFE;
 
-        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_CREACION ASC');
+        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'ID ASC');
     }
 
     public function getGestionadasByJefePaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
@@ -283,6 +283,31 @@ class solicitudModel extends mainModel
     public function aprobarJefe(int $id, string $nit, string $obs): bool
     {
         return $this->gestionarJefe($id, $nit, $obs, 'APROBADO_JEFE');
+    }
+
+    public function aprobarJefeTalentoHumano(int $id, string $nitJefe, string $obs): bool
+    {
+        return $this->ejecutar(
+            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+             SET ESTADO=:estado,
+                 FECHA_GESTION_JEFE=SYSDATE,
+                 OBSERVACION_JEFE=:obs_jefe,
+                 NIT_RRHH=NULL,
+                 FECHA_GESTION_RRHH=SYSDATE,
+                 OBSERVACION_RRHH=:obs_rrhh
+             WHERE ID=:id
+               AND NIT_JEFE=:nit_jefe
+               AND NIT_EMPLEADO<>:nit_jefe
+               AND ESTADO='PENDIENTE_JEFE'
+               AND ACTIVO=1",
+            [
+                ':estado' => ESTADO_APROBADO_RRHH,
+                ':obs_jefe' => $obs,
+                ':obs_rrhh' => 'Aprobacion final automatica: solicitud propia de Talento Humano aprobada por jefe.',
+                ':id' => $id,
+                ':nit_jefe' => $nitJefe,
+            ]
+        );
     }
 
     public function rechazarJefe(int $id, string $nit, string $obs): bool
@@ -539,6 +564,7 @@ class solicitudModel extends mainModel
             'FECHA_CREACION ASC',
             'FECHA_GESTION_JEFE DESC',
             'FECHA_MODIFICACION DESC',
+            'ID ASC',
         ];
 
         return in_array($orden, $permitidos, true) ? $orden : 'FECHA_CREACION DESC';

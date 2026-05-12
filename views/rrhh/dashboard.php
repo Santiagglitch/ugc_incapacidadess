@@ -2,14 +2,19 @@
 $historialTipo = $historialTipo ?? 'historico';
 $historialTitulo = $historialTitulo ?? 'Historial completo';
 $historialSolicitudes = $historialSolicitudes ?? ($todas ?? []);
+$misSolicitudes = $misSolicitudes ?? [];
 $q = $q ?? '';
 $tipoFiltro = $tipoFiltro ?? '';
 
-$historialUrl = static fn(string $tipo): string => url_view('dashboard') . '&' . http_build_query(array_filter([
-  'historial' => $tipo,
-  'q' => $q,
-  'tipo_solicitud' => $tipoFiltro,
-], static fn($value): bool => $value !== '' && $value !== null));
+$historialUrl = static function (string $tipo) use ($q, $tipoFiltro): string {
+  $params = array_filter([
+    'historial' => $tipo,
+    'q' => $q,
+    'tipo_solicitud' => $tipoFiltro,
+  ], static fn($value): bool => $value !== '' && $value !== null);
+
+  return url_view('dashboard') . ($params ? '&' . http_build_query($params) : '');
+};
 $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-link' . ($historialTipo === $tipo ? ' is-active' : '');
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
@@ -31,8 +36,11 @@ $historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-li
   <a href="<?= e($historialUrl('aprobadas')) ?>" class="<?= e($historialCardClass('aprobadas')) ?>"><div class="stat-icon">&#10003;</div><div class="num"><?= e($stats['aprobadas'] ?? 0) ?></div><div class="lbl">Aprobadas RRHH</div></a>
   <a href="<?= e($historialUrl('rechazadas')) ?>" class="<?= e($historialCardClass('rechazadas')) ?>"><div class="stat-icon">&times;</div><div class="num"><?= e($stats['rechazadas'] ?? 0) ?></div><div class="lbl">Rechazadas RRHH</div></a>
   <a href="<?= e($historialUrl('canceladas')) ?>" class="<?= e($historialCardClass('canceladas')) ?>"><div class="stat-icon">&#8856;</div><div class="num"><?= e($stats['canceladas'] ?? 0) ?></div><div class="lbl">Cancelado por el usuario</div></a>
+  <a href="<?= e($historialUrl('mis_solicitudes')) ?>" class="<?= e($historialCardClass('mis_solicitudes')) ?>"><div class="stat-icon">&#9633;</div><div class="num"><?= e($stats['misSolicitudes'] ?? 0) ?></div><div class="lbl">Mis Solicitudes</div></a>
 </div>
-<div class="section-header"><h2>Aprobadas por jefe pendientes de RRHH</h2></div>
+<div id="pendientes-rrhh" class="section-header"><h2>Aprobadas por jefe pendientes de RRHH</h2></div>
 <?php $solicitudes = $pendientes ?? []; $paginationData = $pendientesPaginationData ?? null; $paginationParam = 'pag_pendientes'; $paginationLabel = 'pendientes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
 <div id="historial-rrhh" class="section-header section-header--spaced"><h2><?= e($historialTitulo) ?></h2></div>
 <?php $solicitudes = $historialSolicitudes ?? []; $paginationData = $historialPaginationData ?? null; $paginationParam = 'pag_historial'; $paginationLabel = 'historial'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>
+<div id="mis-solicitudes-rrhh" class="section-header section-header--spaced"><h2>Mis solicitudes personales</h2></div>
+<?php $solicitudes = $misSolicitudes ?? []; $paginationData = $misPaginationData ?? null; $paginationParam = 'pag_mis'; $paginationLabel = 'mis solicitudes'; require dirname(__DIR__) . '/shared/tabla_solicitudes.php'; ?>

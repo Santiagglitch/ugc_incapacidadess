@@ -266,9 +266,23 @@ $csrfToken = csrf_token();
 <script>
 (function () {
   window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-      window.location.reload();
+    if (!event.persisted) {
+      return;
     }
+
+    document.querySelectorAll('[data-clicked="true"]').forEach(function (link) {
+      link.dataset.clicked = 'false';
+      link.classList.remove('is-disabled');
+      link.removeAttribute('aria-disabled');
+    });
+
+    document.querySelectorAll('form[data-submitting="true"]').forEach(function (form) {
+      form.dataset.submitting = 'false';
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (button) {
+        button.disabled = false;
+        button.classList.remove('is-disabled');
+      });
+    });
   });
 })();
 
@@ -359,6 +373,15 @@ $csrfToken = csrf_token();
       || (link.href || '').indexOf('download=1') !== -1
     ) {
       return;
+    }
+
+    try {
+      var linkUrl = new URL(link.href, window.location.href);
+      if (linkUrl.pathname === window.location.pathname && linkUrl.search === window.location.search && linkUrl.hash) {
+        return;
+      }
+    } catch (error) {
+      // Continua con la proteccion normal si el navegador no puede leer la URL.
     }
 
     if (link.dataset.clicked === 'true') {
