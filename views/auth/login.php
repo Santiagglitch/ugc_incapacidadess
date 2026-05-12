@@ -10,8 +10,8 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
     <div class="login-brand">
       <div class="brand-icon">
         <div class="logo-capibara-wrap">
-          <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="login-logo">
-          <img src="<?= e($capibaraUrl) ?>" alt="Mascota" class="login-capibara">
+          <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="login-logo" draggable="false">
+          <img src="<?= e($capibaraUrl) ?>" alt="Mascota" class="login-capibara" draggable="false">
         </div>
       </div>
 
@@ -127,6 +127,18 @@ function fillLogin(cedula) {
   document.getElementById('password').value = 'prueba123';
   document.getElementById('btnLogin').focus();
 }
+
+document.querySelectorAll('.login-brand img').forEach(function(img) {
+  img.addEventListener('dragstart', function(event) {
+    event.preventDefault();
+  });
+});
+
+document.querySelectorAll('#cedula, #password').forEach(function(input) {
+  input.addEventListener('drop', function(event) {
+    event.preventDefault();
+  });
+});
 
 document.getElementById('loginForm').addEventListener('submit', function() {
   const btn = document.getElementById('btnLogin');

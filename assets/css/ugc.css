@@ -470,6 +470,11 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   overflow:visible;
 }
 
+.login-brand img{
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
 .login-logo{
   width:122px;
   height:122px;
