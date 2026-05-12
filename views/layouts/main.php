@@ -28,6 +28,10 @@ $headerHistorial = limpiar_texto($_GET['historial'] ?? '');
 
 // Sonido de notificación
 $notifSoundUrl = app_asset('assets/sounds/notificacion.mp3');
+$notifPlayOnLogin = !empty($_SESSION['notificacion_sonar_login']);
+unset($_SESSION['notificacion_sonar_login']);
+$notifStateKey = 'ugc:notificaciones:count:' . (string)($user['cedula'] ?? '');
+$notifStateKeyJson = json_encode($notifStateKey, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
 
 $csrfToken = csrf_token();
 ?><!DOCTYPE html>
@@ -405,10 +409,39 @@ $csrfToken = csrf_token();
   var list = root.querySelector('[data-notificacion-list]');
   var readAll = root.querySelector('[data-notificacion-read-all]');
 
+  var notificationStateKey = <?= $notifStateKeyJson ?: "''" ?>;
+  var shouldPlayLoginSound = <?= $notifPlayOnLogin ? 'true' : 'false' ?>;
   var notificationAudio = null;
-  var lastNotifCount = null;
+  var lastNotifCount = readStoredNotifCount();
   var firstCountLoad = true;
-  var pendingSound = false;
+
+  function readStoredNotifCount() {
+    try {
+      if (!window.sessionStorage) {
+        return null;
+      }
+
+      var value = window.sessionStorage.getItem(notificationStateKey);
+      if (value === null || value === '') {
+        return null;
+      }
+
+      value = parseInt(value, 10);
+      return isNaN(value) ? null : value;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeStoredNotifCount(total) {
+    try {
+      if (window.sessionStorage) {
+        window.sessionStorage.setItem(notificationStateKey, String(total));
+      }
+    } catch (error) {
+      // Sin storage disponible, el contador en memoria sigue funcionando.
+    }
+  }
 
   function getNotificationAudio() {
     if (!notificationAudio) {
@@ -430,12 +463,10 @@ $csrfToken = csrf_token();
       var playPromise = audio.play();
 
       if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function () {
-          pendingSound = true;
-        });
+        playPromise.catch(function () {});
       }
     } catch (error) {
-      pendingSound = true;
+      // El navegador puede bloquear audio automatico; no se reintenta en el siguiente clic.
     }
   }
 
@@ -452,11 +483,6 @@ $csrfToken = csrf_token();
         audio.pause();
         audio.currentTime = 0;
         audio.muted = wasMuted;
-
-        if (pendingSound) {
-          pendingSound = false;
-          playNotificationSound();
-        }
       };
 
       if (playPromise && typeof playPromise.then === 'function') {
@@ -510,13 +536,12 @@ $csrfToken = csrf_token();
 
     var shouldPlaySound = false;
 
-    // Suena si al entrar ya tiene notificaciones atrasadas.
-    if (firstCountLoad && total > 0) {
-      shouldPlaySound = true;
-    }
-
-    // Suena cuando llegan nuevas notificaciones.
-    if (!firstCountLoad && lastNotifCount !== null && total > lastNotifCount) {
+    if (firstCountLoad) {
+      shouldPlaySound = (shouldPlayLoginSound && total > 0)
+        || (lastNotifCount !== null && total > lastNotifCount);
+      shouldPlayLoginSound = false;
+    } else if (lastNotifCount !== null && total > lastNotifCount) {
+      // Suena cuando llegan nuevas notificaciones.
       shouldPlaySound = true;
     }
 
@@ -528,6 +553,7 @@ $csrfToken = csrf_token();
 
     lastNotifCount = total;
     firstCountLoad = false;
+    writeStoredNotifCount(total);
   }
 
   function escapeHtml(value) {
@@ -660,9 +686,10 @@ $csrfToken = csrf_token();
     post(urls.readAll, {}).then(function () {
       lastNotifCount = 0;
       firstCountLoad = false;
-      pendingSound = false;
+      shouldPlayLoginSound = false;
 
       setCount(0);
+      writeStoredNotifCount(0);
       loadList();
     }).catch(function () {
       // Mantiene la campana usable si falla la peticion.

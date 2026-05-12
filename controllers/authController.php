@@ -46,6 +46,7 @@ class authController
         session_regenerate_id(true);
         $_SESSION['usuario'] = $result['user'];
         $_SESSION['last_activity'] = time();
+        $_SESSION['notificacion_sonar_login'] = true;
 
         // Si es Super Admin, redirigir a selección de modo
         if (($result['user']['cedula'] ?? '') === SUPER_ADMIN_NIT) {
