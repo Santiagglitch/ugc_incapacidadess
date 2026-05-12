@@ -293,6 +293,56 @@ $csrfToken = csrf_token();
 })();
 
 (function () {
+  var nonDraggableSelector = [
+    'a',
+    'button',
+    'img',
+    'input[type="button"]',
+    'input[type="submit"]',
+    'input[type="reset"]',
+    '[role="button"]',
+    '.btn',
+    '.btn-login',
+    '.btn-link',
+    '.btn-cambiar-modo',
+    '.logout',
+    '.stat-card',
+    '.stat-card-link',
+    '.notificacion-item',
+    '.mark-all',
+    '.dev-chip',
+    '.ugc-pagination__page',
+    '.ugc-pagination__step'
+  ].join(',');
+
+  function closest(target, selector) {
+    return target && target.closest ? target.closest(selector) : null;
+  }
+
+  function isProtectedDropTarget(target) {
+    var field = closest(target, 'input, textarea, [contenteditable="true"]');
+
+    return !!field && !field.matches('input[type="file"]');
+  }
+
+  document.querySelectorAll(nonDraggableSelector).forEach(function (element) {
+    element.setAttribute('draggable', 'false');
+  });
+
+  document.addEventListener('dragstart', function (event) {
+    if (closest(event.target, nonDraggableSelector)) {
+      event.preventDefault();
+    }
+  });
+
+  document.addEventListener('drop', function (event) {
+    if (isProtectedDropTarget(event.target)) {
+      event.preventDefault();
+    }
+  });
+})();
+
+(function () {
   document.addEventListener('click', function (event) {
     var submitter = event.target.closest('button[type="submit"], input[type="submit"]');
 
