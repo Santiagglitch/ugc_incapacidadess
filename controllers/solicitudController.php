@@ -269,13 +269,7 @@ class solicitudController
             exit('Sin permiso para ver esta solicitud.');
         }
 
-        $notasAdmin = [];
-        if (($user['rol'] ?? '') === ROL_ADMIN) {
-            require_once __DIR__ . '/../services/notaAdminService.php';
-            $notasAdmin = (new notaAdminService())->getByIdSolicitud($id);
-        }
-
-        render_view('shared/detalle', compact('user', 'solicitud', 'notasAdmin'));
+        render_view('shared/detalle', compact('user', 'solicitud'));
     }
 
     public function editarForm(int $id): void
@@ -551,45 +545,61 @@ class solicitudController
 
         redirect_to($this->returnTo(url_view('dashboard')));
     }
+public function cancelarAgenda(?int $id = null): void
+{
+    requiere_login();
+    $this->validarPost();
 
-    public function cancelarAgenda(?int $id = null): void
-    {
-        requiere_login();
-        $this->validarPost();
+    $id = $id ?? (int)($_POST['id'] ?? 0);
+    $observacionCancelacion = limpiar_texto($_POST['observacion_cancelacion'] ?? '');
 
-        $id = $id ?? (int)($_POST['id'] ?? 0);
-
-        if ($id <= 0) {
-            flash_set('error', 'Solicitud no valida.');
-            redirect_to($this->returnTo(url_view('dashboard')));
-        }
-
-        $user = usuario_actual();
-        $solicitud = $this->model->getById($id);
-
-        if (!$solicitud) {
-            $this->redirigirSolicitudBorrada();
-        }
-
-        if (!$this->puedeCancelarAgenda($solicitud, $user)) {
-            http_response_code(403);
-            exit('No tienes permisos para cancelar esta solicitud.');
-        }
-
-        $ok = $this->model->cancelarAgenda(
-            $id,
-            (string)($solicitud['NIT_EMPLEADO'] ?? '')
-        );
-
-        flash_set(
-            $ok ? 'success' : 'error',
-            $ok
-                ? 'Solicitud cancelada correctamente. El permiso ya no queda vigente.'
-                : 'No se pudo cancelar la solicitud. Verifica que siga aprobada por jefe o Talento Humano.'
-        );
-
+    if ($id <= 0) {
+        flash_set('error', 'Solicitud no valida.');
         redirect_to($this->returnTo(url_view('dashboard')));
     }
+
+    if ($observacionCancelacion === '') {
+        flash_set('error', 'Debes escribir el motivo de la cancelación.');
+        redirect_to($this->returnTo(url_view('dashboard')));
+    }
+
+    $user = usuario_actual();
+    $solicitud = $this->model->getById($id);
+
+    if (!$solicitud) {
+        $this->redirigirSolicitudBorrada();
+    }
+
+    if (!$this->puedeCancelarAgenda($solicitud, $user)) {
+        http_response_code(403);
+        exit('No tienes permisos para cancelar esta agenda.');
+    }
+
+    $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
+    $nitJefeSolicitud = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
+
+    $esJefeAsignado = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
+        && $nitJefeSolicitud === $cedulaUsuario;
+
+    $esGestor = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
+        || $esJefeAsignado;
+
+    $ok = $this->model->cancelarAgenda(
+        $id,
+        (string)($user['cedula'] ?? ''),
+        $esGestor,
+        $observacionCancelacion
+    );
+
+    flash_set(
+        $ok ? 'success' : 'error',
+        $ok
+            ? 'Agenda cancelada correctamente. El motivo quedó guardado en Observaciones.'
+            : 'No se pudo cancelar la agenda. Verifica que la solicitud siga aprobada por jefe o Talento Humano.'
+    );
+
+    redirect_to($this->returnTo(url_view('dashboard')));
+}
 
     public function eliminar(int $id): void
     {

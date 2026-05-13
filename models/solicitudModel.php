@@ -325,57 +325,71 @@ class solicitudModel extends mainModel
         return $this->gestionarRRHH($id, $nit, $obs, 'RECHAZADO_RRHH');
     }
 
-    public function adminIntervenir(int $id, string $nitAdmin, string $obs, string $decision): bool
-    {
-        $nuevoEstado = $decision === 'aprobar' ? ESTADO_APROBADO_RRHH : ESTADO_RECHAZADO_RRHH;
-        return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
-             SET ESTADO=:estado,
-                 NIT_RRHH=:nit_rrhh,
-                 OBSERVACION_RRHH=:obs,
-                 FECHA_GESTION_RRHH=SYSDATE,
-                 FECHA_MODIFICACION=SYSDATE
-             WHERE ID=:id
-               AND ACTIVO=1",
-            [':estado' => $nuevoEstado, ':nit_rrhh' => $nitAdmin, ':obs' => '[ADMIN] ' . $obs, ':id' => $id]
-        );
+public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false, string $observacionCancelacion = ''): bool
+{
+    $observacionCancelacion = trim($observacionCancelacion);
+
+    if ($observacionCancelacion === '') {
+        return false;
     }
 
-    public function adminForzarEstado(int $id, string $nitAdmin, string $nuevoEstado, string $motivo): bool
-    {
-        $estadosValidos = [ESTADO_PENDIENTE_JEFE, ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
-        if (!in_array($nuevoEstado, $estadosValidos, true)) {
-            return false;
-        }
-        return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
-             SET ESTADO=:estado,
-                 OBSERVACION_RRHH=:obs,
-                 NIT_RRHH=:nit_rrhh,
-                 FECHA_MODIFICACION=SYSDATE
-             WHERE ID=:id
-               AND ACTIVO=1",
-            [':estado' => $nuevoEstado, ':obs' => '[FORZADO ADMIN] ' . $motivo, ':nit_rrhh' => $nitAdmin, ':id' => $id]
-        );
+    $solicitudActual = $this->consultarUno(
+        "SELECT OBSERVACIONES
+         FROM SOLICITUDES_PERMISOS
+         WHERE ID = :id
+           AND ACTIVO = 1
+           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_RRHH')
+           AND (
+                NIT_EMPLEADO = :nit_usuario
+                OR :es_gestor = 1
+           )",
+        [
+            ':id' => $id,
+            ':nit_usuario' => $nitUsuario,
+            ':es_gestor' => $esGestor ? 1 : 0,
+        ]
+    );
+
+    if (!$solicitudActual) {
+        return false;
     }
 
-    public function cancelarAgenda(int $id, string $nitEmpleado): bool
-    {
-        return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
-             SET ESTADO=:estado,
-                 FECHA_MODIFICACION=SYSDATE
-             WHERE ID=:id
-               AND ACTIVO=1
-               AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH')
-               AND NIT_EMPLEADO=:nit_empleado",
-            [
-                ':estado' => ESTADO_CANCELADO_AGENDA,
-                ':id' => $id,
-                ':nit_empleado' => $nitEmpleado,
-            ]
-        );
+    $observacionesAnteriores = trim((string)($solicitudActual['OBSERVACIONES'] ?? ''));
+
+    // Limpia saltos de línea para que en SELECT * se vea ordenado.
+    $observacionesAnteriores = preg_replace('/\s+/', ' ', $observacionesAnteriores) ?? '';
+    $observacionCancelacion = preg_replace('/\s+/', ' ', $observacionCancelacion) ?? '';
+
+    $mensajeCancelacion = 'Motivo de cancelación: ' . $observacionCancelacion;
+
+    if ($observacionesAnteriores !== '') {
+        $observacionesFinales = $observacionesAnteriores . ' | ' . $mensajeCancelacion;
+    } else {
+        $observacionesFinales = $mensajeCancelacion;
     }
+
+    return $this->ejecutar(
+        "UPDATE SOLICITUDES_PERMISOS
+         SET ESTADO = :estado,
+             FECHA_MODIFICACION = SYSDATE,
+             FECHA_GESTION_JEFE = SYSDATE,
+             OBSERVACIONES = :observaciones
+         WHERE ID = :id
+           AND ACTIVO = 1
+           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_RRHH')
+           AND (
+                NIT_EMPLEADO = :nit_usuario
+                OR :es_gestor = 1
+           )",
+        [
+            ':estado' => ESTADO_CANCELADO_AGENDA,
+            ':observaciones' => $observacionesFinales,
+            ':id' => $id,
+            ':nit_usuario' => $nitUsuario,
+            ':es_gestor' => $esGestor ? 1 : 0,
+        ]
+    );
+}
 
     public function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool
     {
@@ -447,16 +461,6 @@ class solicitudModel extends mainModel
         if (!empty($filtros['excluir_empleado'])) {
             $where[] = 's.NIT_EMPLEADO<>:excluir_empleado';
             $binds[':excluir_empleado'] = $filtros['excluir_empleado'];
-        }
-
-        if (!empty($filtros['fecha_desde'])) {
-            $where[] = "s.FECHA_CREACION >= TO_DATE(:fecha_desde, 'YYYY-MM-DD')";
-            $binds[':fecha_desde'] = $filtros['fecha_desde'];
-        }
-
-        if (!empty($filtros['fecha_hasta'])) {
-            $where[] = "s.FECHA_CREACION < TO_DATE(:fecha_hasta, 'YYYY-MM-DD') + 1";
-            $binds[':fecha_hasta'] = $filtros['fecha_hasta'];
         }
 
         $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
@@ -691,115 +695,5 @@ class solicitudModel extends mainModel
                 ':nit' => $nit,
             ]
         );
-    }
-
-    public function kpiAdmin(array $filtros = []): array
-    {
-        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
-
-        $tipoRow = $this->consultarUno(
-            "SELECT s.TIPO_SOLICITUD, COUNT(*) AS CNT
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
-             WHERE $whereSql
-             GROUP BY s.TIPO_SOLICITUD
-             ORDER BY CNT DESC
-             FETCH FIRST 1 ROWS ONLY",
-            $binds
-        );
-
-        $avgRow = $this->consultarUno(
-            "SELECT ROUND(AVG(s.DURACION_HORAS), 1) AS PROMEDIO_HORAS
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
-             WHERE $whereSql
-               AND s.DURACION_HORAS IS NOT NULL",
-            $binds
-        );
-
-        $diaRow = $this->consultarUno(
-            "SELECT TO_CHAR(s.FECHA_CREACION, 'DY', 'NLS_DATE_LANGUAGE=SPANISH') AS DIA, COUNT(*) AS CNT
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
-             WHERE $whereSql
-             GROUP BY TO_CHAR(s.FECHA_CREACION, 'DY', 'NLS_DATE_LANGUAGE=SPANISH')
-             ORDER BY CNT DESC
-             FETCH FIRST 1 ROWS ONLY",
-            $binds
-        );
-
-        return [
-            'tipo_top'       => (string)($tipoRow['TIPO_SOLICITUD'] ?? ''),
-            'tipo_top_cnt'   => (int)($tipoRow['CNT'] ?? 0),
-            'promedio_horas' => $avgRow['PROMEDIO_HORAS'] ?? null,
-            'dia_top'        => (string)($diaRow['DIA'] ?? ''),
-            'dia_top_cnt'    => (int)($diaRow['CNT'] ?? 0),
-        ];
-    }
-
-    public function contarPorMes(int $meses = 6): array
-    {
-        $meses = max(2, min(24, $meses));
-        $rows  = $this->consultarTodo(
-            "SELECT TO_CHAR(FECHA_CREACION, 'YYYY-MM') AS MES,
-                    COUNT(*) AS TOTAL,
-                    SUM(CASE WHEN ESTADO IN ('APROBADO_JEFE','APROBADO_RRHH') THEN 1 ELSE 0 END) AS APROBADAS,
-                    SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS,
-                    SUM(CASE WHEN ESTADO IN ('PENDIENTE_JEFE','APROBADO_JEFE') THEN 1 ELSE 0 END) AS PENDIENTES
-             FROM ICEBERG.SOLICITUDES_PERMISOS
-             WHERE ACTIVO=1
-               AND FECHA_CREACION >= ADD_MONTHS(TRUNC(SYSDATE,'MM'), :n_meses)
-             GROUP BY TO_CHAR(FECHA_CREACION, 'YYYY-MM')
-             ORDER BY MES ASC",
-            [':n_meses' => -$meses]
-        );
-
-        $mesesLabel = ['01'=>'Ene','02'=>'Feb','03'=>'Mar','04'=>'Abr','05'=>'May','06'=>'Jun',
-                       '07'=>'Jul','08'=>'Ago','09'=>'Sep','10'=>'Oct','11'=>'Nov','12'=>'Dic'];
-
-        $resultado = [];
-        foreach ($rows as $row) {
-            $mes = (string)($row['MES'] ?? '');
-            $partes = explode('-', $mes);
-            $label  = ($mesesLabel[$partes[1] ?? ''] ?? ($partes[1] ?? '')) . ' ' . substr($partes[0] ?? '', 2);
-            $resultado[] = [
-                'mes'        => $mes,
-                'label'      => $label,
-                'total'      => (int)($row['TOTAL']      ?? 0),
-                'aprobadas'  => (int)($row['APROBADAS']  ?? 0),
-                'rechazadas' => (int)($row['RECHAZADAS'] ?? 0),
-                'pendientes' => (int)($row['PENDIENTES'] ?? 0),
-            ];
-        }
-        return $resultado;
-    }
-
-    public function contarPorNits(array $nits): array
-    {
-        $nits = array_values(array_unique(array_filter(array_map('strval', $nits), fn($n) => $n !== '')));
-        if (empty($nits)) {
-            return [];
-        }
-
-        $resultado = [];
-        foreach (array_chunk($nits, 900) as $i => $chunk) {
-            [$inClause, $binds] = $this->buildInClause($chunk, 'cnt_' . $i . '_');
-            $rows = $this->consultarTodo(
-                "SELECT NIT_EMPLEADO,
-                        COUNT(*) AS TOTAL,
-                        SUM(CASE WHEN ESTADO IN ('PENDIENTE_JEFE','APROBADO_JEFE') THEN 1 ELSE 0 END) AS ACTIVAS
-                 FROM ICEBERG.SOLICITUDES_PERMISOS
-                 WHERE ACTIVO=1 AND NIT_EMPLEADO IN ($inClause)
-                 GROUP BY NIT_EMPLEADO",
-                $binds
-            );
-            foreach ($rows as $row) {
-                $nit = (string)($row['NIT_EMPLEADO'] ?? '');
-                if ($nit !== '') {
-                    $resultado[$nit] = [
-                        'total'   => (int)($row['TOTAL']   ?? 0),
-                        'activas' => (int)($row['ACTIVAS'] ?? 0),
-                    ];
-                }
-            }
-        }
-        return $resultado;
     }
 }
