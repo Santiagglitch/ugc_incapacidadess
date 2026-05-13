@@ -134,6 +134,12 @@ function validar_vigencia_sesion(): void
     }
 
     $_SESSION['last_activity'] = $now;
+
+    $usuario = $_SESSION['usuario'] ?? [];
+    if (!empty($usuario)) {
+        require_once dirname(__DIR__) . '/services/sesionActivaService.php';
+        (new sesionActivaService())->registrar($usuario);
+    }
 }
 
 function requiere_login(): void
@@ -164,6 +170,8 @@ function requiere_rol(array $roles): void
 function cerrar_sesion(): void
 {
     iniciar_sesion_segura();
+    require_once dirname(__DIR__) . '/services/sesionActivaService.php';
+    (new sesionActivaService())->cerrar(session_id());
     $_SESSION = [];
 
     if (ini_get('session.use_cookies')) {

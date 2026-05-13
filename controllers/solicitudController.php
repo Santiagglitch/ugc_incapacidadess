@@ -269,7 +269,13 @@ class solicitudController
             exit('Sin permiso para ver esta solicitud.');
         }
 
-        render_view('shared/detalle', compact('user', 'solicitud'));
+        $notasAdmin = [];
+        if (($user['rol'] ?? '') === ROL_ADMIN) {
+            require_once __DIR__ . '/../services/notaAdminService.php';
+            $notasAdmin = (new notaAdminService())->getByIdSolicitud($id);
+        }
+
+        render_view('shared/detalle', compact('user', 'solicitud', 'notasAdmin'));
     }
 
     public function editarForm(int $id): void

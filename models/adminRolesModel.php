@@ -6,6 +6,7 @@ class adminRolesModel
 {
     private string $path;
     private static ?array $adminsCache = null;
+    private const MAX_ADMINS = 10;
 
     public function __construct()
     {
@@ -47,9 +48,16 @@ class adminRolesModel
         }
 
         $admins = $this->getAdminsAdicionales();
-        if (!in_array($nit, $admins, true)) {
-            $admins[] = $nit;
+
+        if (in_array($nit, $admins, true)) {
+            return true;
         }
+
+        if (count($admins) >= self::MAX_ADMINS) {
+            return false;
+        }
+
+        $admins[] = $nit;
 
         return $this->guardar($admins);
     }
@@ -63,20 +71,38 @@ class adminRolesModel
         return $this->guardar($admins);
     }
 
+    public function getLimiteMaximo(): int
+    {
+        return self::MAX_ADMINS;
+    }
+
+    public function alcanzaLimite(): bool
+    {
+        return count($this->getAdminsAdicionales()) >= self::MAX_ADMINS;
+    }
+
     private function guardar(array $admins): bool
     {
         $dir = dirname($this->path);
         if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+            @mkdir($dir, 0755, true);
         }
 
-        $payload = ['admins' => array_values(array_unique($admins)), 'version' => 1];
-        $ok = file_put_contents($this->path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) !== false;
+        $payload  = ['admins' => array_values(array_unique($admins)), 'version' => 1];
+        $json     = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $tmpPath  = $this->path . '.tmp.' . getmypid();
 
-        if ($ok) {
-            self::$adminsCache = $payload['admins'];
+        if (file_put_contents($tmpPath, $json, LOCK_EX) === false) {
+            @unlink($tmpPath);
+            return false;
         }
 
-        return $ok;
+        if (!rename($tmpPath, $this->path)) {
+            @unlink($tmpPath);
+            return false;
+        }
+
+        self::$adminsCache = $payload['admins'];
+        return true;
     }
 }

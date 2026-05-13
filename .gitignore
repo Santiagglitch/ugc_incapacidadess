@@ -1,5 +1,7 @@
+config/server.php
 storage/sessions/*
 storage/solicitudes/*
+storage/private/sesiones_activas.json
 logs/*.log
 mcp_config.json
 mcp_ldap_server.py
