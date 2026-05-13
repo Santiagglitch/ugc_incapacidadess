@@ -7,5 +7,14 @@
         "ultima_act": 1778705836,
         "ip": "::1",
         "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/148.0.0.0 Safari\/537.36"
+    },
+    "hi73pfmblha1716udfa9qf7stc": {
+        "nit": "11111111",
+        "nombre": "Juan Empleado (Prueba)",
+        "rol": "solicitante",
+        "centro_costo": "2312101",
+        "ultima_act": 1778707205,
+        "ip": "::1",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/148.0.0.0 Safari\/537.36"
     }
 }
