@@ -53,7 +53,17 @@ final class ExportController
 
         $model = new \solicitudModel();
 
-        $todasBase = $model->getAll();
+        $filtrosExport = [];
+        $fechaDesde = trim((string)($_GET['fecha_desde'] ?? ''));
+        $fechaHasta = trim((string)($_GET['fecha_hasta'] ?? ''));
+        if ($fechaDesde !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde)) {
+            $filtrosExport['fecha_desde'] = $fechaDesde;
+        }
+        if ($fechaHasta !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) {
+            $filtrosExport['fecha_hasta'] = $fechaHasta;
+        }
+
+        $todasBase = $model->getAll($filtrosExport);
 
         $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todasBase);
 
@@ -341,5 +351,15 @@ final class ExportController
 }
 
 if (isset($_GET['download']) && $_GET['download'] === '1') {
+    require_once __DIR__ . '/../../config/helpers.php';
+    \iniciar_sesion_segura();
+    if (!\usuario_autenticado()) {
+        http_response_code(401);
+        exit('No autenticado.');
+    }
+    if (!\in_array(\rol_actual(), [\ROL_ADMIN], true)) {
+        http_response_code(403);
+        exit('Sin permiso.');
+    }
     (new ExportController())->todasExcel();
 }

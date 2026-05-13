@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/helpers.php';
 require_once __DIR__ . '/../models/authModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
+require_once __DIR__ . '/../models/adminAuditoriaModel.php';
 
 class authController
 {
@@ -51,6 +52,16 @@ class authController
         // Si es Super Admin, redirigir a selección de modo
         if (($result['user']['cedula'] ?? '') === SUPER_ADMIN_NIT) {
             $_SESSION['super_admin_modo_pendiente'] = true;
+            try {
+                (new adminAuditoriaModel())->registrar(
+                    SUPER_ADMIN_NIT,
+                    'LOGIN_SA',
+                    'Super Usuario inicio sesion',
+                    [],
+                    $result['user']['nombre'] ?? 'Super Usuario'
+                );
+            } catch (Throwable $e) {
+            }
             redirect_to(url_view('seleccionar_modo'));
         }
 
@@ -159,11 +170,31 @@ class authController
             $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
             $_SESSION['usuario']['rol'] = $rolReal;
             flash_set('success', 'Modo cambiado a Empleado/Jefe. Permisos administrativos desactivados.');
+            try {
+                (new adminAuditoriaModel())->registrar(
+                    (string)($user['cedula'] ?? ''),
+                    'CAMBIO_MODO',
+                    'Super Usuario cambio a modo Empleado',
+                    ['modo_destino' => 'empleado'],
+                    (string)($user['nombre'] ?? '')
+                );
+            } catch (Throwable $e) {
+            }
         } else {
             // Cambiar a modo super usuario
             $_SESSION['super_admin_modo'] = 'super_usuario';
             $_SESSION['usuario']['rol'] = ROL_ADMIN;
             flash_set('success', 'Modo cambiado a Super Usuario. Acceso administrativo total activado.');
+            try {
+                (new adminAuditoriaModel())->registrar(
+                    (string)($user['cedula'] ?? ''),
+                    'CAMBIO_MODO',
+                    'Super Usuario cambio a modo Super Usuario',
+                    ['modo_destino' => 'super_usuario'],
+                    (string)($user['nombre'] ?? '')
+                );
+            } catch (Throwable $e) {
+            }
         }
 
         redirect_to(url_view('dashboard'));

@@ -1,3 +1,4 @@
+config/server.php
 storage/sessions/*
 storage/solicitudes/*
 logs/*.log

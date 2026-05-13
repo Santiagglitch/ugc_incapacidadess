@@ -78,6 +78,22 @@ if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
             (new adminController())->quitarAdmin((string) ($_POST['nit'] ?? ''));
             break;
 
+        case 'superadmin_asignar_admin':
+            (new adminController())->asignarAdminDesdePanel((string) ($_POST['nit'] ?? ''));
+            break;
+
+        case 'admin_intervenir_solicitud':
+            (new adminController())->intervenirSolicitud((int) ($_POST['id'] ?? 0));
+            break;
+
+        case 'admin_forzar_estado':
+            (new adminController())->forzarEstadoSolicitud((int) ($_POST['id'] ?? 0));
+            break;
+
+        case 'admin_guardar_nota':
+            (new adminController())->guardarNotaAdmin((int) ($_POST['id'] ?? 0));
+            break;
+
         case 'notif_read':
             (new notificacionController())->marcarLeida((int) ($_POST['id'] ?? 0));
             break;
@@ -142,6 +158,26 @@ switch ($view) {
 
     case 'admin_empleado':
         (new adminController())->empleadoDetalle((string) ($_GET['nit'] ?? ''));
+        break;
+
+    case 'admin_empleados_export':
+        (new adminController())->exportEmpleadosCsv();
+        break;
+
+    case 'superadmin_panel':
+        (new adminController())->superAdminPanel();
+        break;
+
+    case 'superadmin_health':
+        (new adminController())->systemHealth();
+        break;
+
+    case 'superadmin_buscar_empleado':
+        (new adminController())->buscarEmpleadoJson((string) ($_GET['q'] ?? ''));
+        break;
+
+    case 'superadmin_auditoria_export':
+        (new adminController())->auditoriaExportCsv();
         break;
 
     default:

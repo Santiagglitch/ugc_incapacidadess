@@ -18,6 +18,11 @@ $puedeGestionarJefe = in_array($user['rol'] ?? '', [ROL_JEFE, ROL_ADMIN], true)
 $puedeGestionarRrhh = in_array($user['rol'] ?? '', [ROL_RRHH, ROL_ADMIN], true)
   && $estadoSolicitud === ESTADO_APROBADO_JEFE
   && !$esDuenoSolicitud;
+$esAdmin = ($user['rol'] ?? '') === ROL_ADMIN;
+$estadosIntervenibles = [ESTADO_PENDIENTE_JEFE, ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH];
+$puedeIntervenir = $esAdmin && !$esDuenoSolicitud && in_array($estadoSolicitud, $estadosIntervenibles, true);
+$puedeForzarEstado = $esAdmin && !$esDuenoSolicitud;
+$notasAdmin = $notasAdmin ?? [];
 $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard'));
 ?>
 <section class="page-header">
@@ -329,3 +334,125 @@ document.getElementById('formGestionRrhh').addEventListener('submit', function(e
   </div>
   <?php endif; ?>
 </div>
+
+<?php if ($puedeIntervenir): ?>
+<div class="gestion-card" style="border-left:4px solid var(--green);margin-top:20px">
+  <h3 style="display:flex;align-items:center;gap:8px">
+    <span style="background:var(--green3);color:var(--green);font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;border:1px solid var(--green4)">ADMIN</span>
+    Intervención administrativa
+  </h3>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Como administrador puedes aprobar o rechazar esta solicitud independientemente del flujo normal.</p>
+  <form id="formAdminIntervenir" method="post" action="<?= e(url_action('admin_intervenir_solicitud')) ?>">
+    <?= csrf_input() ?>
+    <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <div class="form-group">
+      <label>Observación administrativa <span style="color:var(--red)">*</span></label>
+      <textarea id="obs_admin_intervenir" name="observacion_admin" rows="3" maxlength="2000" placeholder="Motivo de la intervención..."></textarea>
+      <small id="err_obs_admin" style="display:none;color:#b00020;font-weight:600;margin-top:4px">La observación es obligatoria.</small>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-green" type="submit" name="decision" value="aprobar">Aprobar (admin)</button>
+      <button class="btn btn-red" type="submit" name="decision" value="rechazar">Rechazar (admin)</button>
+    </div>
+  </form>
+</div>
+<script>
+document.getElementById('formAdminIntervenir').addEventListener('submit', function(e) {
+  var obs = document.getElementById('obs_admin_intervenir');
+  var err = document.getElementById('err_obs_admin');
+  if (obs.value.trim() === '') {
+    e.preventDefault();
+    err.style.display = 'block';
+    obs.style.border = '2px solid #b00020';
+    obs.focus();
+    return false;
+  }
+  err.style.display = 'none';
+  obs.style.border = '';
+});
+</script>
+<?php endif; ?>
+
+<?php if ($esAdmin): ?>
+<div class="detail-card" style="margin-top:20px;border-left:4px solid var(--blue,#3b82f6)">
+  <div class="detail-section-header" style="display:flex;justify-content:space-between;align-items:center">
+    <h2 class="detail-section-title" style="display:flex;align-items:center;gap:8px">
+      <span style="background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;border:1px solid #bfdbfe">ADMIN</span>
+      Notas internas
+    </h2>
+  </div>
+  <form method="post" action="<?= e(url_action('admin_guardar_nota')) ?>" style="margin-bottom:16px">
+    <?= csrf_input() ?>
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <textarea name="nota_admin" rows="2" maxlength="1000" placeholder="Escribe una nota interna (solo visible para administradores)..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:13px;background:var(--surface);color:var(--text);resize:vertical"></textarea>
+      <button class="btn btn-outline btn-sm" type="submit" style="white-space:nowrap">Guardar nota</button>
+    </div>
+  </form>
+  <?php if (!empty($notasAdmin)): ?>
+    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">
+      <?php foreach ($notasAdmin as $n): ?>
+      <li style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between">
+          <span style="font-weight:600"><?= e($n['nombre'] ?? $n['nit'] ?? '') ?></span>
+          <span><?= e(substr((string)($n['fecha'] ?? ''), 0, 16)) ?></span>
+        </div>
+        <div style="font-size:13px;white-space:pre-wrap"><?= nl2br(e((string)($n['nota'] ?? ''))) ?></div>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+  <?php else: ?>
+    <p style="font-size:12px;color:var(--muted)">No hay notas internas para esta solicitud.</p>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
+<?php if ($puedeForzarEstado): ?>
+<div class="gestion-card" style="border-left:4px solid #f39c12;margin-top:20px">
+  <h3 style="display:flex;align-items:center;gap:8px">
+    <span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;border:1px solid #ffe08a">ADMIN</span>
+    Forzar estado
+  </h3>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Cambia el estado de la solicitud directamente. Úsalo solo en casos excepcionales.</p>
+  <form id="formForzarEstado" method="post" action="<?= e(url_action('admin_forzar_estado')) ?>">
+    <?= csrf_input() ?>
+    <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
+    <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+    <div class="form-group" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1;min-width:180px">
+        <label>Nuevo estado</label>
+        <select name="nuevo_estado" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:13px;background:var(--surface);color:var(--text)">
+          <option value="<?= e(ESTADO_PENDIENTE_JEFE) ?>" <?= $estadoSolicitud === ESTADO_PENDIENTE_JEFE ? 'selected' : '' ?>>Pendiente jefe</option>
+          <option value="<?= e(ESTADO_APROBADO_JEFE) ?>" <?= $estadoSolicitud === ESTADO_APROBADO_JEFE ? 'selected' : '' ?>>Aprobado jefe / Pendiente RRHH</option>
+          <option value="<?= e(ESTADO_RECHAZADO_JEFE) ?>" <?= $estadoSolicitud === ESTADO_RECHAZADO_JEFE ? 'selected' : '' ?>>Rechazado jefe</option>
+          <option value="<?= e(ESTADO_APROBADO_RRHH) ?>" <?= $estadoSolicitud === ESTADO_APROBADO_RRHH ? 'selected' : '' ?>>Aprobado RRHH</option>
+          <option value="<?= e(ESTADO_RECHAZADO_RRHH) ?>" <?= $estadoSolicitud === ESTADO_RECHAZADO_RRHH ? 'selected' : '' ?>>Rechazado RRHH</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:200px">
+        <label>Motivo <span style="color:var(--red)">*</span></label>
+        <input id="motivo_forzar" type="text" name="motivo" maxlength="500" placeholder="Motivo del cambio..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r2);font-size:13px;background:var(--surface);color:var(--text)">
+      </div>
+      <button class="btn btn-outline" type="submit" onclick="return confirm('¿Confirmar cambio de estado?')">Aplicar</button>
+    </div>
+    <small id="err_motivo_forzar" style="display:none;color:#b00020;font-weight:600;margin-top:4px">El motivo es obligatorio.</small>
+  </form>
+</div>
+<script>
+document.getElementById('formForzarEstado').addEventListener('submit', function(e) {
+  var m = document.getElementById('motivo_forzar');
+  var err = document.getElementById('err_motivo_forzar');
+  if (m.value.trim() === '') {
+    e.preventDefault();
+    err.style.display = 'block';
+    m.style.border = '2px solid #b00020';
+    m.focus();
+    return false;
+  }
+  err.style.display = 'none';
+  m.style.border = '';
+});
+</script>
+<?php endif; ?>

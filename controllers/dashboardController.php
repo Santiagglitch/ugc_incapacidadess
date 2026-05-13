@@ -25,69 +25,49 @@ class dashboardController
         }
 
         if ($rol === ROL_ADMIN) {
+            $fechaDesde = limpiar_texto($_GET['fecha_desde'] ?? '');
+            $fechaHasta = limpiar_texto($_GET['fecha_hasta'] ?? '');
+            if ($fechaDesde !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde)) $fechaDesde = '';
+            if ($fechaHasta !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) $fechaHasta = '';
+
             if ($q === '') {
                 $filtrosBase = $tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [];
-                $counts = $model->contarPorEstado($filtrosBase);
-                $stats = $counts;
-                $stats['TOTAL'] = $this->sumarConteos($counts);
-                $historialTipo = limpiar_texto($_GET['historial'] ?? 'total');
-                $historialOpciones = [
-                    'total' => ['titulo' => 'Historial completo', 'filtros' => $filtrosBase, 'orden' => 'FECHA_CREACION DESC'],
-                    'pendiente_jefe' => ['titulo' => 'Solicitudes pendientes de jefe', 'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                    'aprobado_jefe' => ['titulo' => 'Solicitudes pendientes de RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                    'aprobado_rrhh' => ['titulo' => 'Solicitudes aprobadas por RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                    'rechazado_rrhh' => ['titulo' => 'Solicitudes rechazadas por RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                    'canceladas' => ['titulo' => 'Canceladas por el usuario', 'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
-                ];
-
-                if (!array_key_exists($historialTipo, $historialOpciones)) {
-                    $historialTipo = 'total';
-                }
-
-                $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-                $pagina = max(1, (int)($_GET['pag_admin'] ?? 1));
-                $paginaHistorial = $model->getAllPaginado(
-                    $historialOpciones[$historialTipo]['filtros'],
-                    $pagina,
-                    APP_ROWS_PER_PAGE,
-                    $historialOpciones[$historialTipo]['orden']
-                );
-                $historialSolicitudes = $this->enriquecerSolicitudes($paginaHistorial['rows'], $empleadoModel);
-                $historialPaginationData = $paginaHistorial['pagination'];
-                $todas = [];
-                render_view('admin/dashboard', compact('user', 'stats', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
-                return;
+            } else {
+                $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
             }
+            if ($fechaDesde !== '') $filtrosBase['fecha_desde'] = $fechaDesde;
+            if ($fechaHasta !== '') $filtrosBase['fecha_hasta'] = $fechaHasta;
 
-            $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
             $counts = $model->contarPorEstado($filtrosBase);
-            $stats = $counts;
+            $stats  = $counts;
             $stats['TOTAL'] = $this->sumarConteos($counts);
+
             $historialTipo = limpiar_texto($_GET['historial'] ?? 'total');
             $historialOpciones = [
-                'total' => ['titulo' => 'Historial completo', 'filtros' => $filtrosBase, 'orden' => 'FECHA_CREACION DESC'],
-                'pendiente_jefe' => ['titulo' => 'Solicitudes pendientes de jefe', 'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                'aprobado_jefe' => ['titulo' => 'Solicitudes pendientes de RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                'aprobado_rrhh' => ['titulo' => 'Solicitudes aprobadas por RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                'rechazado_rrhh' => ['titulo' => 'Solicitudes rechazadas por RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                'canceladas' => ['titulo' => 'Canceladas por el usuario', 'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
+                'total'          => ['titulo' => 'Historial completo',                       'filtros' => $filtrosBase,                                           'orden' => 'FECHA_CREACION DESC'],
+                'pendiente_jefe' => ['titulo' => 'Solicitudes pendientes de jefe',           'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE],     'orden' => 'FECHA_CREACION DESC'],
+                'aprobado_jefe'  => ['titulo' => 'Solicitudes pendientes de RRHH',           'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],      'orden' => 'FECHA_CREACION DESC'],
+                'aprobado_rrhh'  => ['titulo' => 'Solicitudes aprobadas por RRHH',           'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH],      'orden' => 'FECHA_CREACION DESC'],
+                'rechazado_rrhh' => ['titulo' => 'Solicitudes rechazadas por RRHH',          'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH],     'orden' => 'FECHA_CREACION DESC'],
+                'canceladas'     => ['titulo' => 'Canceladas por el usuario',                'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA],   'orden' => 'FECHA_MODIFICACION DESC'],
             ];
 
             if (!array_key_exists($historialTipo, $historialOpciones)) {
                 $historialTipo = 'total';
             }
 
-            $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-            $paginaHistorial = $model->getAllPaginado(
+            $historialTitulo  = $historialOpciones[$historialTipo]['titulo'];
+            $paginaHistorial  = $model->getAllPaginado(
                 $historialOpciones[$historialTipo]['filtros'],
                 max(1, (int)($_GET['pag_admin'] ?? 1)),
                 APP_ROWS_PER_PAGE,
                 $historialOpciones[$historialTipo]['orden']
             );
-            $historialSolicitudes = $this->enriquecerSolicitudes($paginaHistorial['rows'], $empleadoModel);
+            $historialSolicitudes    = $this->enriquecerSolicitudes($paginaHistorial['rows'], $empleadoModel);
             $historialPaginationData = $paginaHistorial['pagination'];
+            $kpiAdmin = $model->kpiAdmin($filtrosBase);
             $todas = [];
-            render_view('admin/dashboard', compact('user', 'stats', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
+            render_view('admin/dashboard', compact('user', 'stats', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro', 'fechaDesde', 'fechaHasta', 'kpiAdmin'));
             return;
         }
 

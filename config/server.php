@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /*
@@ -32,6 +31,16 @@ define('ORACLE_CHARSET', 'AL32UTF8');
 define('ORACLE_PERSISTENT', true);
 define('ORACLE_STATEMENT_CACHE_SIZE', 40);
 
+
+
+define('LDAP_HOST', '172.20.100.209');
+define('LDAP_PORT', 389);
+define('LDAP_USER', 'cn=Manager,dc=ugc.edu,dc=co');
+define('LDAP_PASSWORD', 'Sl4pdU6Cn3W');
+define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
+
+
+
 /*
  * LDAP Universidad.
  * Ajusta estos datos si el ambiente de produccion usa otro servidor.
@@ -41,12 +50,3 @@ define('LDAP_USER', 'cn=ConsultaSi,ou=users,dc=ugc.edu,dc=co');
 define('LDAP_PASSWORD', '1s0lwt4Secy1723');
 define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
  */
-
-
-define('LDAP_HOST', '172.20.100.209');
-define('LDAP_PORT', 389);
-define('LDAP_USER', 'cn=Manager,dc=ugc.edu,dc=co');
-define('LDAP_PASSWORD', 'Sl4pdU6Cn3W');
-define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
-define('LDAP_NETWORK_TIMEOUT', 3);
-define('LDAP_SEARCH_TIMEOUT', 3);
