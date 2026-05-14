@@ -82,6 +82,34 @@ class notificacionService
         }
     }
 
+    public function notificarCancelacionUsuario(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
+    {
+        $nombre = $this->nombreEmpleado($nitEmpleado, $nitEmpleado);
+        $mensaje = $nombre . ' cancelo su solicitud de ' . $this->tipoLabel($tipoSolicitud);
+
+        if ($obs !== '') {
+            $mensaje .= '. Motivo: ' . substr($obs, 0, 100);
+        }
+
+        $notificados = [];
+        $nitEmpleadoNormalizado = normalizar_documento($nitEmpleado);
+        $notificar = function (string $nit) use (&$notificados, $nitEmpleadoNormalizado, $mensaje, $idSolicitud): void {
+            $nitNormalizado = normalizar_documento($nit);
+            if ($nitNormalizado === '' || $nitNormalizado === $nitEmpleadoNormalizado || isset($notificados[$nitNormalizado])) {
+                return;
+            }
+
+            $notificados[$nitNormalizado] = true;
+            $this->safeCrear($nit, 'SOLICITUD_CANCELADA_USUARIO', $mensaje, $idSolicitud);
+        };
+
+        $notificar($nitJefe);
+
+        foreach ($this->usuariosRRHH() as $nit) {
+            $notificar((string)$nit);
+        }
+    }
+
     public function contarNoLeidas(string $nit): int
     {
         try { return $this->model->contarNoLeidas($nit); } catch (Throwable $e) { return 0; }

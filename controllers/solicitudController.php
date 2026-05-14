@@ -591,6 +591,17 @@ public function cancelarAgenda(?int $id = null): void
         $observacionCancelacion
     );
 
+    if ($ok && $solicitud) {
+        $notificaciones = new notificacionService();
+        $notificaciones->notificarCancelacionUsuario(
+            $id,
+            (string)$solicitud['NIT_EMPLEADO'],
+            (string)$solicitud['NIT_JEFE'],
+            (string)$solicitud['TIPO_SOLICITUD'],
+            $observacionCancelacion
+        );
+    }
+
     flash_set(
         $ok ? 'success' : 'error',
         $ok
