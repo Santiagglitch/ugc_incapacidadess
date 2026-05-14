@@ -6,9 +6,29 @@ require_once __DIR__ . '/../config/helpers.php';
 require_once __DIR__ . '/../models/authModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
 require_once __DIR__ . '/../models/adminAuditoriaModel.php';
+require_once __DIR__ . '/../models/adminRolesModel.php';
 
 class authController
 {
+    /**
+     * Verifica si el usuario tiene acceso al selector de modo (Super Admin o Admin Adicional).
+     */
+    private function usuarioTieneSelectorModo(array $user): bool
+    {
+        $cedula = $user['cedula'] ?? '';
+        if ($cedula === SUPER_ADMIN_NIT) {
+            return true;
+        }
+        return (new adminRolesModel())->esAdminAdicional($cedula);
+    }
+
+    /**
+     * Determina si el usuario es Super Admin (para mostrar opciones específicas).
+     */
+    private function esSuperAdmin(array $user): bool
+    {
+        return ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+    }
     public function loginForm(): void
     {
         if (usuario_autenticado()) {
@@ -49,16 +69,18 @@ class authController
         $_SESSION['last_activity'] = time();
         $_SESSION['notificacion_sonar_login'] = true;
 
-        // Si es Super Admin, redirigir a selección de modo
-        if (($result['user']['cedula'] ?? '') === SUPER_ADMIN_NIT) {
-            $_SESSION['super_admin_modo_pendiente'] = true;
+        // Si es Super Admin o Admin Adicional, redirigir a selección de modo
+        if ($this->usuarioTieneSelectorModo($result['user'])) {
+            $_SESSION['admin_modo_pendiente'] = true;
+            $cedula = $result['user']['cedula'] ?? '';
+            $esSuperAdmin = ($cedula === SUPER_ADMIN_NIT);
             try {
                 (new adminAuditoriaModel())->registrar(
-                    SUPER_ADMIN_NIT,
-                    'LOGIN_SA',
-                    'Super Usuario inicio sesion',
+                    $cedula,
+                    $esSuperAdmin ? 'LOGIN_SA' : 'LOGIN_ADMIN',
+                    $esSuperAdmin ? 'Super Usuario inicio sesion' : 'Administrador adicional inicio sesion',
                     [],
-                    $result['user']['nombre'] ?? 'Super Usuario'
+                    $result['user']['nombre'] ?? 'Usuario'
                 );
             } catch (Throwable $e) {
             }
@@ -70,13 +92,13 @@ class authController
 
     public function seleccionarModoForm(): void
     {
-        if (!usuario_autenticado() || empty($_SESSION['super_admin_modo_pendiente'])) {
+        if (!usuario_autenticado() || empty($_SESSION['admin_modo_pendiente'])) {
             redirect_to(url_view('dashboard'));
         }
 
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
-            unset($_SESSION['super_admin_modo_pendiente']);
+        if (!$this->usuarioTieneSelectorModo($user)) {
+            unset($_SESSION['admin_modo_pendiente']);
             redirect_to(url_view('dashboard'));
         }
 
@@ -86,6 +108,7 @@ class authController
         render_view('auth/seleccionar_modo', [
             'user' => $user,
             'error' => $error,
+            'esSuperAdmin' => $this->esSuperAdmin($user),
         ], 'auth');
     }
 
@@ -96,26 +119,30 @@ class authController
             redirect_to(url_view('seleccionar_modo'));
         }
 
-        if (!usuario_autenticado() || empty($_SESSION['super_admin_modo_pendiente'])) {
+        if (!usuario_autenticado() || empty($_SESSION['admin_modo_pendiente'])) {
             redirect_to(url_view('dashboard'));
         }
 
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
-            unset($_SESSION['super_admin_modo_pendiente']);
+        if (!$this->usuarioTieneSelectorModo($user)) {
+            unset($_SESSION['admin_modo_pendiente']);
             redirect_to(url_view('dashboard'));
         }
 
         $modo = limpiar_texto($_POST['modo'] ?? '');
+        $modosValidos = ['admin', 'empleado'];
+        if ($this->esSuperAdmin($user)) {
+            $modosValidos = ['super_usuario', 'empleado'];
+        }
 
-        if (!in_array($modo, ['super_usuario', 'empleado'], true)) {
+        if (!in_array($modo, $modosValidos, true)) {
             $_SESSION['modo_error'] = 'Selecciona un modo valido.';
             redirect_to(url_view('seleccionar_modo'));
         }
 
         // Guardar el modo seleccionado en sesión
-        $_SESSION['super_admin_modo'] = $modo;
-        unset($_SESSION['super_admin_modo_pendiente']);
+        $_SESSION['admin_modo'] = $modo;
+        unset($_SESSION['admin_modo_pendiente']);
 
         // Si elige modo empleado, recalcular su rol real según su jerarquía
         if ($modo === 'empleado') {
@@ -138,22 +165,25 @@ class authController
             redirect_to(url_view('login'));
         }
 
-        if (super_admin_modo_pendiente()) {
+        if (admin_modo_pendiente()) {
             redirect_to(url_view('seleccionar_modo'));
         }
 
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!$this->usuarioTieneSelectorModo($user)) {
             http_response_code(403);
-            flash_set('error', 'Solo el Super Admin puede cambiar de modo.');
+            flash_set('error', 'No tienes permiso para cambiar de modo.');
             redirect_to(url_view('dashboard'));
         }
 
-        $modoActual = $_SESSION['super_admin_modo'] ?? 'super_usuario';
+        $esSuperAdmin = $this->esSuperAdmin($user);
+        $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
+        $modoActual = $_SESSION['admin_modo'] ?? $modoAdminKey;
         $modoDestino = limpiar_texto($_POST['modo_destino'] ?? '');
+        $modosValidos = $esSuperAdmin ? ['super_usuario', 'empleado'] : ['admin', 'empleado'];
 
-        if (!in_array($modoDestino, ['super_usuario', 'empleado'], true)) {
-            $modoDestino = $modoActual === 'super_usuario' ? 'empleado' : 'super_usuario';
+        if (!in_array($modoDestino, $modosValidos, true)) {
+            $modoDestino = $modoActual === $modoAdminKey ? 'empleado' : $modoAdminKey;
         }
 
         if ($modoDestino === $modoActual) {
@@ -164,33 +194,35 @@ class authController
         // Cambiar al modo solicitado. Esto evita que un doble envio revierta el cambio.
         if ($modoDestino === 'empleado') {
             // Cambiar a modo empleado
-            $_SESSION['super_admin_modo'] = 'empleado';
+            $_SESSION['admin_modo'] = 'empleado';
             $empleadoModel = new empleadoModel();
             $empleado = $empleadoModel->getByNit($user['cedula']);
             $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
             $_SESSION['usuario']['rol'] = $rolReal;
             flash_set('success', 'Modo cambiado a Empleado/Jefe. Permisos administrativos desactivados.');
             try {
+                $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : 'Administrador';
                 (new adminAuditoriaModel())->registrar(
                     (string)($user['cedula'] ?? ''),
                     'CAMBIO_MODO',
-                    'Super Usuario cambio a modo Empleado',
+                    $tipoAdmin . ' cambio a modo Empleado',
                     ['modo_destino' => 'empleado'],
                     (string)($user['nombre'] ?? '')
                 );
             } catch (Throwable $e) {
             }
         } else {
-            // Cambiar a modo super usuario
-            $_SESSION['super_admin_modo'] = 'super_usuario';
+            // Cambiar a modo admin/super usuario
+            $_SESSION['admin_modo'] = $modoAdminKey;
             $_SESSION['usuario']['rol'] = ROL_ADMIN;
-            flash_set('success', 'Modo cambiado a Super Usuario. Acceso administrativo total activado.');
+            $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : 'Administrador';
+            flash_set('success', 'Modo cambiado a ' . $tipoAdmin . '. Acceso administrativo activado.');
             try {
                 (new adminAuditoriaModel())->registrar(
                     (string)($user['cedula'] ?? ''),
                     'CAMBIO_MODO',
-                    'Super Usuario cambio a modo Super Usuario',
-                    ['modo_destino' => 'super_usuario'],
+                    $tipoAdmin . ' cambio a modo ' . $tipoAdmin,
+                    ['modo_destino' => $modoAdminKey],
                     (string)($user['nombre'] ?? '')
                 );
             } catch (Throwable $e) {
