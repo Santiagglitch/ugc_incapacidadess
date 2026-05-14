@@ -235,6 +235,51 @@ class solicitudModel extends mainModel
         return $result;
     }
 
+    public function kpiAdmin(array $filtros = []): array
+    {
+        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
+
+        $tipoTop = $this->consultarUno(
+            "SELECT s.TIPO_SOLICITUD, COUNT(*) AS TOTAL
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql
+             GROUP BY s.TIPO_SOLICITUD
+             ORDER BY TOTAL DESC, s.TIPO_SOLICITUD ASC
+             FETCH FIRST 1 ROWS ONLY",
+            $binds
+        ) ?? [];
+
+        $promedio = $this->consultarUno(
+            "SELECT ROUND(AVG(NVL(s.DURACION_HORAS, 0) + (NVL(s.DURACION_DIAS, 0) * 8)), 2) AS PROMEDIO_HORAS
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql",
+            $binds
+        ) ?? [];
+
+        $diaTop = $this->consultarUno(
+            "SELECT TRIM(TO_CHAR(s.FECHA_CREACION, 'DAY', 'NLS_DATE_LANGUAGE=SPANISH')) AS DIA, COUNT(*) AS TOTAL
+             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             WHERE $whereSql
+             GROUP BY TRIM(TO_CHAR(s.FECHA_CREACION, 'DAY', 'NLS_DATE_LANGUAGE=SPANISH'))
+             ORDER BY TOTAL DESC, DIA ASC
+             FETCH FIRST 1 ROWS ONLY",
+            $binds
+        ) ?? [];
+
+        $promedioHoras = $promedio['PROMEDIO_HORAS'] ?? null;
+        if ($promedioHoras !== null) {
+            $promedioHoras = round((float)str_replace(',', '.', (string)$promedioHoras), 2);
+        }
+
+        return [
+            'tipo_top' => (string)($tipoTop['TIPO_SOLICITUD'] ?? ''),
+            'tipo_top_cnt' => (int)($tipoTop['TOTAL'] ?? 0),
+            'promedio_horas' => $promedioHoras,
+            'dia_top' => (string)($diaTop['DIA'] ?? ''),
+            'dia_top_cnt' => (int)($diaTop['TOTAL'] ?? 0),
+        ];
+    }
+
     public function getResumenEmpleado(string $nit): array
     {
         $row = $this->consultarUno(
@@ -461,6 +506,16 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
         if (!empty($filtros['excluir_empleado'])) {
             $where[] = 's.NIT_EMPLEADO<>:excluir_empleado';
             $binds[':excluir_empleado'] = $filtros['excluir_empleado'];
+        }
+
+        if (!empty($filtros['fecha_desde']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$filtros['fecha_desde'])) {
+            $where[] = "s.FECHA_CREACION >= TO_DATE(:fecha_desde, 'YYYY-MM-DD')";
+            $binds[':fecha_desde'] = (string)$filtros['fecha_desde'];
+        }
+
+        if (!empty($filtros['fecha_hasta']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$filtros['fecha_hasta'])) {
+            $where[] = "s.FECHA_CREACION < TO_DATE(:fecha_hasta, 'YYYY-MM-DD') + 1";
+            $binds[':fecha_hasta'] = (string)$filtros['fecha_hasta'];
         }
 
         $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
