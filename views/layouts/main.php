@@ -673,6 +673,10 @@ $csrfToken = csrf_token();
       return 'rechazada';
     }
 
+    if (tipo.indexOf('cancelada') !== -1 || tipo.indexOf('cancelacion') !== -1) {
+      return 'cancelada';
+    }
+
     if (tipo.indexOf('aprobada') !== -1 || tipo.indexOf('aprobacion') !== -1) {
       return 'aprobada';
     }

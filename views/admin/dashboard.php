@@ -18,8 +18,6 @@ $historialUrl = static function (string $tipo) use ($q, $tipoFiltro, $fechaDesde
   ], static fn($value): bool => $value !== '' && $value !== null);
   return url_view('dashboard') . ($params ? '&' . http_build_query($params) : '');
 };
-$historialCardClass = static fn(string $tipo): string => 'stat-card stat-card-link' . ($historialTipo === $tipo ? ' is-active' : '');
-
 $tieneFiltroDates = ($fechaDesde !== '' || $fechaHasta !== '');
 $exportUrl = 'Export/Admin/ExportController.php?download=1'
   . ($fechaDesde !== '' ? '&fecha_desde=' . urlencode($fechaDesde) : '')
@@ -112,43 +110,26 @@ $exportUrl = 'Export/Admin/ExportController.php?download=1'
 </div>
 
 <!-- ── KPIs principales ── -->
-<div class="stats-row animate-fade-up" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:0">
-  <?php
-    $kpiCards = [
-      ['tipo'=>'total',          'color'=>'#6366f1', 'bg'=>'#eef2ff', 'lbl'=>'Total',              'val'=>$stats['TOTAL'] ?? 0,
-       'svg'=>'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>'],
-      ['tipo'=>'pendiente_jefe', 'color'=>'#f59e0b', 'bg'=>'#fffbeb', 'lbl'=>'Pendientes jefe',    'val'=>$stats[ESTADO_PENDIENTE_JEFE] ?? 0,
-       'svg'=>'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
-      ['tipo'=>'aprobado_jefe',  'color'=>'#3b82f6', 'bg'=>'#eff6ff', 'lbl'=>'Pendientes RRHH',   'val'=>$stats[ESTADO_APROBADO_JEFE] ?? 0,
-       'svg'=>'<polyline points="20 6 9 17 4 12"/>'],
-      ['tipo'=>'aprobado_rrhh',  'color'=>'#10b981', 'bg'=>'#ecfdf5', 'lbl'=>'Aprobadas RRHH',    'val'=>$stats[ESTADO_APROBADO_RRHH] ?? 0,
-       'svg'=>'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'],
-      ['tipo'=>'rechazado_rrhh', 'color'=>'#ef4444', 'bg'=>'#fef2f2', 'lbl'=>'Rechazadas RRHH',   'val'=>$stats[ESTADO_RECHAZADO_RRHH] ?? 0,
-       'svg'=>'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'],
-      ['tipo'=>'canceladas',     'color'=>'#64748b', 'bg'=>'#f1f5f9', 'lbl'=>'Canceladas',         'val'=>$stats[ESTADO_CANCELADO_AGENDA] ?? 0,
-       'svg'=>'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'],
-    ];
-  ?>
-  <?php foreach ($kpiCards as $k):
-    $isActive = $historialTipo === $k['tipo'];
-    $href = $historialUrl($k['tipo']);
-  ?>
-  <a href="<?= e($href) ?>" style="text-decoration:none;display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--surface);border:1.5px solid <?= $isActive ? $k['color'] : 'var(--border)' ?>;border-radius:var(--r2);transition:box-shadow .15s,border-color .15s;<?= $isActive ? 'box-shadow:0 0 0 3px '.$k['color'].'22' : '' ?>">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-      <div style="width:34px;height:34px;border-radius:8px;background:<?= $k['bg'] ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="<?= $k['color'] ?>" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><?= $k['svg'] ?></svg>
-      </div>
-      <?php if ($isActive): ?>
-        <span style="font-size:9px;font-weight:800;color:<?= $k['color'] ?>;background:<?= $k['bg'] ?>;border:1px solid <?= $k['color'] ?>33;border-radius:99px;padding:1px 7px;letter-spacing:.4px">VIENDO</span>
-      <?php endif; ?>
-    </div>
-    <div>
-      <div style="font-size:24px;font-weight:800;color:var(--text);line-height:1"><?= e((string)$k['val']) ?></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:500"><?= e($k['lbl']) ?></div>
-    </div>
-  </a>
-  <?php endforeach; ?>
-</div>
+<?php
+$dashboardKpiCards = [
+  ['tipo'=>'total',          'color'=>'#6366f1', 'bg'=>'#eef2ff', 'lbl'=>'Total',              'val'=>$stats['TOTAL'] ?? 0,
+   'svg'=>'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>'],
+  ['tipo'=>'pendiente_jefe', 'color'=>'#f59e0b', 'bg'=>'#fffbeb', 'lbl'=>'Pendientes jefe',    'val'=>$stats[ESTADO_PENDIENTE_JEFE] ?? 0,
+   'svg'=>'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+  ['tipo'=>'aprobado_jefe',  'color'=>'#3b82f6', 'bg'=>'#eff6ff', 'lbl'=>'Pendientes RRHH',   'val'=>$stats[ESTADO_APROBADO_JEFE] ?? 0,
+   'svg'=>'<polyline points="20 6 9 17 4 12"/>'],
+  ['tipo'=>'aprobado_rrhh',  'color'=>'#10b981', 'bg'=>'#ecfdf5', 'lbl'=>'Aprobadas RRHH',    'val'=>$stats[ESTADO_APROBADO_RRHH] ?? 0,
+   'svg'=>'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'],
+  ['tipo'=>'rechazado_rrhh', 'color'=>'#ef4444', 'bg'=>'#fef2f2', 'lbl'=>'Rechazadas RRHH',   'val'=>$stats[ESTADO_RECHAZADO_RRHH] ?? 0,
+   'svg'=>'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'],
+  ['tipo'=>'canceladas',     'color'=>'#64748b', 'bg'=>'#f1f5f9', 'lbl'=>'Canceladas',         'val'=>$stats[ESTADO_CANCELADO_AGENDA] ?? 0,
+   'svg'=>'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'],
+];
+$dashboardKpiActive = $historialTipo;
+$dashboardKpiUrl = $historialUrl;
+$dashboardKpiRowClass = 'dashboard-kpi-row--compact';
+require dirname(__DIR__) . '/shared/dashboard_kpi_cards.php';
+?>
 
 <!-- ── KPIs adicionales (insights) ── -->
 <?php if (!empty($kpiAdmin) && ($kpiAdmin['tipo_top'] !== '' || $kpiAdmin['promedio_horas'] !== null || $kpiAdmin['dia_top'] !== '')): ?>
