@@ -1,5 +1,52 @@
 [
     {
+        "fecha": "2026-05-14 11:17:44",
+        "nit_actor": "1085042421",
+        "nombre_actor": "Ingeniero Jefe \/ Super Admin",
+        "accion": "CAMBIO_MODO",
+        "descripcion": "Super Usuario cambio a modo Super Usuario",
+        "ip": "::1",
+        "meta": {
+            "modo_destino": "super_usuario"
+        }
+    },
+    {
+        "fecha": "2026-05-14 11:17:39",
+        "nit_actor": "1085042421",
+        "nombre_actor": "Ingeniero Jefe \/ Super Admin",
+        "accion": "CAMBIO_MODO",
+        "descripcion": "Super Usuario cambio a modo Empleado",
+        "ip": "::1",
+        "meta": {
+            "modo_destino": "empleado"
+        }
+    },
+    {
+        "fecha": "2026-05-14 11:13:01",
+        "nit_actor": "1085042421",
+        "nombre_actor": "Ingeniero Jefe \/ Super Admin",
+        "accion": "QUITAR_ADMIN",
+        "descripcion": "Se removio rol de administrador al NIT 1028880412 (KEVIN SANTIAGO SAENZ REYES)",
+        "ip": "::1",
+        "meta": {
+            "nit_objetivo": "1028880412",
+            "nombre_objetivo": "KEVIN SANTIAGO SAENZ REYES"
+        }
+    },
+    {
+        "fecha": "2026-05-14 11:12:57",
+        "nit_actor": "1085042421",
+        "nombre_actor": "Ingeniero Jefe \/ Super Admin",
+        "accion": "ASIGNAR_ADMIN",
+        "descripcion": "Se asigno rol de administrador al NIT 1028880412 (KEVIN SANTIAGO SAENZ REYES) desde panel SA",
+        "ip": "::1",
+        "meta": {
+            "nit_objetivo": "1028880412",
+            "nombre_objetivo": "KEVIN SANTIAGO SAENZ REYES",
+            "origen": "panel_sa"
+        }
+    },
+    {
         "fecha": "2026-05-14 11:02:01",
         "nit_actor": "1085042421",
         "nombre_actor": "Ingeniero Jefe \/ Super Admin",
