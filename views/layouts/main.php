@@ -12,10 +12,14 @@ $rolesLabel = [
 
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
-// Variables para el modo Super Admin
+// Variables para el modo Admin (Super Admin o Admin Adicional)
 $esSuperAdmin = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
-$modoActual = $_SESSION['super_admin_modo'] ?? 'super_usuario';
-$modoLabel = $modoActual === 'super_usuario' ? 'Super Usuario' : 'Modo Empleado';
+$tieneSelectorModo = usuario_tiene_selector_modo();
+$modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
+$modoActual = $_SESSION['admin_modo'] ?? $modoAdminKey;
+$modoLabel = ($modoActual === 'super_usuario' || $modoActual === 'admin')
+    ? ($esSuperAdmin ? 'Super Usuario' : 'Administrador')
+    : 'Modo Empleado';
 
 $notifCountUrl = url_view('notif_count');
 $notifListUrl = url_view('notif_list');
@@ -205,8 +209,8 @@ $csrfToken = csrf_token();
     <div class="user-chip">
       <?= e($user['nombre'] ?? '') ?>
       <span class="user-role"><?= e($rolLabel) ?></span>
-      <?php if ($esSuperAdmin): ?>
-        <span class="user-modo-badge <?= $modoActual === 'super_usuario' ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
+      <?php if ($tieneSelectorModo): ?>
+        <span class="user-modo-badge <?= ($modoActual === 'super_usuario' || $modoActual === 'admin') ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
       <?php endif; ?>
     </div>
 
@@ -225,11 +229,17 @@ $csrfToken = csrf_token();
     </a>
     <?php endif; ?>
 
-    <?php if ($esSuperAdmin): ?>
+    <?php if ($tieneSelectorModo): ?>
     <form action="<?= e(url_action('cambiar_modo')) ?>" method="post" class="header-cambiar-modo-form">
       <?= csrf_input() ?>
-      <input type="hidden" name="modo_destino" value="<?= $modoActual === 'super_usuario' ? 'empleado' : 'super_usuario' ?>">
-      <button class="btn-cambiar-modo <?= $modoActual === 'super_usuario' ? 'btn-modo-admin' : 'btn-modo-empleado' ?>" type="submit" title="Cambiar a <?= $modoActual === 'super_usuario' ? 'Modo Empleado' : 'Super Usuario' ?>">
+      <?php
+        $esModoAdmin = ($modoActual === 'super_usuario' || $modoActual === 'admin');
+        $modoDestino = $esModoAdmin ? 'empleado' : $modoAdminKey;
+        $tituloDestino = $esModoAdmin ? 'Modo Empleado' : ($esSuperAdmin ? 'Super Usuario' : 'Administrador');
+        $btnClase = $esModoAdmin ? 'btn-modo-admin' : 'btn-modo-empleado';
+      ?>
+      <input type="hidden" name="modo_destino" value="<?= e($modoDestino) ?>">
+      <button class="btn-cambiar-modo <?= $btnClase ?>" type="submit" title="Cambiar a <?= e($tituloDestino) ?>">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M16 3h3v3h-3zM8 3h3v3H8zM5 8h14v12H5z"/>
           <path d="M12 12v6M8 15h8"/>

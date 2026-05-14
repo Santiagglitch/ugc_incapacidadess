@@ -1,6 +1,13 @@
 <?php
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $nombreUsuario = e($user['nombre'] ?? 'Usuario');
+$esSuperAdmin = $esSuperAdmin ?? false;
+$modoAdminValue = $esSuperAdmin ? 'super_usuario' : 'admin';
+$modoAdminTitulo = $esSuperAdmin ? 'Modo Super Usuario' : 'Modo Administrador';
+$modoAdminDesc = $esSuperAdmin
+    ? 'Acceso total administrativo. Gestion de empleados, todas las solicitudes, aprobaciones RRHH y configuracion del sistema.'
+    : 'Acceso administrativo. Gestion de empleados, todas las solicitudes y aprobaciones RRHH.';
+$modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
 ?>
 <div class="login-container">
   <div class="login-bg-pattern"></div>
@@ -24,7 +31,7 @@ $nombreUsuario = e($user['nombre'] ?? 'Usuario');
       
       <div class="modo-seleccion">
         <label class="modo-option">
-          <input type="radio" name="modo" value="super_usuario" required>
+          <input type="radio" name="modo" value="<?= e($modoAdminValue) ?>" required>
           <div class="modo-card">
             <div class="modo-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -36,9 +43,9 @@ $nombreUsuario = e($user['nombre'] ?? 'Usuario');
               </svg>
             </div>
             <div class="modo-info">
-              <h3>Modo Super Usuario</h3>
-              <p>Acceso total administrativo. Gestion de empleados, todas las solicitudes, aprobaciones RRHH y configuracion del sistema.</p>
-              <span class="modo-badge admin">Administrador Total</span>
+              <h3><?= e($modoAdminTitulo) ?></h3>
+              <p><?= e($modoAdminDesc) ?></p>
+              <span class="modo-badge admin"><?= e($modoAdminBadge) ?></span>
             </div>
           </div>
         </label>
