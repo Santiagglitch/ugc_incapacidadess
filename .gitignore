@@ -4,6 +4,7 @@ storage/solicitudes/*
 storage/private/auditoria_admin.json
 storage/private/notas_admin.json
 storage/private/sesiones_activas.json
+storage/private/admins_adicionales.json
 logs/*.log
 mcp_config.json
 mcp_ldap_server.py
