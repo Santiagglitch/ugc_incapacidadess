@@ -31,11 +31,22 @@ function iniciar_sesion_segura(): void
     session_start();
 }
 
+function csp_nonce(): string
+{
+    static $nonce = null;
+    if ($nonce === null) {
+        $nonce = base64_encode(random_bytes(16));
+    }
+    return $nonce;
+}
+
 function aplicar_headers_seguridad(): void
 {
     if (headers_sent()) {
         return;
     }
+
+    $nonce = csp_nonce();
 
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: SAMEORIGIN');
@@ -44,7 +55,7 @@ function aplicar_headers_seguridad(): void
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Pragma: no-cache');
     header('Expires: 0');
-    header("Content-Security-Policy: default-src 'self' blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' blob:; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'self' blob:");
+    header("Content-Security-Policy: default-src 'self' blob:; script-src 'self' 'nonce-{$nonce}'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' blob:; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'self' blob:");
 
     if (APP_ENV === 'production') {
         header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
