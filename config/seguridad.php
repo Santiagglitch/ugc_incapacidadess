@@ -111,6 +111,22 @@ function super_admin_modo_pendiente(): bool
         && (($usuario['cedula'] ?? '') === SUPER_ADMIN_NIT);
 }
 
+function admin_modo_pendiente(): bool
+{
+    return !empty($_SESSION['admin_modo_pendiente']);
+}
+
+function usuario_tiene_selector_modo(): bool
+{
+    $usuario = usuario_actual();
+    $cedula = $usuario['cedula'] ?? '';
+    if ($cedula === SUPER_ADMIN_NIT) {
+        return true;
+    }
+    require_once __DIR__ . '/../models/adminRolesModel.php';
+    return (new adminRolesModel())->esAdminAdicional($cedula);
+}
+
 function rol_actual(): string
 {
     $usuario = usuario_actual();
@@ -151,7 +167,7 @@ function requiere_login(): void
 
     validar_vigencia_sesion();
 
-    if (super_admin_modo_pendiente()) {
+    if (admin_modo_pendiente()) {
         header('Location: ' . app_base_url('index.php?view=seleccionar_modo'));
         exit;
     }
