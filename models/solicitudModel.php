@@ -565,10 +565,10 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
 
     $solicitudActual = $this->consultarUno(
         "SELECT OBSERVACIONES
-         FROM SOLICITUDES_PERMISOS
+         FROM ICEBERG.SOLICITUDES_PERMISOS
          WHERE ID = :id
            AND ACTIVO = 1
-           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_RRHH')
+           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
            AND (
                 NIT_EMPLEADO = :nit_usuario
                 OR :es_gestor = 1
@@ -599,14 +599,14 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
     }
 
     return $this->ejecutar(
-        "UPDATE SOLICITUDES_PERMISOS
+        "UPDATE ICEBERG.SOLICITUDES_PERMISOS
          SET ESTADO = :estado,
              FECHA_MODIFICACION = SYSDATE,
              FECHA_GESTION_JEFE = SYSDATE,
              OBSERVACIONES = :observaciones
          WHERE ID = :id
            AND ACTIVO = 1
-           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_RRHH')
+           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
            AND (
                 NIT_EMPLEADO = :nit_usuario
                 OR :es_gestor = 1

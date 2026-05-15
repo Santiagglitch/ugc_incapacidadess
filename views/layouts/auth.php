@@ -1,4 +1,11 @@
 <?php
+/**
+ * Layout de autenticacion
+ * 
+ * Variables recibidas del scope externo:
+ * @var string $content Contenido HTML de la vista principal
+ */
+
 $cssUrl = app_asset('assets/css/ugc.css');
 $loginBg = app_asset('assets/img/login-fondo.png');
 $faviconUrl = app_asset('assets/img/favicon.png');
@@ -18,7 +25,7 @@ $faviconUrl = app_asset('assets/img/favicon.png');
 </head>
 <body>
 <?= $content ?>
-<script>
+<script nonce="<?= csp_nonce() ?>">
 (function () {
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) {

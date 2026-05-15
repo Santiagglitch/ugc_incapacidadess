@@ -1,4 +1,13 @@
 <?php
+/**
+ * Layout principal del sistema
+ * 
+ * Variables recibidas del scope externo:
+ * @var string $content Contenido HTML de la vista principal
+ * @var array $user Datos del usuario autenticado
+ * @var array|null $flash Mensaje flash de notificacion
+ */
+
 $cssUrl = app_asset('assets/css/ugc.css');
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $faviconUrl = app_asset('assets/img/favicon.png');
@@ -263,7 +272,7 @@ $csrfToken = csrf_token();
     </div>
   <?php endif; ?>
 
-  <?= $content ?>
+ <?= $content ?> 
 </main>
 
 <footer class="ugc-footer">
@@ -288,7 +297,7 @@ $csrfToken = csrf_token();
   </div>
 </footer>
 
-<script>
+<script nonce="<?= csp_nonce() ?>">
 (function () {
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) {
