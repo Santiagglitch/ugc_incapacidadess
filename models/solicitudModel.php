@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/mainModel.php';
-require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/mainModelUXXI.php';
 
 if (!defined('ESTADO_CANCELADO_AGENDA')) {
     define('ESTADO_CANCELADO_AGENDA', 'CANCELADO_AGENDA');
 }
 
-class solicitudModel extends mainModel
+class solicitudModel extends mainModelUXXI
 {
     private const LIST_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
         OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO,
@@ -33,7 +32,7 @@ class solicitudModel extends mainModel
         $estado = (string)($data['estado'] ?? 'PENDIENTE_JEFE');
 
         return $this->ejecutar(
-            "INSERT INTO ICEBERG.SOLICITUDES_PERMISOS
+            "INSERT INTO SOLICITUDES_PERMISOS
                 (NIT_EMPLEADO, NIT_JEFE, TIPO_SOLICITUD, FECHA_INICIO, FECHA_FIN,
                  DURACION_HORAS, DURACION_DIAS, OBSERVACIONES, RUTA_COMPROBANTE,
                  ESTADO, ACTIVO, FECHA_CREACION, FECHA_MODIFICACION)
@@ -61,7 +60,7 @@ class solicitudModel extends mainModel
     {
         $row = $this->consultarUno(
             "SELECT ID
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE NIT_EMPLEADO=:nit AND ACTIVO=1
              ORDER BY FECHA_CREACION DESC
              FETCH FIRST 1 ROWS ONLY",
@@ -75,7 +74,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarUno(
             "SELECT " . self::DETAIL_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE ID=:id AND ACTIVO=1",
             [':id' => $id]
         );
@@ -85,7 +84,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE NIT_EMPLEADO=:nit AND ACTIVO=1
              ORDER BY FECHA_CREACION DESC",
             [':nit' => $nit]
@@ -96,7 +95,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE NIT_JEFE=:nit
                AND NIT_EMPLEADO<>:nit
                AND ESTADO='PENDIENTE_JEFE'
@@ -110,7 +109,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE NIT_JEFE=:nit
                AND NIT_EMPLEADO<>:nit
                AND ACTIVO=1
@@ -124,7 +123,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE ACTIVO=1
                AND ESTADO='APROBADO_JEFE'
              ORDER BY ID ASC"
@@ -135,7 +134,7 @@ class solicitudModel extends mainModel
     {
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE ACTIVO=1
              ORDER BY FECHA_CREACION DESC"
         );
@@ -147,7 +146,7 @@ class solicitudModel extends mainModel
 
         return $this->consultarTodo(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql
              ORDER BY FECHA_CREACION DESC",
             $binds
@@ -160,7 +159,7 @@ class solicitudModel extends mainModel
 
         return $this->paginar(
             "SELECT " . self::LIST_SELECT . "
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql",
             $binds,
             $orden,
@@ -206,7 +205,7 @@ class solicitudModel extends mainModel
 
         $row = $this->consultarUno(
             "SELECT COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql",
             $binds
         );
@@ -220,7 +219,7 @@ class solicitudModel extends mainModel
 
         $rows = $this->consultarTodo(
             "SELECT ESTADO, COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql
              GROUP BY ESTADO",
             $binds
@@ -260,7 +259,7 @@ class solicitudModel extends mainModel
                         WHEN s.ESTADO IN ('PENDIENTE_JEFE', 'APROBADO_JEFE', 'APROBADO_RRHH') THEN 1
                         ELSE 0
                     END) AS ACTIVAS
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE s.ACTIVO=1
                AND s.NIT_EMPLEADO IN ($inClause)
              GROUP BY s.NIT_EMPLEADO",
@@ -288,7 +287,7 @@ class solicitudModel extends mainModel
 
         $tipoTop = $this->consultarUno(
             "SELECT s.TIPO_SOLICITUD, COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql
              GROUP BY s.TIPO_SOLICITUD
              ORDER BY TOTAL DESC, s.TIPO_SOLICITUD ASC
@@ -298,14 +297,14 @@ class solicitudModel extends mainModel
 
         $promedio = $this->consultarUno(
             "SELECT ROUND(AVG(NVL(s.DURACION_HORAS, 0) + (NVL(s.DURACION_DIAS, 0) * 8)), 2) AS PROMEDIO_HORAS
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql",
             $binds
         ) ?? [];
 
         $diaTop = $this->consultarUno(
             "SELECT TRIM(TO_CHAR(s.FECHA_CREACION, 'DAY', 'NLS_DATE_LANGUAGE=SPANISH')) AS DIA, COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE $whereSql
              GROUP BY TRIM(TO_CHAR(s.FECHA_CREACION, 'DAY', 'NLS_DATE_LANGUAGE=SPANISH'))
              ORDER BY TOTAL DESC, DIA ASC
@@ -346,7 +345,7 @@ class solicitudModel extends mainModel
         $rows = $this->consultarTodo(
             "SELECT TO_CHAR(TRUNC(s.FECHA_CREACION, 'MM'), 'YYYY-MM') AS MES,
                     COUNT(*) AS TOTAL
-             FROM ICEBERG.SOLICITUDES_PERMISOS s
+             FROM SOLICITUDES_PERMISOS s
              WHERE s.ACTIVO=1
                AND s.FECHA_CREACION >= TO_DATE(:fecha_desde, 'YYYY-MM-DD')
              GROUP BY TRUNC(s.FECHA_CREACION, 'MM')
@@ -374,7 +373,7 @@ class solicitudModel extends mainModel
                     SUM(CASE WHEN ESTADO IN ('APROBADO_JEFE','APROBADO_RRHH') THEN 1 ELSE 0 END) AS APROBADAS,
                     SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS,
                     SUM(CASE WHEN ESTADO='CANCELADO_AGENDA' THEN 1 ELSE 0 END) AS CANCELADAS
-             FROM ICEBERG.SOLICITUDES_PERMISOS
+             FROM SOLICITUDES_PERMISOS
              WHERE NIT_EMPLEADO=:nit AND ACTIVO=1",
             [':nit' => $nit]
         ) ?? [];
@@ -419,7 +418,7 @@ class solicitudModel extends mainModel
     public function aprobarJefeTalentoHumano(int $id, string $nitJefe, string $obs): bool
     {
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  FECHA_GESTION_JEFE=SYSDATE,
                  OBSERVACION_JEFE=:obs_jefe,
@@ -476,7 +475,7 @@ class solicitudModel extends mainModel
         [$inClause, $estadoBinds] = $this->buildInClause($estadosIntervenibles, 'admin_intervenir_estado_');
 
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  NIT_RRHH=:nit_admin,
                  FECHA_GESTION_RRHH=SYSDATE,
@@ -519,7 +518,7 @@ class solicitudModel extends mainModel
         $obsAdmin = 'Estado forzado por admin a ' . $nuevoEstado . ': ' . $motivo;
 
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  FECHA_MODIFICACION=SYSDATE,
                  NIT_RRHH=CASE WHEN :es_rrhh=1 THEN :nit_admin ELSE NIT_RRHH END,
@@ -565,7 +564,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
 
     $solicitudActual = $this->consultarUno(
         "SELECT OBSERVACIONES
-         FROM ICEBERG.SOLICITUDES_PERMISOS
+         FROM SOLICITUDES_PERMISOS
          WHERE ID = :id
            AND ACTIVO = 1
            AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
@@ -599,7 +598,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
     }
 
     return $this->ejecutar(
-        "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+        "UPDATE SOLICITUDES_PERMISOS
          SET ESTADO = :estado,
              FECHA_MODIFICACION = SYSDATE,
              FECHA_GESTION_JEFE = SYSDATE,
@@ -626,7 +625,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
         $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
 
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ACTIVO=0,
                  FECHA_MODIFICACION=SYSDATE
              WHERE ID=:id
@@ -718,7 +717,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
                 "UPPER(NVL(s.OBSERVACIONES, '')) LIKE :q_like ESCAPE '\\'",
                 "EXISTS (
                     SELECT 1
-                    FROM EMPLEADO emp
+                    FROM ICEBERG.EMPLEADO emp
                     WHERE emp.EMPRESA='BA2'
                       AND emp.ESTADO='A'
                       AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
@@ -863,7 +862,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
         $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
 
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET TIPO_SOLICITUD=:tipo_solicitud,
                  NIT_JEFE=:nit_jefe,
                  FECHA_INICIO=TO_DATE(:fecha_inicio, 'YYYY-MM-DD'),
@@ -899,7 +898,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
     private function gestionarJefe(int $id, string $nit, string $obs, string $estado): bool
     {
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  FECHA_GESTION_JEFE=SYSDATE,
                  OBSERVACION_JEFE=:obs
@@ -920,7 +919,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
     private function gestionarRRHH(int $id, string $nit, string $obs, string $estado): bool
     {
         return $this->ejecutar(
-            "UPDATE ICEBERG.SOLICITUDES_PERMISOS
+            "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  NIT_RRHH=:nit,
                  FECHA_GESTION_RRHH=SYSDATE,
