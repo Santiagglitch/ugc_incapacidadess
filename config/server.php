@@ -42,6 +42,19 @@ define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
 
 
 /*
+ * Oracle UXXI / Permisos.
+ * Conexion a FREEPDB1 para gestion de permisos e incapacidades.
+ */
+define('UXXI_HOST', '172.20.100.92');
+define('UXXI_PORT', '1521');
+define('UXXI_USER', 'PERMISOS');
+define('UXXI_PASS', 'Permisos123');
+define('UXXI_SERVICE', 'FREEPDB1');
+define('UXXI_CHARSET', 'AL32UTF8');
+
+
+
+/*
  * LDAP Universidad.
  * Ajusta estos datos si el ambiente de produccion usa otro servidor.
 define('LDAP_HOST', '10.238.30.115');
