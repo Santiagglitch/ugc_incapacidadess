@@ -12,7 +12,7 @@ class authModel
     public function login(string $cedula, string $password): array
     {
         $cedula = trim($cedula);
-        $password = (string) $password;
+        $password = trim((string) $password);
 
         if ($cedula === '' || $password === '') {
             return ['ok' => false, 'error' => 'Ingresa documento y contrasena.'];
@@ -34,7 +34,6 @@ class authModel
         $empleadoModel = new empleadoModel();
         $empleado = $empleadoModel->getByNit($cedula);
         $rol = $empleadoModel->getRol($cedula, $empleado);
-        $jefe = !in_array($rol, [ROL_ADMIN, ROL_RRHH], true) ? $empleadoModel->getJefeInmediato($cedula) : null;
 
         return [
             'ok' => true,
@@ -45,8 +44,9 @@ class authModel
                 'rol' => $rol,
                 'nivel' => (int) ($empleado['NIVEL'] ?? 0),
                 'centro_costo' => $empleado['CENTRO_COSTO'] ?? '',
-                'nit_jefe' => $jefe['NIT_JEFE'] ?? null,
-                'nombre_jefe' => $jefe['NOMBRE_JEFE'] ?? null,
+                // El jefe se consulta al crear/editar solicitudes, no al autenticar.
+                'nit_jefe' => null,
+                'nombre_jefe' => null,
             ],
         ];
     }
