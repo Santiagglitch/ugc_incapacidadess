@@ -67,7 +67,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
             autocomplete="current-password"
           >
 
-          <button type="button" class="input-toggle" onclick="togglePassword(this)" aria-label="Mostrar contrasena">
+          <button type="button" class="input-toggle" data-password-toggle aria-label="Mostrar contrasena">
             <!-- OJO CERRADO -->
             <svg class="toggle-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a20.29 20.29 0 0 1 5.06-5.94"/>
@@ -96,7 +96,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
 
         <div class="dev-chips">
           <?php foreach ($devUsuarios as $ced => $u): ?>
-            <button type="button" class="dev-chip" onclick="fillLogin('<?= e($ced) ?>')">
+            <button type="button" class="dev-chip" data-login-cedula="<?= e($ced) ?>">
               <span class="chip-role <?= e($u['rol']) ?>"><?= e(strtoupper(substr($u['rol'], 0, 3))) ?></span>
               <span class="chip-name"><?= e(explode(' ', $u['nombre'])[0]) ?></span>
             </button>
@@ -107,42 +107,60 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
   </div>
 </div>
 
-<script>
-function togglePassword(button) {
-  const pwd = document.getElementById('password');
+<script nonce="<?= csp_nonce() ?>">
+(function () {
+  var passwordInput = document.getElementById('password');
+  var toggleButton = document.querySelector('[data-password-toggle]');
+  var loginButton = document.getElementById('btnLogin');
+  var loginForm = document.getElementById('loginForm');
 
-  if (pwd.type === 'password') {
-    pwd.type = 'text';
-    button.classList.add('is-visible');
-    button.setAttribute('aria-label', 'Ocultar contrasena');
-  } else {
-    pwd.type = 'password';
-    button.classList.remove('is-visible');
-    button.setAttribute('aria-label', 'Mostrar contrasena');
+  if (toggleButton && passwordInput) {
+    toggleButton.addEventListener('click', function () {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.classList.add('is-visible');
+        toggleButton.setAttribute('aria-label', 'Ocultar contrasena');
+      } else {
+        passwordInput.type = 'password';
+        toggleButton.classList.remove('is-visible');
+        toggleButton.setAttribute('aria-label', 'Mostrar contrasena');
+      }
+    });
   }
-}
 
-function fillLogin(cedula) {
-  document.getElementById('cedula').value = cedula;
-  document.getElementById('password').value = 'prueba123';
-  document.getElementById('btnLogin').focus();
-}
+  document.querySelectorAll('[data-login-cedula]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var cedulaInput = document.getElementById('cedula');
 
-document.querySelectorAll('.login-brand img').forEach(function(img) {
-  img.addEventListener('dragstart', function(event) {
-    event.preventDefault();
+      if (cedulaInput) {
+        cedulaInput.value = button.dataset.loginCedula || '';
+      }
+      if (passwordInput) {
+        passwordInput.value = 'prueba123';
+      }
+      if (loginButton) {
+        loginButton.focus();
+      }
+    });
   });
-});
 
-document.querySelectorAll('#cedula, #password').forEach(function(input) {
-  input.addEventListener('drop', function(event) {
-    event.preventDefault();
+  document.querySelectorAll('.login-brand img').forEach(function (img) {
+    img.addEventListener('dragstart', function (event) {
+      event.preventDefault();
+    });
   });
-});
 
-document.getElementById('loginForm').addEventListener('submit', function() {
-  const btn = document.getElementById('btnLogin');
-  btn.classList.add('loading');
-  btn.querySelector('.btn-text').textContent = 'Ingresando...';
-});
+  document.querySelectorAll('#cedula, #password').forEach(function (input) {
+    input.addEventListener('drop', function (event) {
+      event.preventDefault();
+    });
+  });
+
+  if (loginForm && loginButton) {
+    loginForm.addEventListener('submit', function () {
+      loginButton.classList.add('loading');
+      loginButton.querySelector('.btn-text').textContent = 'Ingresando...';
+    });
+  }
+})();
 </script>

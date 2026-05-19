@@ -145,8 +145,15 @@ class authController
     {
         $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $clave = md5($ip . '|' . $cedula);
+        if (!is_file($this->bloqueoPath())) {
+            return;
+        }
 
         $data = $this->bloqueoLeer();
+        if (!array_key_exists($clave, $data)) {
+            return;
+        }
+
         unset($data[$clave]);
         $this->bloqueoGuardar($data);
     }
