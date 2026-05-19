@@ -44,6 +44,120 @@ class authController
         ], 'auth');
     }
 
+    private function bloqueoPath(): string
+    {
+        return __DIR__ . '/../storage/private/login_bloqueos.json';
+    }
+
+    private function bloqueoLeer(): array
+    {
+        $path = $this->bloqueoPath();
+        if (!is_file($path)) {
+            return [];
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return [];
+        }
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
+    }
+
+    private function bloqueoGuardar(array $data): void
+    {
+        $path = $this->bloqueoPath();
+        $dir  = dirname($path);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $tmp = $path . '.tmp.' . getmypid();
+        if (file_put_contents($tmp, json_encode($data, JSON_PRETTY_PRINT), LOCK_EX) !== false) {
+            rename($tmp, $path);
+        } else {
+            @unlink($tmp);
+        }
+    }
+
+    private function bloqueoLimpiarExpirados(array &$data, int $ventana): void
+    {
+        $ahora = time();
+        foreach ($data as $clave => $entrada) {
+            if (($ahora - (int)($entrada['t'] ?? 0)) >= $ventana) {
+                unset($data[$clave]);
+            }
+        }
+    }
+
+    private function verificarBruteForce(string $cedula): ?string
+    {
+        $maxIntentos = 3;
+        $ventana     = 900;
+        $clave       = md5($cedula);
+        $ahora       = time();
+
+        $data = $this->bloqueoLeer();
+        $this->bloqueoLimpiarExpirados($data, $ventana);
+
+        $entrada   = $data[$clave] ?? null;
+        $intentos  = (int)($entrada['c'] ?? 0);
+        $primerInt = (int)($entrada['t'] ?? $ahora);
+
+        if ($intentos >= $maxIntentos && ($ahora - $primerInt) < $ventana) {
+            $restante = $ventana - ($ahora - $primerInt);
+            return 'Cuenta bloqueada por seguridad. Intenta de nuevo en ' . ceil($restante / 60) . ' minuto(s).';
+        }
+
+        return null;
+    }
+
+    private function registrarIntentoFallido(string $cedula): void
+    {
+        $ventana = 900;
+        $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $clave   = md5($cedula);
+        $ahora   = time();
+
+        $data = $this->bloqueoLeer();
+        $this->bloqueoLimpiarExpirados($data, $ventana);
+
+        if (!isset($data[$clave])) {
+            $data[$clave] = ['c' => 0, 't' => $ahora];
+        }
+        $data[$clave]['c'] = (int)($data[$clave]['c'] ?? 0) + 1;
+        $data[$clave]['ultima'] = $ahora;
+        $data[$clave]['ip_ultima'] = $ip;
+
+        $this->bloqueoGuardar($data);
+
+        try {
+            require_once __DIR__ . '/../models/adminAuditoriaModel.php';
+            (new adminAuditoriaModel())->registrar(
+                $cedula,
+                'LOGIN_FALLIDO',
+                'Intento de login fallido (intento ' . $data[$clave]['c'] . ' de 3)',
+                ['ip' => $ip, 'intentos' => $data[$clave]['c']]
+            );
+        } catch (Throwable $e) {
+        }
+    }
+
+    private function limpiarIntentosFallidos(string $cedula): void
+    {
+        $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $clave = md5($ip . '|' . $cedula);
+        if (!is_file($this->bloqueoPath())) {
+            return;
+        }
+
+        $data = $this->bloqueoLeer();
+        if (!array_key_exists($clave, $data)) {
+            return;
+        }
+
+        unset($data[$clave]);
+        $this->bloqueoGuardar($data);
+    }
+
     public function loginPost(): void
     {
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
@@ -58,12 +172,24 @@ class authController
         $cedula = limpiar_texto($_POST['cedula'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
 
+        $bloqueo = $this->verificarBruteForce($cedula);
+        if ($bloqueo !== null) {
+            http_response_code(429);
+            render_view('auth/login', [
+                'error' => $bloqueo,
+                'devUsuarios' => APP_ENV === 'development' ? USUARIOS_PRUEBA : [],
+            ], 'auth');
+            return;
+        }
+
         $result = (new authModel())->login($cedula, $password);
         if (empty($result['ok'])) {
-            $_SESSION['login_error'] = $result['error'] ?? 'No se pudo iniciar sesion.';
+            $this->registrarIntentoFallido($cedula);
+            $_SESSION['login_error'] = 'Credenciales incorrectas.';
             redirect_to(url_view('login'));
         }
 
+        $this->limpiarIntentosFallidos($cedula);
         session_regenerate_id(true);
         $_SESSION['usuario'] = $result['user'];
         $_SESSION['last_activity'] = time();
@@ -253,7 +379,6 @@ class authController
     public function logout(): void
     {
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            cerrar_sesion();
             redirect_to(url_view('login'));
         }
 

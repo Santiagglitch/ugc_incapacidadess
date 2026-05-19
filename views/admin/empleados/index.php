@@ -253,7 +253,7 @@ ugcRenderPagination([
 ], 'empleados');
 ?>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function () {
   var STORAGE_KEY = 'ugc_emp_view';
 

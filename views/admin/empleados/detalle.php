@@ -256,7 +256,7 @@ $iniciales = implode('', array_map(
 </div>
 <?php endif; ?>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 function detTab(btn, panelId) {
   document.querySelectorAll('.det-tab').forEach(function(t) { t.classList.remove('active'); });
   document.querySelectorAll('.det-panel').forEach(function(p) { p.classList.remove('active'); });
