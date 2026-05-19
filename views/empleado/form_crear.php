@@ -434,7 +434,7 @@ $hoy   = $hoy ?? date('Y-m-d');
   </form>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function () {
 
   var hoy = <?= json_encode($hoy) ?>;

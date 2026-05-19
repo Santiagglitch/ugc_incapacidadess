@@ -516,7 +516,7 @@ $nitActual = (string)($user['cedula'] ?? '');
   <?php endif; ?>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function () {
   var input    = document.getElementById('sa-ac-input');
   var hidden   = document.getElementById('sa-ac-nit');

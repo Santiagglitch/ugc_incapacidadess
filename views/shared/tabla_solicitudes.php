@@ -387,7 +387,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
 
 <?php endif; ?>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 function ugcAbrirPanelCancelacion(panelId) {
   const panel = document.getElementById(panelId);
 

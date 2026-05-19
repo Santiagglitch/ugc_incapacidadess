@@ -253,7 +253,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
   </form>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 (function () {
 
   var hoy = <?= json_encode($hoy) ?>;

@@ -199,7 +199,7 @@ $modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
 }
 </style>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.getElementById('modoForm').addEventListener('submit', function() {
   const btn = document.getElementById('btnModo');
   btn.classList.add('loading');

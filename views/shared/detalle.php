@@ -163,7 +163,7 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
   </form>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.getElementById('formGestionJefe').addEventListener('submit', function(e) {
   const botonPresionado = e.submitter;
   const observacion = document.getElementById('observacion_jefe');
@@ -234,7 +234,7 @@ document.getElementById('formGestionJefe').addEventListener('submit', function(e
   </form>
 </div>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.getElementById('formGestionRrhh').addEventListener('submit', function(e) {
   const botonPresionado = e.submitter;
   const observacion = document.getElementById('observacion_rrhh');
@@ -357,7 +357,7 @@ document.getElementById('formGestionRrhh').addEventListener('submit', function(e
     </div>
   </form>
 </div>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.getElementById('formAdminIntervenir').addEventListener('submit', function(e) {
   var obs = document.getElementById('obs_admin_intervenir');
   var err = document.getElementById('err_obs_admin');
@@ -440,7 +440,7 @@ document.getElementById('formAdminIntervenir').addEventListener('submit', functi
     <small id="err_motivo_forzar" style="display:none;color:#b00020;font-weight:600;margin-top:4px">El motivo es obligatorio.</small>
   </form>
 </div>
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 document.getElementById('formForzarEstado').addEventListener('submit', function(e) {
   var m = document.getElementById('motivo_forzar');
   var err = document.getElementById('err_motivo_forzar');
