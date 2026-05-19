@@ -90,10 +90,9 @@ class authController
 
     private function verificarBruteForce(string $cedula): ?string
     {
-        $maxIntentos = 5;
+        $maxIntentos = 3;
         $ventana     = 900;
-        $ip          = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $clave       = md5($ip . '|' . $cedula);
+        $clave       = md5($cedula);
         $ahora       = time();
 
         $data = $this->bloqueoLeer();
@@ -105,7 +104,7 @@ class authController
 
         if ($intentos >= $maxIntentos && ($ahora - $primerInt) < $ventana) {
             $restante = $ventana - ($ahora - $primerInt);
-            return 'Demasiados intentos fallidos. Intenta de nuevo en ' . ceil($restante / 60) . ' minuto(s).';
+            return 'Cuenta bloqueada por seguridad. Intenta de nuevo en ' . ceil($restante / 60) . ' minuto(s).';
         }
 
         return null;
@@ -115,17 +114,18 @@ class authController
     {
         $ventana = 900;
         $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $clave   = md5($ip . '|' . $cedula);
+        $clave   = md5($cedula);
         $ahora   = time();
 
         $data = $this->bloqueoLeer();
         $this->bloqueoLimpiarExpirados($data, $ventana);
 
         if (!isset($data[$clave])) {
-            $data[$clave] = ['c' => 0, 't' => $ahora, 'ip' => $ip];
+            $data[$clave] = ['c' => 0, 't' => $ahora];
         }
         $data[$clave]['c'] = (int)($data[$clave]['c'] ?? 0) + 1;
         $data[$clave]['ultima'] = $ahora;
+        $data[$clave]['ip_ultima'] = $ip;
 
         $this->bloqueoGuardar($data);
 
@@ -134,7 +134,7 @@ class authController
             (new adminAuditoriaModel())->registrar(
                 $cedula,
                 'LOGIN_FALLIDO',
-                'Intento de login fallido (intento ' . $data[$clave]['c'] . ')',
+                'Intento de login fallido (intento ' . $data[$clave]['c'] . ' de 3)',
                 ['ip' => $ip, 'intentos' => $data[$clave]['c']]
             );
         } catch (Throwable $e) {
@@ -143,8 +143,7 @@ class authController
 
     private function limpiarIntentosFallidos(string $cedula): void
     {
-        $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $clave = md5($ip . '|' . $cedula);
+        $clave = md5($cedula);
 
         $data = $this->bloqueoLeer();
         unset($data[$clave]);
