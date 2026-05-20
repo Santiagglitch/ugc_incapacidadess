@@ -319,7 +319,7 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
                 <h3>Motivo de cancelación</h3>
 
                 <p>
-                  Escribe por qué deseas cancelar esta cita. Este mensaje es obligatorio y quedará guardado en Observaciones.
+                  Escribe por qué deseas cancelar esta cita. Este mensaje es obligatorio y quedará guardado como motivo de cancelación.
                 </p>
 
                 <form 
@@ -449,7 +449,7 @@ function ugcValidarCancelacion(form) {
     return false;
   }
 
-  return confirm('¿Seguro que deseas cancelar esta cita? El motivo quedará guardado en Observaciones.');
+  return confirm('¿Seguro que deseas cancelar esta cita? El motivo quedará guardado como motivo de cancelación.');
 }
 
 document.addEventListener('click', function (event) {

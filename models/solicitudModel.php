@@ -19,7 +19,7 @@ class solicitudModel extends mainModelUXXI
         TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH";
 
     private const DETAIL_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
-        TIPO_DURACION, NIT_CANCELADOR, OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO, ACTIVO,
+        TIPO_DURACION, NIT_CANCELADOR, MOTIVO_CANCELACION, OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO, ACTIVO,
         TO_CHAR(FECHA_INICIO, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_INICIO,
         TO_CHAR(FECHA_FIN, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_FIN,
         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION,
@@ -587,26 +587,14 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
         return false;
     }
 
-    $observacionesAnteriores = trim((string)($solicitudActual['OBSERVACIONES'] ?? ''));
-
-    // Limpia saltos de línea para que en SELECT * se vea ordenado.
-    $observacionesAnteriores = preg_replace('/\s+/', ' ', $observacionesAnteriores) ?? '';
-    $observacionCancelacion = preg_replace('/\s+/', ' ', $observacionCancelacion) ?? '';
-
-    $mensajeCancelacion = 'Motivo de cancelación: ' . $observacionCancelacion;
-
-    if ($observacionesAnteriores !== '') {
-        $observacionesFinales = $observacionesAnteriores . ' | ' . $mensajeCancelacion;
-    } else {
-        $observacionesFinales = $mensajeCancelacion;
-    }
+    $motivoCancelacion = trim(preg_replace('/\s+/', ' ', $observacionCancelacion) ?? '');
 
     return $this->ejecutar(
         "UPDATE SOLICITUDES_PERMISOS
          SET ESTADO = :estado,
              FECHA_MODIFICACION = SYSDATE,
              FECHA_GESTION_JEFE = SYSDATE,
-             OBSERVACIONES = :observaciones,
+             MOTIVO_CANCELACION = :motivo_cancelacion,
              NIT_CANCELADOR = :nit_cancelador,
              FECHA_CANCELACION = SYSDATE
          WHERE ID = :id
@@ -617,12 +605,12 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
                 OR :es_gestor = 1
            )",
         [
-            ':estado'          => ESTADO_CANCELADO_AGENDA,
-            ':observaciones'   => $observacionesFinales,
-            ':nit_cancelador'  => $nitUsuario,
-            ':id'              => $id,
-            ':nit_usuario' => $nitUsuario,
-            ':es_gestor' => $esGestor ? 1 : 0,
+            ':estado'             => ESTADO_CANCELADO_AGENDA,
+            ':motivo_cancelacion' => $motivoCancelacion,
+            ':nit_cancelador'     => $nitUsuario,
+            ':id'                 => $id,
+            ':nit_usuario'        => $nitUsuario,
+            ':es_gestor'          => $esGestor ? 1 : 0,
         ]
     );
 }

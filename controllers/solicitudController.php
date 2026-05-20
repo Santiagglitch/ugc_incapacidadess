@@ -606,7 +606,7 @@ public function cancelarAgenda(?int $id = null): void
     flash_set(
         $ok ? 'success' : 'error',
         $ok
-            ? 'Agenda cancelada correctamente. El motivo quedó guardado en Observaciones.'
+            ? 'Agenda cancelada correctamente. El motivo quedó guardado como motivo de cancelación.'
             : 'No se pudo cancelar la agenda. Verifica que la solicitud siga aprobada por jefe o Talento Humano.'
     );
 
