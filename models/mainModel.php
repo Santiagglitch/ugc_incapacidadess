@@ -31,7 +31,11 @@ class mainModel
                 if ($nombre === '' || $nombre[0] !== ':') {
                     $nombre = ':' . $nombre;
                 }
-                oci_bind_by_name($stmt, $nombre, $valor);
+                if ($valor === null) {
+                    oci_bind_by_name($stmt, $nombre, $valor, -1, SQLT_CHR);
+                } else {
+                    oci_bind_by_name($stmt, $nombre, $valor);
+                }
             }
             unset($valor);
 

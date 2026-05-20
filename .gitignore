@@ -9,10 +9,6 @@ uploads/
 storage/private/
 
 # ── Configuración con credenciales ───────────────────────────────────
-config/server.php
-config/conexion.php
-config/conexion_ldap.php
-config/conexion_uxxi.php
 
 # ── Logs ─────────────────────────────────────────────────────────────
 logs/
