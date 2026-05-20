@@ -14,10 +14,8 @@ class loginBloqueoService extends mainModelUXXI
         $clave = md5($cedula);
         $ahora = time();
 
-        $this->limpiarExpirados();
-
         $row = $this->consultarUno(
-            "SELECT INTENTOS, PRIMER_INT FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave",
+            "SELECT INTENTOS, PRIMER_INT FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
             [':clave' => $clave]
         );
 
@@ -55,14 +53,12 @@ class loginBloqueoService extends mainModelUXXI
         if ($row) {
             $this->ejecutar(
                 "UPDATE LOGIN_BLOQUEOS
-                 SET INTENTOS=:intentos, ULTIMA_ACT=:ultima, IP_ULTIMA=:ip,
-                     EXPIRA=TO_DATE(:expira,'YYYY-MM-DD HH24:MI:SS')
+                 SET INTENTOS=:intentos, ULTIMA_ACT=:ultima, IP_ULTIMA=:ip
                  WHERE CLAVE=:clave",
                 [
                     ':intentos' => $nuevosIntentos,
                     ':ultima'   => $ahora,
                     ':ip'       => $ip,
-                    ':expira'   => $expira,
                     ':clave'    => $clave,
                 ]
             );
@@ -95,6 +91,13 @@ class loginBloqueoService extends mainModelUXXI
 
     private function limpiarExpirados(): void
     {
-        $this->ejecutar("DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < SYSDATE");
+        $conn = $this->conectar();
+        if ($conn) {
+            $stmt = @oci_parse($conn, "DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < SYSDATE");
+            if ($stmt) {
+                @oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
+                @oci_free_statement($stmt);
+            }
+        }
     }
 }
