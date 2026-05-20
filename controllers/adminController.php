@@ -553,7 +553,6 @@ class adminController
             $oracleMsg = 'Error: ' . $e->getMessage();
         }
 
-        $storagePrivate  = is_writable(dirname(__DIR__) . '/storage/private');
         $storageUploads  = is_writable(dirname(__DIR__) . '/uploads');
         $storageSessions = is_writable(dirname(__DIR__) . '/storage/sessions');
 
@@ -561,19 +560,13 @@ class adminController
         $ociHabilitado = function_exists('oci_connect');
         $ldapHabilitado = function_exists('ldap_connect');
 
-        $adminsJson = dirname(__DIR__) . '/storage/private/admins_adicionales.json';
-        $auditoriaJson = dirname(__DIR__) . '/storage/private/auditoria_admin.json';
-
         return [
             'oracle'            => ['ok' => $oracle, 'mensaje' => $oracleMsg],
             'php_version'       => $phpVersion,
             'oci_habilitado'    => $ociHabilitado,
             'ldap_habilitado'   => $ldapHabilitado,
-            'storage_private'   => $storagePrivate,
             'storage_uploads'   => $storageUploads,
             'storage_sessions'  => $storageSessions,
-            'admins_json'       => is_file($adminsJson),
-            'auditoria_json'    => is_file($auditoriaJson),
             'app_env'           => APP_ENV,
             'app_version'       => defined('APP_VERSION') ? APP_VERSION : '—',
             'timezone'          => date_default_timezone_get(),

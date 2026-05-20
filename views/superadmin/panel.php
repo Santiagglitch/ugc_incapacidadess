@@ -22,9 +22,6 @@ if (!$oracleOk) {
 if (!($estadoSistema['oci_habilitado'] ?? false)) {
     $alertasCriticas[] = 'Extension OCI8 no habilitada en PHP.';
 }
-if (!($estadoSistema['storage_private'] ?? false)) {
-    $alertasCriticas[] = 'Directorio storage/private sin permisos de escritura.';
-}
 if (!($estadoSistema['storage_uploads'] ?? false)) {
     $alertasCriticas[] = 'Directorio uploads sin permisos de escritura.';
 }
@@ -263,13 +260,6 @@ $nitActual = (string)($user['cedula'] ?? '');
       <span class="sa-health-val">
         <?php if ($estadoSistema['ldap_habilitado'] ?? false): ?><span class="badge-ok">Habilitada</span>
         <?php else: ?><span class="badge-err">No disponible</span><?php endif; ?>
-      </span>
-    </div>
-    <div class="sa-health-row">
-      <span class="sa-health-label">Storage /private</span>
-      <span class="sa-health-val">
-        <?php if ($estadoSistema['storage_private'] ?? false): ?><span class="badge-ok">Escribible</span>
-        <?php else: ?><span class="badge-err">Sin permisos</span><?php endif; ?>
       </span>
     </div>
     <div class="sa-health-row">
