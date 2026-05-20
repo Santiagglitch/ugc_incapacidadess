@@ -33,15 +33,16 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <?php if ($puedeCancelarSolicitud): ?>
       <form
+        id="form-cancelar-agenda"
         class="inline-form form-cancelar-agenda"
         method="post"
         action="<?= e(url_action('solicitud_cancelar_agenda')) ?>"
-        onsubmit="return confirm('Seguro que deseas cancelar esta solicitud? El permiso dejara de estar vigente.');"
       >
         <?= csrf_input() ?>
         <input type="hidden" name="_method" value="POST">
         <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
         <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
+        <input type="hidden" name="observacion_cancelacion" id="motivo_cancelacion_val">
       </form>
     <?php endif; ?>
     <a class="btn btn-outline" href="<?= e($returnToDetalle) ?>">Volver</a>
@@ -327,7 +328,16 @@ document.getElementById('formGestionRrhh').addEventListener('submit', function(e
   </div>
   <?php endif; ?>
 
-  <?php if (empty($solicitud['OBSERVACIONES']) && empty($solicitud['OBSERVACION_JEFE']) && empty($solicitud['OBSERVACION_RRHH'])): ?>
+  <?php if (!empty($solicitud['MOTIVO_CANCELACION'])): ?>
+  <div class="observacion-block">
+    <div class="observacion-header">
+      <span class="observacion-badge" style="background:#fff3cd;color:#856404;border:1px solid #ffe08a">Motivo de cancelación</span>
+    </div>
+    <div class="observacion-content"><?= nl2br(e($solicitud['MOTIVO_CANCELACION'])) ?></div>
+  </div>
+  <?php endif; ?>
+
+  <?php if (empty($solicitud['OBSERVACIONES']) && empty($solicitud['OBSERVACION_JEFE']) && empty($solicitud['OBSERVACION_RRHH']) && empty($solicitud['MOTIVO_CANCELACION'])): ?>
   <div class="observacion-empty">
     <p>No hay observaciones registradas para esta solicitud.</p>
   </div>
@@ -453,5 +463,63 @@ document.getElementById('formForzarEstado').addEventListener('submit', function(
   err.style.display = 'none';
   m.style.border = '';
 });
+</script>
+<?php endif; ?>
+
+<?php if ($puedeCancelarSolicitud): ?>
+<div id="modal-cancelar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--surface,#fff);border-radius:var(--r3,10px);padding:28px 24px;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <h3 style="margin:0 0 6px;font-size:16px">Cancelar solicitud</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Escribe el motivo de cancelación. Quedará guardado como motivo de cancelación.</p>
+    <textarea id="motivo-cancelar-input" rows="3" maxlength="2000" placeholder="Motivo de cancelación..." style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:var(--r2,6px);font-size:13px;background:var(--surface,#fff);color:var(--text,#1a1a1a);resize:vertical;box-sizing:border-box"></textarea>
+    <small id="motivo-cancelar-error" style="display:none;color:#b00020;font-weight:600;margin-top:4px;display:block">El motivo de cancelación es obligatorio.</small>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+      <button type="button" id="btn-cancelar-cerrar" class="btn btn-outline">Cerrar</button>
+      <button type="button" id="btn-cancelar-confirmar" class="btn btn-red">Confirmar cancelación</button>
+    </div>
+  </div>
+</div>
+<script nonce="<?= e(csp_nonce()) ?>">
+(function() {
+  var modal   = document.getElementById('modal-cancelar');
+  var input   = document.getElementById('motivo-cancelar-input');
+  var error   = document.getElementById('motivo-cancelar-error');
+  var btnConf = document.getElementById('btn-cancelar-confirmar');
+  var btnCerr = document.getElementById('btn-cancelar-cerrar');
+  var form    = document.getElementById('form-cancelar-agenda');
+  var hidden  = document.getElementById('motivo_cancelacion_val');
+
+  document.querySelectorAll('.form-cancelar-agenda button[type="submit"], .btn-cancelar-agenda').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      input.value = '';
+      error.style.display = 'none';
+      input.style.border = '';
+      modal.style.display = 'flex';
+      setTimeout(function(){ input.focus(); }, 80);
+    });
+  });
+
+  btnCerr.addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  btnConf.addEventListener('click', function() {
+    var motivo = input.value.trim();
+    if (motivo === '') {
+      error.style.display = 'block';
+      input.style.border = '2px solid #b00020';
+      input.focus();
+      return;
+    }
+    hidden.value = motivo;
+    modal.style.display = 'none';
+    form.submit();
+  });
+})();
 </script>
 <?php endif; ?>
