@@ -19,39 +19,43 @@ class solicitudModel extends mainModelUXXI
         TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH";
 
     private const DETAIL_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
-        OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO, ACTIVO,
+        TIPO_DURACION, NIT_CANCELADOR, OBSERVACIONES, OBSERVACION_JEFE, OBSERVACION_RRHH, RUTA_COMPROBANTE, ESTADO, ACTIVO,
         TO_CHAR(FECHA_INICIO, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_INICIO,
         TO_CHAR(FECHA_FIN, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_FIN,
         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION,
         TO_CHAR(FECHA_MODIFICACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_MODIFICACION,
         TO_CHAR(FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE,
-        TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH";
+        TO_CHAR(FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH,
+        TO_CHAR(FECHA_CANCELACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CANCELACION";
 
     public function crear(array $data): bool
     {
         $estado = (string)($data['estado'] ?? 'PENDIENTE_JEFE');
 
+        $tipoDuracion = isset($data['tipo_duracion']) && $data['tipo_duracion'] !== '' ? $data['tipo_duracion'] : null;
+
         return $this->ejecutar(
             "INSERT INTO SOLICITUDES_PERMISOS
                 (NIT_EMPLEADO, NIT_JEFE, TIPO_SOLICITUD, FECHA_INICIO, FECHA_FIN,
-                 DURACION_HORAS, DURACION_DIAS, OBSERVACIONES, RUTA_COMPROBANTE,
+                 DURACION_HORAS, DURACION_DIAS, TIPO_DURACION, OBSERVACIONES, RUTA_COMPROBANTE,
                  ESTADO, ACTIVO, FECHA_CREACION, FECHA_MODIFICACION)
              VALUES
                 (:nit_empleado, :nit_jefe, :tipo_solicitud,
                  TO_DATE(:fecha_inicio, 'YYYY-MM-DD'), TO_DATE(:fecha_fin, 'YYYY-MM-DD'),
-                 :duracion_horas, :duracion_dias, :observaciones, :ruta_comprobante,
+                 :duracion_horas, :duracion_dias, :tipo_duracion, :observaciones, :ruta_comprobante,
                  :estado, 1, SYSDATE, SYSDATE)",
             [
-                ':nit_empleado' => $data['nit_empleado'],
-                ':nit_jefe' => $data['nit_jefe'],
-                ':tipo_solicitud' => $data['tipo_solicitud'],
-                ':fecha_inicio' => $data['fecha_inicio'],
-                ':fecha_fin' => $data['fecha_fin'],
-                ':duracion_horas' => $data['duracion_horas'],
-                ':duracion_dias' => $data['duracion_dias'],
-                ':observaciones' => $data['observaciones'],
+                ':nit_empleado'     => $data['nit_empleado'],
+                ':nit_jefe'         => $data['nit_jefe'],
+                ':tipo_solicitud'   => $data['tipo_solicitud'],
+                ':fecha_inicio'     => $data['fecha_inicio'],
+                ':fecha_fin'        => $data['fecha_fin'],
+                ':duracion_horas'   => $data['duracion_horas'],
+                ':duracion_dias'    => $data['duracion_dias'],
+                ':tipo_duracion'    => $tipoDuracion,
+                ':observaciones'    => $data['observaciones'],
                 ':ruta_comprobante' => $data['ruta_comprobante'],
-                ':estado' => $estado,
+                ':estado'           => $estado,
             ]
         );
     }
@@ -602,7 +606,9 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
          SET ESTADO = :estado,
              FECHA_MODIFICACION = SYSDATE,
              FECHA_GESTION_JEFE = SYSDATE,
-             OBSERVACIONES = :observaciones
+             OBSERVACIONES = :observaciones,
+             NIT_CANCELADOR = :nit_cancelador,
+             FECHA_CANCELACION = SYSDATE
          WHERE ID = :id
            AND ACTIVO = 1
            AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
@@ -611,9 +617,10 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
                 OR :es_gestor = 1
            )",
         [
-            ':estado' => ESTADO_CANCELADO_AGENDA,
-            ':observaciones' => $observacionesFinales,
-            ':id' => $id,
+            ':estado'          => ESTADO_CANCELADO_AGENDA,
+            ':observaciones'   => $observacionesFinales,
+            ':nit_cancelador'  => $nitUsuario,
+            ':id'              => $id,
             ':nit_usuario' => $nitUsuario,
             ':es_gestor' => $esGestor ? 1 : 0,
         ]

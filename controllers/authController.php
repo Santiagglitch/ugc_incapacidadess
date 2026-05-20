@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/authModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
 require_once __DIR__ . '/../models/adminAuditoriaModel.php';
 require_once __DIR__ . '/../models/adminRolesModel.php';
+require_once __DIR__ . '/../services/loginBloqueoService.php';
 
 class authController
 {
@@ -44,118 +45,34 @@ class authController
         ], 'auth');
     }
 
-    private function bloqueoPath(): string
-    {
-        return __DIR__ . '/../storage/private/login_bloqueos.json';
-    }
-
-    private function bloqueoLeer(): array
-    {
-        $path = $this->bloqueoPath();
-        if (!is_file($path)) {
-            return [];
-        }
-        $raw = file_get_contents($path);
-        if ($raw === false) {
-            return [];
-        }
-        $data = json_decode($raw, true);
-        return is_array($data) ? $data : [];
-    }
-
-    private function bloqueoGuardar(array $data): void
-    {
-        $path = $this->bloqueoPath();
-        $dir  = dirname($path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
-        $tmp = $path . '.tmp.' . getmypid();
-        if (file_put_contents($tmp, json_encode($data, JSON_PRETTY_PRINT), LOCK_EX) !== false) {
-            rename($tmp, $path);
-        } else {
-            @unlink($tmp);
-        }
-    }
-
-    private function bloqueoLimpiarExpirados(array &$data, int $ventana): void
-    {
-        $ahora = time();
-        foreach ($data as $clave => $entrada) {
-            if (($ahora - (int)($entrada['t'] ?? 0)) >= $ventana) {
-                unset($data[$clave]);
-            }
-        }
-    }
-
     private function verificarBruteForce(string $cedula): ?string
     {
-        $maxIntentos = 3;
-        $ventana     = 900;
-        $clave       = md5($cedula);
-        $ahora       = time();
-
-        $data = $this->bloqueoLeer();
-        $this->bloqueoLimpiarExpirados($data, $ventana);
-
-        $entrada   = $data[$clave] ?? null;
-        $intentos  = (int)($entrada['c'] ?? 0);
-        $primerInt = (int)($entrada['t'] ?? $ahora);
-
-        if ($intentos >= $maxIntentos && ($ahora - $primerInt) < $ventana) {
-            $restante = $ventana - ($ahora - $primerInt);
-            return 'Cuenta bloqueada por seguridad. Intenta de nuevo en ' . ceil($restante / 60) . ' minuto(s).';
+        try {
+            return (new loginBloqueoService())->verificar($cedula);
+        } catch (Throwable $e) {
+            return null;
         }
-
-        return null;
     }
 
     private function registrarIntentoFallido(string $cedula): void
     {
-        $ventana = 900;
-        $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $clave   = md5($cedula);
-        $ahora   = time();
-
-        $data = $this->bloqueoLeer();
-        $this->bloqueoLimpiarExpirados($data, $ventana);
-
-        if (!isset($data[$clave])) {
-            $data[$clave] = ['c' => 0, 't' => $ahora];
-        }
-        $data[$clave]['c'] = (int)($data[$clave]['c'] ?? 0) + 1;
-        $data[$clave]['ultima'] = $ahora;
-        $data[$clave]['ip_ultima'] = $ip;
-
-        $this->bloqueoGuardar($data);
-
         try {
-            require_once __DIR__ . '/../models/adminAuditoriaModel.php';
+            $ip           = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $intentos     = (new loginBloqueoService())->registrarFallido($cedula);
             (new adminAuditoriaModel())->registrar(
                 $cedula,
                 'LOGIN_FALLIDO',
-                'Intento de login fallido (intento ' . $data[$clave]['c'] . ' de 3)',
-                ['ip' => $ip, 'intentos' => $data[$clave]['c']]
+                'Intento de login fallido (intento ' . $intentos . ' de 3)',
+                ['ip' => $ip, 'intentos' => $intentos]
             );
-        } catch (Throwable $e) {
-        }
+        } catch (Throwable $e) {}
     }
 
     private function limpiarIntentosFallidos(string $cedula): void
     {
-        $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $clave = md5($ip . '|' . $cedula);
-        if (!is_file($this->bloqueoPath())) {
-            return;
-        }
-
-        $data = $this->bloqueoLeer();
-        if (!array_key_exists($clave, $data)) {
-            return;
-        }
-
-        unset($data[$clave]);
-        $this->bloqueoGuardar($data);
+        try {
+            (new loginBloqueoService())->limpiar($cedula);
+        } catch (Throwable $e) {}
     }
 
     public function loginPost(): void

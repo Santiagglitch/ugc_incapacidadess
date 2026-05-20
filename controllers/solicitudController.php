@@ -213,16 +213,17 @@ class solicitudController
         }
 
         $ok = $this->model->crear([
-            'nit_empleado' => $user['cedula'],
-            'nit_jefe' => $nitJefe,
-            'tipo_solicitud' => $tipoSolicitud,
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin' => $fechaFin,
-            'duracion_horas' => $duracionHoras,
-            'duracion_dias' => $duracionDias,
-            'observaciones' => $observaciones !== '' ? $observaciones : null,
+            'nit_empleado'     => $user['cedula'],
+            'nit_jefe'         => $nitJefe,
+            'tipo_solicitud'   => $tipoSolicitud,
+            'fecha_inicio'     => $fechaInicio,
+            'fecha_fin'        => $fechaFin,
+            'duracion_horas'   => $duracionHoras,
+            'duracion_dias'    => $duracionDias,
+            'tipo_duracion'    => $tipoDuracion,
+            'observaciones'    => $observaciones !== '' ? $observaciones : null,
             'ruta_comprobante' => $rutaPdf,
-            'estado' => ESTADO_PENDIENTE_JEFE,
+            'estado'           => ESTADO_PENDIENTE_JEFE,
         ]);
 
         if (!$ok && $rutaPdf) {
