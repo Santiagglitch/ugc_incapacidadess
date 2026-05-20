@@ -2,98 +2,164 @@
 
 declare(strict_types=1);
 
-class adminAuditoriaModel
+require_once __DIR__ . '/mainModelUXXI.php';
+
+class adminAuditoriaModel extends mainModelUXXI
 {
-    private string $path;
-    private const MAX_ENTRADAS = 200;
-
-    public function __construct()
-    {
-        $this->path = __DIR__ . '/../storage/private/auditoria_admin.json';
-    }
-
     public function registrar(string $nitActor, string $accion, string $descripcion, array $meta = [], string $nombreActor = ''): bool
     {
-        $entradas = $this->leer();
+        $nitObjetivo = isset($meta['nit_objetivo']) ? (string)$meta['nit_objetivo'] : null;
+        $idSolicitud = isset($meta['id_solicitud']) ? (int)$meta['id_solicitud'] : null;
+        $metaJson    = !empty($meta) ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
+        $nombre      = $nombreActor !== '' ? $nombreActor : $this->resolverNombre($nitActor);
 
-        array_unshift($entradas, [
-            'fecha'         => date('Y-m-d H:i:s'),
-            'nit_actor'     => $nitActor,
-            'nombre_actor'  => $nombreActor !== '' ? $nombreActor : $this->resolverNombre($nitActor),
-            'accion'        => $accion,
-            'descripcion'   => $descripcion,
-            'ip'            => $this->ipCliente(),
-            'meta'          => $meta,
-        ]);
-
-        if (count($entradas) > self::MAX_ENTRADAS) {
-            $entradas = array_slice($entradas, 0, self::MAX_ENTRADAS);
-        }
-
-        return $this->guardar($entradas);
+        return $this->ejecutar(
+            "INSERT INTO ADMIN_AUDITORIA
+                (ID, NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP, NIT_OBJETIVO, ID_SOLICITUD, META_JSON, FECHA)
+             VALUES
+                (SEQ_ADMIN_AUDITORIA.NEXTVAL, :nit_actor, :nombre_actor, :accion, :descripcion, :ip, :nit_objetivo, :id_solicitud, :meta_json, SYSDATE)",
+            [
+                ':nit_actor'    => $nitActor,
+                ':nombre_actor' => $nombre,
+                ':accion'       => $accion,
+                ':descripcion'  => $descripcion,
+                ':ip'           => $this->ipCliente(),
+                ':nit_objetivo' => $nitObjetivo,
+                ':id_solicitud' => $idSolicitud,
+                ':meta_json'    => $metaJson,
+            ]
+        );
     }
 
     public function getEntradas(int $limite = 50): array
     {
-        return array_slice($this->leer(), 0, max(1, $limite));
+        $limite = max(1, $limite);
+        $rows   = $this->consultarTodo(
+            "SELECT ID, TO_CHAR(FECHA,'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                    NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP,
+                    NIT_OBJETIVO, ID_SOLICITUD, META_JSON
+             FROM ADMIN_AUDITORIA
+             ORDER BY FECHA DESC
+             FETCH FIRST :limite ROWS ONLY",
+            [':limite' => $limite]
+        );
+
+        return $this->normalizarFilas($rows);
     }
 
     public function filtrar(string $accion = '', int $pagina = 1, int $porPagina = 20): array
     {
-        $todas = $this->leer();
+        $pagina    = max(1, $pagina);
+        $porPagina = max(1, $porPagina);
+        $offset    = ($pagina - 1) * $porPagina;
 
-        if ($accion !== '') {
-            $todas = array_values(array_filter($todas, fn($e) => ($e['accion'] ?? '') === $accion));
-        }
+        $whereAcicion = $accion !== '' ? "WHERE ACCION = :accion" : "";
+        $params       = $accion !== '' ? [':accion' => $accion] : [];
 
-        $total      = count($todas);
-        $totalPags  = max(1, (int) ceil($total / $porPagina));
-        $pagina     = max(1, min($pagina, $totalPags));
-        $filas      = array_slice($todas, ($pagina - 1) * $porPagina, $porPagina);
+        $totalRow = $this->consultarUno(
+            "SELECT COUNT(*) AS TOTAL FROM ADMIN_AUDITORIA $whereAcicion",
+            $params
+        );
+        $total = (int)($totalRow['TOTAL'] ?? 0);
+
+        $rows = $this->consultarTodo(
+            "SELECT ID, TO_CHAR(FECHA,'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                    NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP,
+                    NIT_OBJETIVO, ID_SOLICITUD, META_JSON
+             FROM ADMIN_AUDITORIA
+             $whereAcicion
+             ORDER BY FECHA DESC
+             OFFSET :offset ROWS FETCH NEXT :por_pagina ROWS ONLY",
+            $params + [':offset' => $offset, ':por_pagina' => $porPagina]
+        );
+
+        $totalPags = max(1, (int)ceil($total / $porPagina));
 
         return [
-            'filas'       => $filas,
-            'total'       => $total,
-            'pagina'      => $pagina,
+            'filas'        => $this->normalizarFilas($rows),
+            'total'        => $total,
+            'pagina'       => min($pagina, $totalPags),
             'totalPaginas' => $totalPags,
-            'porPagina'   => $porPagina,
+            'porPagina'    => $porPagina,
         ];
     }
 
     public function getByNitObjetivo(string $nit, int $limite = 10): array
     {
-        $todas = array_values(array_filter(
-            $this->leer(),
-            fn($e) => isset($e['meta']['nit_objetivo']) && (string)$e['meta']['nit_objetivo'] === $nit
-        ));
-        return array_slice($todas, 0, max(1, $limite));
+        $limite = max(1, $limite);
+        $rows   = $this->consultarTodo(
+            "SELECT ID, TO_CHAR(FECHA,'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                    NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP,
+                    NIT_OBJETIVO, ID_SOLICITUD, META_JSON
+             FROM ADMIN_AUDITORIA
+             WHERE NIT_OBJETIVO = :nit
+             ORDER BY FECHA DESC
+             FETCH FIRST :limite ROWS ONLY",
+            [':nit' => $nit, ':limite' => $limite]
+        );
+
+        return $this->normalizarFilas($rows);
     }
 
     public function getAccionesUnicas(): array
     {
-        $acciones = array_unique(array_column($this->leer(), 'accion'));
-        sort($acciones);
-        return $acciones;
+        $rows     = $this->consultarTodo("SELECT DISTINCT ACCION FROM ADMIN_AUDITORIA ORDER BY ACCION ASC");
+        $acciones = array_column($rows, 'ACCION');
+        return array_values(array_filter(array_map('strval', $acciones)));
     }
 
     public function exportCsv(): string
     {
-        $entradas = $this->leer();
+        $rows      = $this->consultarTodo(
+            "SELECT TO_CHAR(FECHA,'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                    NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP
+             FROM ADMIN_AUDITORIA
+             ORDER BY FECHA DESC"
+        );
         $cabeceras = ['Fecha', 'NIT Actor', 'Nombre Actor', 'Accion', 'Descripcion', 'IP'];
-        $lineas = [implode(',', array_map([$this, 'csvEscape'], $cabeceras))];
+        $lineas    = [implode(',', array_map([$this, 'csvEscape'], $cabeceras))];
 
-        foreach ($entradas as $e) {
+        foreach ($rows as $e) {
             $lineas[] = implode(',', array_map([$this, 'csvEscape'], [
-                $e['fecha']        ?? '',
-                $e['nit_actor']    ?? '',
-                $e['nombre_actor'] ?? '',
-                $e['accion']       ?? '',
-                $e['descripcion']  ?? '',
-                $e['ip']           ?? '',
+                (string)($e['FECHA']        ?? ''),
+                (string)($e['NIT_ACTOR']    ?? ''),
+                (string)($e['NOMBRE_ACTOR'] ?? ''),
+                (string)($e['ACCION']       ?? ''),
+                (string)($e['DESCRIPCION']  ?? ''),
+                (string)($e['IP']           ?? ''),
             ]));
         }
 
         return implode("\r\n", $lineas);
+    }
+
+    private function normalizarFilas(array $rows): array
+    {
+        return array_map(function (array $row): array {
+            $meta = [];
+            if (!empty($row['META_JSON'])) {
+                $decoded = json_decode((string)$row['META_JSON'], true);
+                if (is_array($decoded)) {
+                    $meta = $decoded;
+                }
+            }
+            if (!empty($row['NIT_OBJETIVO'])) {
+                $meta['nit_objetivo'] = $row['NIT_OBJETIVO'];
+            }
+            if (!empty($row['ID_SOLICITUD'])) {
+                $meta['id_solicitud'] = $row['ID_SOLICITUD'];
+            }
+
+            return [
+                'fecha'        => (string)($row['FECHA']        ?? ''),
+                'nit_actor'    => (string)($row['NIT_ACTOR']    ?? ''),
+                'nombre_actor' => (string)($row['NOMBRE_ACTOR'] ?? ''),
+                'accion'       => (string)($row['ACCION']       ?? ''),
+                'descripcion'  => (string)($row['DESCRIPCION']  ?? ''),
+                'ip'           => (string)($row['IP']           ?? ''),
+                'meta'         => $meta,
+            ];
+        }, $rows);
     }
 
     private function resolverNombre(string $nit): string
@@ -115,7 +181,7 @@ class adminAuditoriaModel
 
         try {
             require_once __DIR__ . '/empleadoModel.php';
-            $emp = (new empleadoModel())->getByNit($nit);
+            $emp    = (new empleadoModel())->getByNit($nit);
             $nombre = trim((string)($emp['NOMBRE_COMPLETO'] ?? ''));
             if ($nombre !== '') {
                 return $nombre;
@@ -126,51 +192,10 @@ class adminAuditoriaModel
         return $nit;
     }
 
-    private function leer(): array
-    {
-        if (!is_file($this->path)) {
-            return [];
-        }
-
-        $raw = file_get_contents($this->path);
-        if ($raw === false) {
-            return [];
-        }
-
-        $data = json_decode($raw, true);
-        return is_array($data) ? $data : [];
-    }
-
-    private function guardar(array $entradas): bool
-    {
-        $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
-
-        $json    = json_encode($entradas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $tmpPath = $this->path . '.tmp.' . getmypid();
-
-        if (file_put_contents($tmpPath, $json, LOCK_EX) === false) {
-            @unlink($tmpPath);
-            return false;
-        }
-
-        if (!rename($tmpPath, $this->path)) {
-            @unlink($tmpPath);
-            return false;
-        }
-
-        return true;
-    }
-
     private function ipCliente(): string
     {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return $ip;
-        }
-        return 'desconocida';
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : 'desconocida';
     }
 
     private function csvEscape(string $valor): string

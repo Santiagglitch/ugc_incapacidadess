@@ -2,16 +2,12 @@
 
 declare(strict_types=1);
 
-class adminRolesModel
+require_once __DIR__ . '/mainModelUXXI.php';
+
+class adminRolesModel extends mainModelUXXI
 {
-    private string $path;
     private static ?array $adminsCache = null;
     private const MAX_ADMINS = 10;
-
-    public function __construct()
-    {
-        $this->path = __DIR__ . '/../storage/private/admins_adicionales.json';
-    }
 
     public function getAdminsAdicionales(): array
     {
@@ -19,20 +15,14 @@ class adminRolesModel
             return self::$adminsCache;
         }
 
-        if (!is_file($this->path)) {
-            return self::$adminsCache = [];
-        }
+        $rows = $this->consultarTodo(
+            "SELECT NIT_ADMIN FROM ADMIN_ROLES WHERE ACTIVO = 1 ORDER BY FECHA_ASIGNADO ASC"
+        );
 
-        $data = json_decode((string) file_get_contents($this->path), true);
-        if (!is_array($data)) {
-            return self::$adminsCache = [];
-        }
-
-        if (isset($data['admins']) && is_array($data['admins'])) {
-            return self::$adminsCache = array_values(array_map('strval', $data['admins']));
-        }
-
-        return self::$adminsCache = array_values(array_map('strval', $data));
+        return self::$adminsCache = array_values(array_map(
+            static fn($r) => (string)$r['NIT_ADMIN'],
+            $rows
+        ));
     }
 
     public function esAdminAdicional(string $nit): bool
@@ -40,35 +30,51 @@ class adminRolesModel
         return in_array($nit, $this->getAdminsAdicionales(), true);
     }
 
-    public function agregarAdmin(string $nit): bool
+    public function agregarAdmin(string $nit, string $nitAsignadoPor = ''): bool
     {
         $nit = preg_replace('/\D/', '', $nit);
         if ($nit === '') {
             return false;
         }
 
-        $admins = $this->getAdminsAdicionales();
-
-        if (in_array($nit, $admins, true)) {
+        if ($this->esAdminAdicional($nit)) {
             return true;
         }
 
-        if (count($admins) >= self::MAX_ADMINS) {
+        if ($this->alcanzaLimite()) {
             return false;
         }
 
-        $admins[] = $nit;
+        $asignadoPor = $nitAsignadoPor !== '' ? $nitAsignadoPor : null;
+        $ok = $this->ejecutar(
+            "INSERT INTO ADMIN_ROLES (ID, NIT_ADMIN, ACTIVO, FECHA_ASIGNADO, NIT_ASIGNADO_POR)
+             VALUES (SEQ_ADMIN_ROLES.NEXTVAL, :nit, 1, SYSDATE, :asignado_por)",
+            [':nit' => $nit, ':asignado_por' => $asignadoPor]
+        );
 
-        return $this->guardar($admins);
+        if ($ok) {
+            self::$adminsCache = null;
+        }
+
+        return $ok;
     }
 
     public function quitarAdmin(string $nit): bool
     {
-        $admins = array_values(array_filter($this->getAdminsAdicionales(), function ($item) use ($nit) {
-            return $item !== $nit;
-        }));
+        if (!$this->esAdminAdicional($nit)) {
+            return true;
+        }
 
-        return $this->guardar($admins);
+        $ok = $this->ejecutar(
+            "UPDATE ADMIN_ROLES SET ACTIVO = 0 WHERE NIT_ADMIN = :nit AND ACTIVO = 1",
+            [':nit' => $nit]
+        );
+
+        if ($ok) {
+            self::$adminsCache = null;
+        }
+
+        return $ok;
     }
 
     public function getLimiteMaximo(): int
@@ -79,30 +85,5 @@ class adminRolesModel
     public function alcanzaLimite(): bool
     {
         return count($this->getAdminsAdicionales()) >= self::MAX_ADMINS;
-    }
-
-    private function guardar(array $admins): bool
-    {
-        $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
-
-        $payload  = ['admins' => array_values(array_unique($admins)), 'version' => 1];
-        $json     = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $tmpPath  = $this->path . '.tmp.' . getmypid();
-
-        if (file_put_contents($tmpPath, $json, LOCK_EX) === false) {
-            @unlink($tmpPath);
-            return false;
-        }
-
-        if (!rename($tmpPath, $this->path)) {
-            @unlink($tmpPath);
-            return false;
-        }
-
-        self::$adminsCache = $payload['admins'];
-        return true;
     }
 }

@@ -1,18 +1,42 @@
+# ── Sesiones PHP (archivos en disco, nunca al repo) ──────────────────
+storage/sessions/
+
+# ── Archivos subidos por usuarios ────────────────────────────────────
+storage/solicitudes/
+uploads/
+
+# ── Datos privados en disco (ya migrados a BD, carpeta puede quedar vacía) ──
+storage/private/
+
+# ── Configuración con credenciales ───────────────────────────────────
 config/server.php
-storage/sessions/*
-storage/solicitudes/*
-storage/private/auditoria_admin.json
-storage/private/notas_admin.json
-storage/private/sesiones_activas.json
-storage/private/admins_adicionales.json
-logs/*.log
+config/conexion.php
+config/conexion_ldap.php
+config/conexion_uxxi.php
+
+# ── Logs ─────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── MCP / Windsurf / herramientas locales ────────────────────────────
 mcp_config.json
 mcp_ldap_server.py
 oracle-mcp-server/
+%USERPROFILE%oracle-mcp-server/
+UsersJohanS.BocanegraSoracle-mcp-server/
 %USERPROFILE%\.codeium\windsurf\mcp_config.json
 INSTALLATION_COMPLETE.md
 MCP_SETUP_README.md
 install_mcp_oracle.bat
-%USERPROFILE%oracle-mcp-server/
-UsersJohanS.BocanegraSoracle-mcp-server/
-storage/private/
+
+# ── Caché y compilados PHP ───────────────────────────────────────────
+__pycache__/
+*.pyc
+
+# ── IDE / OS ─────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
