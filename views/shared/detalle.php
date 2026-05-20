@@ -42,7 +42,6 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
         <input type="hidden" name="_method" value="POST">
         <input type="hidden" name="return_to" value="<?= e($returnToDetalle) ?>">
         <input type="hidden" name="id" value="<?= e($idSolicitud) ?>">
-        <button class="btn btn-cancelar-agenda" type="submit">Cancelar</button>
       </form>
     <?php endif; ?>
     <a class="btn btn-outline" href="<?= e($returnToDetalle) ?>">Volver</a>
