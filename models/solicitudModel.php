@@ -486,17 +486,19 @@ class solicitudModel extends mainModelUXXI
                  FECHA_MODIFICACION=SYSDATE,
                  OBSERVACION_RRHH=CASE
                     WHEN OBSERVACION_RRHH IS NULL THEN :obs
-                    ELSE SUBSTR(OBSERVACION_RRHH || CHR(10) || :obs, 1, 2000)
+                    ELSE SUBSTR(OBSERVACION_RRHH || CHR(10) || :obs2, 1, 2000)
                  END
              WHERE ID=:id
                AND ACTIVO=1
-               AND NIT_EMPLEADO<>:nit_admin
+               AND NIT_EMPLEADO<>:nit_admin2
                AND ESTADO IN ($inClause)",
             [
-                ':estado' => $estado,
+                ':estado'    => $estado,
                 ':nit_admin' => $nitAdmin,
-                ':obs' => $obsAdmin,
-                ':id' => $id,
+                ':nit_admin2'=> $nitAdmin,
+                ':obs'       => $obsAdmin,
+                ':obs2'      => $obsAdmin,
+                ':id'        => $id,
             ] + $estadoBinds
         );
     }
@@ -526,34 +528,41 @@ class solicitudModel extends mainModelUXXI
              SET ESTADO=:estado,
                  FECHA_MODIFICACION=SYSDATE,
                  NIT_RRHH=CASE WHEN :es_rrhh=1 THEN :nit_admin ELSE NIT_RRHH END,
-                 FECHA_GESTION_RRHH=CASE WHEN :es_rrhh=1 THEN SYSDATE ELSE FECHA_GESTION_RRHH END,
+                 FECHA_GESTION_RRHH=CASE WHEN :es_rrhh2=1 THEN SYSDATE ELSE FECHA_GESTION_RRHH END,
                  OBSERVACION_RRHH=CASE
-                    WHEN :es_rrhh=1 THEN
+                    WHEN :es_rrhh3=1 THEN
                         CASE
-                            WHEN OBSERVACION_RRHH IS NULL THEN :obs
-                            ELSE SUBSTR(OBSERVACION_RRHH || CHR(10) || :obs, 1, 2000)
+                            WHEN OBSERVACION_RRHH IS NULL THEN :obs_rrhh
+                            ELSE SUBSTR(OBSERVACION_RRHH || CHR(10) || :obs_rrhh2, 1, 2000)
                         END
                     ELSE OBSERVACION_RRHH
                  END,
                  FECHA_GESTION_JEFE=CASE WHEN :es_jefe=1 THEN SYSDATE ELSE FECHA_GESTION_JEFE END,
                  OBSERVACION_JEFE=CASE
-                    WHEN :es_jefe=1 THEN
+                    WHEN :es_jefe2=1 THEN
                         CASE
-                            WHEN OBSERVACION_JEFE IS NULL THEN :obs
-                            ELSE SUBSTR(OBSERVACION_JEFE || CHR(10) || :obs, 1, 2000)
+                            WHEN OBSERVACION_JEFE IS NULL THEN :obs_jefe
+                            ELSE SUBSTR(OBSERVACION_JEFE || CHR(10) || :obs_jefe2, 1, 2000)
                         END
                     ELSE OBSERVACION_JEFE
                  END
              WHERE ID=:id
                AND ACTIVO=1
-               AND NIT_EMPLEADO<>:nit_admin",
+               AND NIT_EMPLEADO<>:nit_admin2",
             [
-                ':estado' => $nuevoEstado,
+                ':estado'    => $nuevoEstado,
                 ':nit_admin' => $nitAdmin,
-                ':es_rrhh' => $esEstadoRrhh,
-                ':es_jefe' => $esEstadoJefe,
-                ':obs' => $obsAdmin,
-                ':id' => $id,
+                ':nit_admin2'=> $nitAdmin,
+                ':es_rrhh'   => $esEstadoRrhh,
+                ':es_rrhh2'  => $esEstadoRrhh,
+                ':es_rrhh3'  => $esEstadoRrhh,
+                ':es_jefe'   => $esEstadoJefe,
+                ':es_jefe2'  => $esEstadoJefe,
+                ':obs_rrhh'  => $obsAdmin,
+                ':obs_rrhh2' => $obsAdmin,
+                ':obs_jefe'  => $obsAdmin,
+                ':obs_jefe2' => $obsAdmin,
+                ':id'        => $id,
             ]
         );
     }
@@ -566,6 +575,8 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
         return false;
     }
 
+    $esGestorInt = $esGestor ? 1 : 0;
+
     $solicitudActual = $this->consultarUno(
         "SELECT OBSERVACIONES
          FROM SOLICITUDES_PERMISOS
@@ -573,13 +584,13 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
            AND ACTIVO = 1
            AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
            AND (
-                NIT_EMPLEADO = :nit_usuario
-                OR :es_gestor = 1
+                NIT_EMPLEADO = :nit_usuario_chk
+                OR :es_gestor_chk = 1
            )",
         [
-            ':id' => $id,
-            ':nit_usuario' => $nitUsuario,
-            ':es_gestor' => $esGestor ? 1 : 0,
+            ':id'             => $id,
+            ':nit_usuario_chk' => $nitUsuario,
+            ':es_gestor_chk'  => $esGestorInt,
         ]
     );
 
@@ -601,16 +612,16 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
            AND ACTIVO = 1
            AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
            AND (
-                NIT_EMPLEADO = :nit_usuario
-                OR :es_gestor = 1
+                NIT_EMPLEADO = :nit_usuario_upd
+                OR :es_gestor_upd = 1
            )",
         [
             ':estado'             => ESTADO_CANCELADO_AGENDA,
             ':motivo_cancelacion' => $motivoCancelacion,
             ':nit_cancelador'     => $nitUsuario,
             ':id'                 => $id,
-            ':nit_usuario'        => $nitUsuario,
-            ':es_gestor'          => $esGestor ? 1 : 0,
+            ':nit_usuario_upd'    => $nitUsuario,
+            ':es_gestor_upd'      => $esGestorInt,
         ]
     );
 }

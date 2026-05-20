@@ -88,10 +88,20 @@ class mainModel
             return false;
         }
 
-        $affectedRows = oci_num_rows($stmt);
         oci_free_statement($stmt);
+        return true;
+    }
 
-        return $affectedRows > 0;
+    protected function ejecutarConAfectadas(string $sql, array $params = []): int
+    {
+        $stmt = $this->ejecutarConsulta($sql, $params, OCI_COMMIT_ON_SUCCESS);
+        if (!$stmt) {
+            return 0;
+        }
+
+        $n = oci_num_rows($stmt);
+        oci_free_statement($stmt);
+        return (int)$n;
     }
 
     protected function buildInClause(array $values, string $prefix): array
