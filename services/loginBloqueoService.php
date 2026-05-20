@@ -12,10 +12,12 @@ class loginBloqueoService extends mainModelUXXI
     public function verificar(string $cedula): ?string
     {
         $clave = md5($cedula);
-        $ahora = time();
 
         $row = $this->consultarUno(
-            "SELECT INTENTOS, PRIMER_INT FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
+            "SELECT INTENTOS,
+                    ROUND((EXPIRA - SYSDATE) * 86400) AS SEGUNDOS_RESTANTES
+             FROM LOGIN_BLOQUEOS
+             WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
             [':clave' => $clave]
         );
 
@@ -23,12 +25,11 @@ class loginBloqueoService extends mainModelUXXI
             return null;
         }
 
-        $intentos  = (int)($row['INTENTOS']  ?? 0);
-        $primerInt = (int)($row['PRIMER_INT'] ?? $ahora);
+        $intentos  = (int)($row['INTENTOS'] ?? 0);
+        $restantes = max(0, (int)($row['SEGUNDOS_RESTANTES'] ?? 0));
 
-        if ($intentos >= self::MAX_INTENTOS && ($ahora - $primerInt) < self::VENTANA) {
-            $restante = self::VENTANA - ($ahora - $primerInt);
-            return 'Cuenta bloqueada por seguridad. Intenta de nuevo en ' . ceil($restante / 60) . ' minuto(s).';
+        if ($intentos >= self::MAX_INTENTOS) {
+            return 'Cuenta bloqueada por seguridad. Intenta de nuevo en ' . (int)ceil($restantes / 60) . ' minuto(s).';
         }
 
         return null;
@@ -37,43 +38,42 @@ class loginBloqueoService extends mainModelUXXI
     public function registrarFallido(string $cedula): int
     {
         $clave = md5($cedula);
-        $ahora = time();
         $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
         $this->limpiarExpirados();
 
         $row = $this->consultarUno(
-            "SELECT INTENTOS FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave",
+            "SELECT INTENTOS FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
             [':clave' => $clave]
         );
 
         $nuevosIntentos = (int)($row['INTENTOS'] ?? 0) + 1;
-        $expira         = date('Y-m-d H:i:s', $ahora + self::VENTANA);
 
         if ($row) {
             $this->ejecutar(
                 "UPDATE LOGIN_BLOQUEOS
-                 SET INTENTOS=:intentos, ULTIMA_ACT=:ultima, IP_ULTIMA=:ip
+                 SET INTENTOS=:intentos, ULTIMA_ACT=:ultima_act, IP_ULTIMA=:ip
                  WHERE CLAVE=:clave",
                 [
-                    ':intentos' => $nuevosIntentos,
-                    ':ultima'   => $ahora,
-                    ':ip'       => $ip,
-                    ':clave'    => $clave,
+                    ':intentos'  => $nuevosIntentos,
+                    ':ultima_act' => time(),
+                    ':ip'        => $ip,
+                    ':clave'     => $clave,
                 ]
             );
         } else {
+            $ahora = time();
             $this->ejecutar(
                 "INSERT INTO LOGIN_BLOQUEOS (CLAVE, INTENTOS, PRIMER_INT, ULTIMA_ACT, IP_ULTIMA, EXPIRA)
-                 VALUES (:clave, :intentos, :primer_int, :ultima, :ip,
-                         TO_DATE(:expira,'YYYY-MM-DD HH24:MI:SS'))",
+                 VALUES (:clave, :intentos, :primer_int, :ultima_act, :ip,
+                         SYSDATE + (:ventana / 86400))",
                 [
                     ':clave'      => $clave,
                     ':intentos'   => $nuevosIntentos,
                     ':primer_int' => $ahora,
-                    ':ultima'     => $ahora,
+                    ':ultima_act' => $ahora,
                     ':ip'         => $ip,
-                    ':expira'     => $expira,
+                    ':ventana'    => self::VENTANA,
                 ]
             );
         }

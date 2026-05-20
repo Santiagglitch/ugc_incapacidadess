@@ -31,7 +31,11 @@ class mainModel
                 if ($nombre === '' || $nombre[0] !== ':') {
                     $nombre = ':' . $nombre;
                 }
-                oci_bind_by_name($stmt, $nombre, $valor);
+                if ($valor === null) {
+                    oci_bind_by_name($stmt, $nombre, $valor, -1, SQLT_CHR);
+                } else {
+                    oci_bind_by_name($stmt, $nombre, $valor);
+                }
             }
             unset($valor);
 
@@ -84,10 +88,20 @@ class mainModel
             return false;
         }
 
-        $affectedRows = oci_num_rows($stmt);
         oci_free_statement($stmt);
+        return true;
+    }
 
-        return $affectedRows > 0;
+    protected function ejecutarConAfectadas(string $sql, array $params = []): int
+    {
+        $stmt = $this->ejecutarConsulta($sql, $params, OCI_COMMIT_ON_SUCCESS);
+        if (!$stmt) {
+            return 0;
+        }
+
+        $n = oci_num_rows($stmt);
+        oci_free_statement($stmt);
+        return (int)$n;
     }
 
     protected function buildInClause(array $values, string $prefix): array
