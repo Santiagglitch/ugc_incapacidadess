@@ -59,8 +59,6 @@ final class ExportController
 
         $todas = $model->getAll();
 
-        $historialCompleto = $todas;
-
         $pendientesRRHH = $this->ordenarPorFechaCreacionAsc(
             $this->filtrarPorEstados($todas, [
                 $this->constante('ESTADO_APROBADO_JEFE', 'APROBADO_JEFE'),
@@ -88,7 +86,7 @@ final class ExportController
             MISMO ORDEN Y MISMOS NOMBRES DE LAS TARJETAS DEL PANEL RRHH
         */
         $data = [
-            'Historial completo' => $historialCompleto,
+            'Historial completo' => $todas,
             'Pendientes RRHH' => $pendientesRRHH,
             'En Revision Jefe' => $enRevisionJefe,
             'Aprobadas RRHH' => $aprobadasRRHH,
@@ -193,11 +191,6 @@ final class ExportController
         }
 
         return $resultado;
-    }
-
-    private function filtrarPorEstado(array $rows, string $estado): array
-    {
-        return $this->filtrarPorEstados($rows, [$estado]);
     }
 
     private function filtrarPorEstados(array $rows, array $estados): array
@@ -334,9 +327,7 @@ final class ExportController
             $titulo = 'Hoja';
         }
 
-        return function_exists('mb_substr')
-            ? mb_substr($titulo, 0, 31)
-            : substr($titulo, 0, 31);
+        return mb_substr($titulo, 0, 31);
     }
 }
 

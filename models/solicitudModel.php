@@ -567,64 +567,62 @@ class solicitudModel extends mainModelUXXI
         );
     }
 
-public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false, string $observacionCancelacion = ''): bool
-{
-    $observacionCancelacion = trim($observacionCancelacion);
+    public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false, string $observacionCancelacion = ''): bool
+    {
+        $observacionCancelacion = trim(preg_replace('/\s+/', ' ', $observacionCancelacion) ?? '');
 
-    if ($observacionCancelacion === '') {
-        return false;
+        if ($observacionCancelacion === '') {
+            return false;
+        }
+
+        $esGestorInt = $esGestor ? 1 : 0;
+
+        $solicitudActual = $this->consultarUno(
+            "SELECT OBSERVACIONES
+             FROM SOLICITUDES_PERMISOS
+             WHERE ID = :id
+               AND ACTIVO = 1
+               AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
+               AND (
+                    NIT_EMPLEADO = :nit_usuario_chk
+                    OR :es_gestor_chk = 1
+               )",
+            [
+                ':id'              => $id,
+                ':nit_usuario_chk' => $nitUsuario,
+                ':es_gestor_chk'   => $esGestorInt,
+            ]
+        );
+
+        if (!$solicitudActual) {
+            return false;
+        }
+
+        return $this->ejecutar(
+            "UPDATE SOLICITUDES_PERMISOS
+             SET ESTADO = :estado,
+                 FECHA_MODIFICACION = SYSDATE,
+                 FECHA_GESTION_JEFE = SYSDATE,
+                 MOTIVO_CANCELACION = :motivo_cancelacion,
+                 NIT_CANCELADOR = :nit_cancelador,
+                 FECHA_CANCELACION = SYSDATE
+             WHERE ID = :id
+               AND ACTIVO = 1
+               AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
+               AND (
+                    NIT_EMPLEADO = :nit_usuario_upd
+                    OR :es_gestor_upd = 1
+               )",
+            [
+                ':estado'             => ESTADO_CANCELADO_AGENDA,
+                ':motivo_cancelacion' => $observacionCancelacion,
+                ':nit_cancelador'     => $nitUsuario,
+                ':id'                 => $id,
+                ':nit_usuario_upd'    => $nitUsuario,
+                ':es_gestor_upd'      => $esGestorInt,
+            ]
+        );
     }
-
-    $esGestorInt = $esGestor ? 1 : 0;
-
-    $solicitudActual = $this->consultarUno(
-        "SELECT OBSERVACIONES
-         FROM SOLICITUDES_PERMISOS
-         WHERE ID = :id
-           AND ACTIVO = 1
-           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
-           AND (
-                NIT_EMPLEADO = :nit_usuario_chk
-                OR :es_gestor_chk = 1
-           )",
-        [
-            ':id'             => $id,
-            ':nit_usuario_chk' => $nitUsuario,
-            ':es_gestor_chk'  => $esGestorInt,
-        ]
-    );
-
-    if (!$solicitudActual) {
-        return false;
-    }
-
-    $motivoCancelacion = trim(preg_replace('/\s+/', ' ', $observacionCancelacion) ?? '');
-
-    return $this->ejecutar(
-        "UPDATE SOLICITUDES_PERMISOS
-         SET ESTADO = :estado,
-             FECHA_MODIFICACION = SYSDATE,
-             FECHA_GESTION_JEFE = SYSDATE,
-             MOTIVO_CANCELACION = :motivo_cancelacion,
-             NIT_CANCELADOR = :nit_cancelador,
-             FECHA_CANCELACION = SYSDATE
-         WHERE ID = :id
-           AND ACTIVO = 1
-           AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
-           AND (
-                NIT_EMPLEADO = :nit_usuario_upd
-                OR :es_gestor_upd = 1
-           )",
-        [
-            ':estado'             => ESTADO_CANCELADO_AGENDA,
-            ':motivo_cancelacion' => $motivoCancelacion,
-            ':nit_cancelador'     => $nitUsuario,
-            ':id'                 => $id,
-            ':nit_usuario_upd'    => $nitUsuario,
-            ':es_gestor_upd'      => $esGestorInt,
-        ]
-    );
-}
 
     public function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool
     {
@@ -794,9 +792,7 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
             return '';
         }
 
-        $texto = function_exists('mb_strtolower')
-            ? mb_strtolower($texto, 'UTF-8')
-            : strtolower($texto);
+        $texto = mb_strtolower($texto, 'UTF-8');
 
         if (function_exists('iconv')) {
             $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);
@@ -806,7 +802,6 @@ public function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = fal
             }
         }
 
-        $texto = strtolower($texto);
         $texto = preg_replace('/[^a-z0-9]+/i', ' ', $texto) ?? '';
 
         return trim(preg_replace('/\s+/', ' ', $texto) ?? '');

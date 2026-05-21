@@ -30,11 +30,9 @@ class dashboardController
             if ($fechaDesde !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde)) $fechaDesde = '';
             if ($fechaHasta !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) $fechaHasta = '';
 
-            if ($q === '') {
-                $filtrosBase = $tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [];
-            } else {
-                $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
-            }
+            $filtrosBase = $q === ''
+                ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
+                : $this->filtrosBase($q, $tipoFiltro);
             if ($fechaDesde !== '') $filtrosBase['fecha_desde'] = $fechaDesde;
             if ($fechaHasta !== '') $filtrosBase['fecha_hasta'] = $fechaHasta;
 
@@ -72,367 +70,186 @@ class dashboardController
         }
 
         if ($rol === ROL_RRHH) {
-            if ($q === '') {
-                $cedula = (string)($user['cedula'] ?? '');
-                $filtrosBase = $tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [];
-                $counts = $model->contarPorEstado($filtrosBase);
-                $historialTipo = limpiar_texto($_GET['historial'] ?? 'historico');
-                $historialOpciones = [
-                    'pendientes' => ['titulo' => 'Aprobadas por jefe pendientes de RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE], 'orden' => 'ID ASC'],
-                    'aprobadas' => ['titulo' => 'Aprobadas por Talento Humano', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                    'rechazadas' => ['titulo' => 'Rechazadas por Talento Humano', 'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                    'canceladas' => ['titulo' => 'Canceladas por el usuario', 'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
-                    'historico' => ['titulo' => 'Historial completo', 'filtros' => $filtrosBase, 'orden' => 'FECHA_CREACION DESC'],
-                    'revision_jefe' => ['titulo' => 'En revision de jefe', 'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                    'mis_solicitudes' => ['titulo' => 'Mis solicitudes personales', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula], 'orden' => 'FECHA_CREACION DESC'],
-                ];
-
-                if (!array_key_exists($historialTipo, $historialOpciones)) {
-                    $historialTipo = 'historico';
-                }
-
-                $pendientesPage = $model->getAllPaginado(
-                    $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],
-                    max(1, (int)($_GET['pag_pendientes'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    'ID ASC'
-                );
-                $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
-                $pendientesPaginationData = $pendientesPage['pagination'];
-
-                $misPage = $model->getByEmpleadoPaginado(
-                    $cedula,
-                    max(1, (int)($_GET['pag_mis'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    $filtrosBase
-                );
-                $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
-                $misPaginationData = $misPage['pagination'];
-
-                $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-                if (
-                    $historialTipo === 'pendientes'
-                    && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_pendientes'] ?? 1))
-                ) {
-                    $historialPage = $pendientesPage;
-                } elseif (
-                    $historialTipo === 'mis_solicitudes'
-                    && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_mis'] ?? 1))
-                ) {
-                    $historialPage = $misPage;
-                } else {
-                    $historialPage = $model->getAllPaginado(
-                        $historialOpciones[$historialTipo]['filtros'],
-                        max(1, (int)($_GET['pag_historial'] ?? 1)),
-                        APP_ROWS_PER_PAGE,
-                        $historialOpciones[$historialTipo]['orden']
-                    );
-                }
-                $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
-                $historialPaginationData = $historialPage['pagination'];
-                $todas = [];
-                $stats = [
-                    'pendientes' => (int)($counts[ESTADO_APROBADO_JEFE] ?? 0),
-                    'aprobadas' => (int)($counts[ESTADO_APROBADO_RRHH] ?? 0),
-                    'rechazadas' => (int)($counts[ESTADO_RECHAZADO_RRHH] ?? 0),
-                    'canceladas' => (int)($counts[ESTADO_CANCELADO_AGENDA] ?? 0),
-                    'historico' => $this->sumarConteos($counts),
-                    'revisionJefe' => (int)($counts[ESTADO_PENDIENTE_JEFE] ?? 0),
-                    'misSolicitudes' => $model->contarTotal($filtrosBase + ['nit_empleado' => $cedula]),
-                ];
-                render_view('rrhh/dashboard', compact('user', 'stats', 'pendientes', 'pendientesPaginationData', 'misSolicitudes', 'misPaginationData', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
-                return;
-            }
-
-            $cedula = (string)($user['cedula'] ?? '');
-            $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
-            $counts = $model->contarPorEstado($filtrosBase);
-            $historialTipo = limpiar_texto($_GET['historial'] ?? 'historico');
-            $historialOpciones = [
-                'pendientes' => ['titulo' => 'Aprobadas por jefe pendientes de RRHH', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE], 'orden' => 'ID ASC'],
-                'aprobadas' => ['titulo' => 'Aprobadas por Talento Humano', 'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                'rechazadas' => ['titulo' => 'Rechazadas por Talento Humano', 'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH], 'orden' => 'FECHA_CREACION DESC'],
-                'canceladas' => ['titulo' => 'Canceladas por el usuario', 'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
-                'historico' => ['titulo' => 'Historial completo', 'filtros' => $filtrosBase, 'orden' => 'FECHA_CREACION DESC'],
-                'revision_jefe' => ['titulo' => 'En revision de jefe', 'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE], 'orden' => 'FECHA_CREACION DESC'],
-                'mis_solicitudes' => ['titulo' => 'Mis solicitudes personales', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula], 'orden' => 'FECHA_CREACION DESC'],
-            ];
-
-            if (!array_key_exists($historialTipo, $historialOpciones)) {
-                $historialTipo = 'historico';
-            }
-
-            $pendientesPage = $model->getAllPaginado(
-                $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],
-                max(1, (int)($_GET['pag_pendientes'] ?? 1)),
-                APP_ROWS_PER_PAGE,
-                'ID ASC'
-            );
-            $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
-            $pendientesPaginationData = $pendientesPage['pagination'];
-
-            $misPage = $model->getByEmpleadoPaginado(
-                $cedula,
-                max(1, (int)($_GET['pag_mis'] ?? 1)),
-                APP_ROWS_PER_PAGE,
-                $filtrosBase
-            );
-            $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
-            $misPaginationData = $misPage['pagination'];
-
-            $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-            if (
-                $historialTipo === 'pendientes'
-                && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_pendientes'] ?? 1))
-            ) {
-                $historialPage = $pendientesPage;
-            } elseif (
-                $historialTipo === 'mis_solicitudes'
-                && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_mis'] ?? 1))
-            ) {
-                $historialPage = $misPage;
-            } else {
-                $historialPage = $model->getAllPaginado(
-                    $historialOpciones[$historialTipo]['filtros'],
-                    max(1, (int)($_GET['pag_historial'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    $historialOpciones[$historialTipo]['orden']
-                );
-            }
-            $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
-            $historialPaginationData = $historialPage['pagination'];
-            $todas = [];
-            $stats = [
-                'pendientes' => (int)($counts[ESTADO_APROBADO_JEFE] ?? 0),
-                'aprobadas' => (int) ($counts[ESTADO_APROBADO_RRHH] ?? 0),
-                'rechazadas' => (int) ($counts[ESTADO_RECHAZADO_RRHH] ?? 0),
-                'canceladas' => (int)($counts[ESTADO_CANCELADO_AGENDA] ?? 0),
-                'historico' => $this->sumarConteos($counts),
-                'revisionJefe' => (int)($counts[ESTADO_PENDIENTE_JEFE] ?? 0),
-                'misSolicitudes' => $model->contarTotal($filtrosBase + ['nit_empleado' => $cedula]),
-            ];
-            render_view('rrhh/dashboard', compact('user', 'stats', 'pendientes', 'pendientesPaginationData', 'misSolicitudes', 'misPaginationData', 'todas', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
+            $this->dashboardRrhh($user, $model, $empleadoModel, $q, $tipoFiltro);
             return;
         }
 
         if ($rol === ROL_JEFE) {
-            if ($q === '') {
-                $cedula = (string)($user['cedula'] ?? '');
-                $filtrosBase = $tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [];
-                $gestionadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH, ESTADO_CANCELADO_AGENDA];
-                $aprobadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
-
-                $pendientesPage = $model->getPendientesJefePaginado(
-                    $cedula,
-                    max(1, (int)($_GET['pag_pendientes'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    $filtrosBase
-                );
-                $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
-                $pendientesPaginationData = $pendientesPage['pagination'];
-
-                $misPage = $model->getByEmpleadoPaginado(
-                    $cedula,
-                    max(1, (int)($_GET['pag_mis'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    $filtrosBase
-                );
-                $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
-                $misPaginationData = $misPage['pagination'];
-
-                $historialTipo = limpiar_texto($_GET['historial'] ?? 'gestionadas');
-                $historialOpciones = [
-                    'pendientes' => [
-                        'titulo' => 'Solicitudes pendientes de tu aprobacion',
-                        'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE],
-                        'orden' => 'ID ASC',
-                    ],
-                    'aprobadas' => [
-                        'titulo' => 'Solicitudes aprobadas por ti',
-                        'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $aprobadasEstados],
-                        'orden' => 'FECHA_GESTION_JEFE DESC',
-                    ],
-                    'rechazadas' => [
-                        'titulo' => 'Solicitudes rechazadas por ti',
-                        'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_RECHAZADO_JEFE],
-                        'orden' => 'FECHA_GESTION_JEFE DESC',
-                    ],
-                    'canceladas' => [
-                        'titulo' => 'Solicitudes canceladas por el usuario',
-                        'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA],
-                        'orden' => 'FECHA_MODIFICACION DESC',
-                    ],
-                    'mis_solicitudes' => [
-                        'titulo' => 'Mis solicitudes personales',
-                        'filtros' => $filtrosBase + ['nit_empleado' => $cedula],
-                        'orden' => 'FECHA_CREACION DESC',
-                    ],
-                    'gestionadas' => [
-                        'titulo' => 'Historial gestionado',
-                        'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $gestionadasEstados],
-                        'orden' => 'FECHA_GESTION_JEFE DESC',
-                    ],
-                ];
-
-                if (!array_key_exists($historialTipo, $historialOpciones)) {
-                    $historialTipo = 'gestionadas';
-                }
-
-                $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-                if (
-                    $historialTipo === 'pendientes'
-                    && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_pendientes'] ?? 1))
-                ) {
-                    $historialPage = $pendientesPage;
-                } elseif (
-                    $historialTipo === 'mis_solicitudes'
-                    && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_mis'] ?? 1))
-                ) {
-                    $historialPage = $misPage;
-                } else {
-                    $historialPage = $model->getAllPaginado(
-                        $historialOpciones[$historialTipo]['filtros'],
-                        max(1, (int)($_GET['pag_historial'] ?? 1)),
-                        APP_ROWS_PER_PAGE,
-                        $historialOpciones[$historialTipo]['orden']
-                    );
-                }
-                $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
-                $historialPaginationData = $historialPage['pagination'];
-                $gestionadas = $historialTipo === 'gestionadas' ? $historialSolicitudes : [];
-                $stats = $this->estadisticasJefe($model, $filtrosBase, $cedula, $gestionadasEstados, $aprobadasEstados);
-                render_view('jefe/dashboard', compact('user', 'pendientes', 'pendientesPaginationData', 'gestionadas', 'misSolicitudes', 'misPaginationData', 'stats', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
-                return;
-            }
-
-            $cedula = (string)($user['cedula'] ?? '');
-            $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
-            $gestionadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH, ESTADO_CANCELADO_AGENDA];
-            $aprobadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
-
-            $pendientesPage = $model->getPendientesJefePaginado(
-                $cedula,
-                max(1, (int)($_GET['pag_pendientes'] ?? 1)),
-                APP_ROWS_PER_PAGE,
-                $filtrosBase
-            );
-            $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
-            $pendientesPaginationData = $pendientesPage['pagination'];
-
-            $misPage = $model->getByEmpleadoPaginado(
-                $cedula,
-                max(1, (int)($_GET['pag_mis'] ?? 1)),
-                APP_ROWS_PER_PAGE,
-                $filtrosBase
-            );
-            $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
-            $misPaginationData = $misPage['pagination'];
-
-            $historialTipo = limpiar_texto($_GET['historial'] ?? 'gestionadas');
-            $historialOpciones = [
-                'pendientes' => [
-                    'titulo' => 'Solicitudes pendientes de tu aprobacion',
-                    'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE],
-                    'orden' => 'ID ASC',
-                ],
-                'aprobadas' => [
-                    'titulo' => 'Solicitudes aprobadas por ti',
-                    'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $aprobadasEstados],
-                    'orden' => 'FECHA_GESTION_JEFE DESC',
-                ],
-                'rechazadas' => [
-                    'titulo' => 'Solicitudes rechazadas por ti',
-                    'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_RECHAZADO_JEFE],
-                    'orden' => 'FECHA_GESTION_JEFE DESC',
-                ],
-                'canceladas' => [
-                    'titulo' => 'Solicitudes canceladas por el usuario',
-                    'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA],
-                    'orden' => 'FECHA_MODIFICACION DESC',
-                ],
-                'mis_solicitudes' => [
-                    'titulo' => 'Mis solicitudes personales',
-                    'filtros' => $filtrosBase + ['nit_empleado' => $cedula],
-                    'orden' => 'FECHA_CREACION DESC',
-                ],
-                'gestionadas' => [
-                    'titulo' => 'Historial gestionado',
-                    'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $gestionadasEstados],
-                    'orden' => 'FECHA_GESTION_JEFE DESC',
-                ],
-            ];
-
-            if (!array_key_exists($historialTipo, $historialOpciones)) {
-                $historialTipo = 'gestionadas';
-            }
-
-            $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-            if (
-                $historialTipo === 'pendientes'
-                && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_pendientes'] ?? 1))
-            ) {
-                $historialPage = $pendientesPage;
-            } elseif (
-                $historialTipo === 'mis_solicitudes'
-                && max(1, (int)($_GET['pag_historial'] ?? 1)) === max(1, (int)($_GET['pag_mis'] ?? 1))
-            ) {
-                $historialPage = $misPage;
-            } else {
-                $historialPage = $model->getAllPaginado(
-                    $historialOpciones[$historialTipo]['filtros'],
-                    max(1, (int)($_GET['pag_historial'] ?? 1)),
-                    APP_ROWS_PER_PAGE,
-                    $historialOpciones[$historialTipo]['orden']
-                );
-            }
-            $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
-            $historialPaginationData = $historialPage['pagination'];
-            $gestionadas = $historialTipo === 'gestionadas' ? $historialSolicitudes : [];
-            $stats = $this->estadisticasJefe($model, $filtrosBase, $cedula, $gestionadasEstados, $aprobadasEstados);
-            render_view('jefe/dashboard', compact('user', 'pendientes', 'pendientesPaginationData', 'gestionadas', 'misSolicitudes', 'misPaginationData', 'stats', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
+            $this->dashboardJefe($user, $model, $empleadoModel, $q, $tipoFiltro);
             return;
         }
 
-        if ($q === '') {
-            $cedula = (string)($user['cedula'] ?? '');
-            $filtrosBase = $tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [];
-            $historialTipo = limpiar_texto($_GET['historial'] ?? 'total');
-            $historialOpciones = [
-                'total' => ['titulo' => 'Historial completo de mis solicitudes', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula]],
-                'pendientes' => ['titulo' => 'Mis solicitudes pendientes', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE]],
-                'aprobadas' => ['titulo' => 'Mis solicitudes aprobadas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH]]],
-                'rechazadas' => ['titulo' => 'Mis solicitudes rechazadas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH]]],
-                'canceladas' => ['titulo' => 'Mis solicitudes canceladas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
-            ];
+        $this->dashboardEmpleado($user, $model, $empleadoModel, $q, $tipoFiltro);
+    }
 
-            if (!array_key_exists($historialTipo, $historialOpciones)) {
-                $historialTipo = 'total';
-            }
-
-            $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
-            $page = $model->getAllPaginado(
-                $historialOpciones[$historialTipo]['filtros'],
-                max(1, (int)($_GET['pag_mis'] ?? 1)),
-                APP_ROWS_PER_PAGE,
-                $historialOpciones[$historialTipo]['orden'] ?? 'FECHA_CREACION DESC'
-            );
-            $historialSolicitudes = $this->enriquecerSolicitudes($page['rows'], $empleadoModel);
-            $historialPaginationData = $page['pagination'];
-            $solicitudes = $historialSolicitudes;
-            $stats = $this->estadisticasEmpleado($model, $filtrosBase, $cedula);
-            render_view('empleado/dashboard', compact('user', 'solicitudes', 'stats', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
-            return;
-        }
-
+    private function dashboardRrhh(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
+    {
         $cedula = (string)($user['cedula'] ?? '');
-        $filtrosBase = $this->filtrosBase($q, $tipoFiltro);
+        $filtrosBase = $q === ''
+            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
+            : $this->filtrosBase($q, $tipoFiltro);
+
+        $counts = $model->contarPorEstado($filtrosBase);
+        $historialTipo = limpiar_texto($_GET['historial'] ?? 'historico');
+        $historialOpciones = [
+            'pendientes'     => ['titulo' => 'Aprobadas por jefe pendientes de RRHH',   'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],    'orden' => 'ID ASC'],
+            'aprobadas'      => ['titulo' => 'Aprobadas por Talento Humano',             'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH],    'orden' => 'FECHA_CREACION DESC'],
+            'rechazadas'     => ['titulo' => 'Rechazadas por Talento Humano',            'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH],   'orden' => 'FECHA_CREACION DESC'],
+            'canceladas'     => ['titulo' => 'Canceladas por el usuario',                'filtros' => $filtrosBase + ['estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
+            'historico'      => ['titulo' => 'Historial completo',                       'filtros' => $filtrosBase,                                         'orden' => 'FECHA_CREACION DESC'],
+            'revision_jefe'  => ['titulo' => 'En revision de jefe',                      'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE],   'orden' => 'FECHA_CREACION DESC'],
+            'mis_solicitudes'=> ['titulo' => 'Mis solicitudes personales',               'filtros' => $filtrosBase + ['nit_empleado' => $cedula],            'orden' => 'FECHA_CREACION DESC'],
+        ];
+
+        if (!array_key_exists($historialTipo, $historialOpciones)) {
+            $historialTipo = 'historico';
+        }
+
+        $pendientesPage = $model->getAllPaginado(
+            $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],
+            max(1, (int)($_GET['pag_pendientes'] ?? 1)),
+            APP_ROWS_PER_PAGE,
+            'ID ASC'
+        );
+        $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
+        $pendientesPaginationData = $pendientesPage['pagination'];
+
+        $misPage = $model->getByEmpleadoPaginado(
+            $cedula,
+            max(1, (int)($_GET['pag_mis'] ?? 1)),
+            APP_ROWS_PER_PAGE,
+            $filtrosBase
+        );
+        $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
+        $misPaginationData = $misPage['pagination'];
+
+        $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
+        $historialPage = $this->resolverHistorialPage(
+            $historialTipo, $historialOpciones, $model,
+            $pendientesPage, 'pendientes', 'pag_pendientes',
+            $misPage, 'mis_solicitudes', 'pag_mis'
+        );
+        $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
+        $historialPaginationData = $historialPage['pagination'];
+
+        $stats = [
+            'pendientes'     => (int)($counts[ESTADO_APROBADO_JEFE]    ?? 0),
+            'aprobadas'      => (int)($counts[ESTADO_APROBADO_RRHH]    ?? 0),
+            'rechazadas'     => (int)($counts[ESTADO_RECHAZADO_RRHH]   ?? 0),
+            'canceladas'     => (int)($counts[ESTADO_CANCELADO_AGENDA] ?? 0),
+            'historico'      => $this->sumarConteos($counts),
+            'revisionJefe'   => (int)($counts[ESTADO_PENDIENTE_JEFE]   ?? 0),
+            'misSolicitudes' => $model->contarTotal($filtrosBase + ['nit_empleado' => $cedula]),
+        ];
+
+        $todas = [];
+        render_view('rrhh/dashboard', compact(
+            'user', 'stats', 'pendientes', 'pendientesPaginationData',
+            'misSolicitudes', 'misPaginationData', 'todas',
+            'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData',
+            'q', 'tipoFiltro'
+        ));
+    }
+
+    private function dashboardJefe(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
+    {
+        $cedula = (string)($user['cedula'] ?? '');
+        $filtrosBase = $q === ''
+            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
+            : $this->filtrosBase($q, $tipoFiltro);
+
+        $gestionadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH, ESTADO_CANCELADO_AGENDA];
+        $aprobadasEstados   = [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
+
+        $pendientesPage = $model->getPendientesJefePaginado(
+            $cedula,
+            max(1, (int)($_GET['pag_pendientes'] ?? 1)),
+            APP_ROWS_PER_PAGE,
+            $filtrosBase
+        );
+        $pendientes = $this->enriquecerSolicitudes($pendientesPage['rows'], $empleadoModel);
+        $pendientesPaginationData = $pendientesPage['pagination'];
+
+        $misPage = $model->getByEmpleadoPaginado(
+            $cedula,
+            max(1, (int)($_GET['pag_mis'] ?? 1)),
+            APP_ROWS_PER_PAGE,
+            $filtrosBase
+        );
+        $misSolicitudes = $this->enriquecerSolicitudes($misPage['rows'], $empleadoModel);
+        $misPaginationData = $misPage['pagination'];
+
+        $historialTipo = limpiar_texto($_GET['historial'] ?? 'gestionadas');
+        $historialOpciones = [
+            'pendientes' => [
+                'titulo' => 'Solicitudes pendientes de tu aprobacion',
+                'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE],
+                'orden'   => 'ID ASC',
+            ],
+            'aprobadas' => [
+                'titulo' => 'Solicitudes aprobadas por ti',
+                'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $aprobadasEstados],
+                'orden'   => 'FECHA_GESTION_JEFE DESC',
+            ],
+            'rechazadas' => [
+                'titulo' => 'Solicitudes rechazadas por ti',
+                'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_RECHAZADO_JEFE],
+                'orden'   => 'FECHA_GESTION_JEFE DESC',
+            ],
+            'canceladas' => [
+                'titulo' => 'Solicitudes canceladas por el usuario',
+                'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA],
+                'orden'   => 'FECHA_MODIFICACION DESC',
+            ],
+            'mis_solicitudes' => [
+                'titulo' => 'Mis solicitudes personales',
+                'filtros' => $filtrosBase + ['nit_empleado' => $cedula],
+                'orden'   => 'FECHA_CREACION DESC',
+            ],
+            'gestionadas' => [
+                'titulo' => 'Historial gestionado',
+                'filtros' => $filtrosBase + ['nit_jefe' => $cedula, 'excluir_empleado' => $cedula, 'estados' => $gestionadasEstados],
+                'orden'   => 'FECHA_GESTION_JEFE DESC',
+            ],
+        ];
+
+        if (!array_key_exists($historialTipo, $historialOpciones)) {
+            $historialTipo = 'gestionadas';
+        }
+
+        $historialTitulo = $historialOpciones[$historialTipo]['titulo'];
+        $historialPage = $this->resolverHistorialPage(
+            $historialTipo, $historialOpciones, $model,
+            $pendientesPage, 'pendientes', 'pag_pendientes',
+            $misPage, 'mis_solicitudes', 'pag_mis'
+        );
+        $historialSolicitudes = $this->enriquecerSolicitudes($historialPage['rows'], $empleadoModel);
+        $historialPaginationData = $historialPage['pagination'];
+        $gestionadas = $historialTipo === 'gestionadas' ? $historialSolicitudes : [];
+        $stats = $this->estadisticasJefe($model, $filtrosBase, $cedula, $gestionadasEstados, $aprobadasEstados);
+
+        render_view('jefe/dashboard', compact(
+            'user', 'pendientes', 'pendientesPaginationData', 'gestionadas',
+            'misSolicitudes', 'misPaginationData', 'stats',
+            'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData',
+            'q', 'tipoFiltro'
+        ));
+    }
+
+    private function dashboardEmpleado(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
+    {
+        $cedula = (string)($user['cedula'] ?? '');
+        $filtrosBase = $q === ''
+            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
+            : $this->filtrosBase($q, $tipoFiltro);
+
         $historialTipo = limpiar_texto($_GET['historial'] ?? 'total');
         $historialOpciones = [
-            'total' => ['titulo' => 'Historial completo de mis solicitudes', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula]],
-            'pendientes' => ['titulo' => 'Mis solicitudes pendientes', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE]],
-            'aprobadas' => ['titulo' => 'Mis solicitudes aprobadas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH]]],
-            'rechazadas' => ['titulo' => 'Mis solicitudes rechazadas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH]]],
-            'canceladas' => ['titulo' => 'Mis solicitudes canceladas', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
+            'total'      => ['titulo' => 'Historial completo de mis solicitudes', 'filtros' => $filtrosBase + ['nit_empleado' => $cedula]],
+            'pendientes' => ['titulo' => 'Mis solicitudes pendientes',            'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_PENDIENTE_JEFE]],
+            'aprobadas'  => ['titulo' => 'Mis solicitudes aprobadas',             'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH]]],
+            'rechazadas' => ['titulo' => 'Mis solicitudes rechazadas',            'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estados' => [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH]]],
+            'canceladas' => ['titulo' => 'Mis solicitudes canceladas',            'filtros' => $filtrosBase + ['nit_empleado' => $cedula, 'estado' => ESTADO_CANCELADO_AGENDA], 'orden' => 'FECHA_MODIFICACION DESC'],
         ];
 
         if (!array_key_exists($historialTipo, $historialOpciones)) {
@@ -450,7 +267,41 @@ class dashboardController
         $historialPaginationData = $page['pagination'];
         $solicitudes = $historialSolicitudes;
         $stats = $this->estadisticasEmpleado($model, $filtrosBase, $cedula);
-        render_view('empleado/dashboard', compact('user', 'solicitudes', 'stats', 'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData', 'q', 'tipoFiltro'));
+
+        render_view('empleado/dashboard', compact(
+            'user', 'solicitudes', 'stats',
+            'historialTipo', 'historialTitulo', 'historialSolicitudes', 'historialPaginationData',
+            'q', 'tipoFiltro'
+        ));
+    }
+
+    private function resolverHistorialPage(
+        string $historialTipo,
+        array $historialOpciones,
+        solicitudModel $model,
+        array $pendientesPage,
+        string $tipoPendientes,
+        string $paramPendientes,
+        array $misPage,
+        string $tipoMis,
+        string $paramMis
+    ): array {
+        $pagHistorial = max(1, (int)($_GET['pag_historial'] ?? 1));
+
+        if ($historialTipo === $tipoPendientes && $pagHistorial === max(1, (int)($_GET[$paramPendientes] ?? 1))) {
+            return $pendientesPage;
+        }
+
+        if ($historialTipo === $tipoMis && $pagHistorial === max(1, (int)($_GET[$paramMis] ?? 1))) {
+            return $misPage;
+        }
+
+        return $model->getAllPaginado(
+            $historialOpciones[$historialTipo]['filtros'],
+            $pagHistorial,
+            APP_ROWS_PER_PAGE,
+            $historialOpciones[$historialTipo]['orden']
+        );
     }
 
     private function estadisticasJefe(

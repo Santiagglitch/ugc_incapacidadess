@@ -34,10 +34,10 @@ class notaAdminService extends mainModelUXXI
         );
 
         return array_map(static fn($r) => [
-            'fecha'  => (string)($r['FECHA']   ?? $r['fecha']   ?? ''),
-            'nit'    => (string)($r['NIT']     ?? $r['nit']     ?? ''),
-            'nombre' => (string)($r['NOMBRE']  ?? $r['nombre']  ?? ''),
-            'nota'   => (string)($r['NOTA']    ?? $r['nota']    ?? ''),
+            'fecha'  => (string)($r['FECHA']  ?? ''),
+            'nit'    => (string)($r['NIT']    ?? ''),
+            'nombre' => (string)($r['NOMBRE'] ?? ''),
+            'nota'   => (string)($r['NOTA']   ?? ''),
         ], $rows);
     }
 }
