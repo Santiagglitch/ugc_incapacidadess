@@ -75,9 +75,20 @@ class authController
         } catch (Throwable $e) {}
     }
 
+    private function esperaHtml(): bool
+    {
+        $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+        return str_contains($accept, 'text/html');
+    }
+
     public function loginPost(): void
     {
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
+            if ($this->esperaHtml()) {
+                $_SESSION['login_error'] = 'Token de seguridad invalido. Recarga la pagina.';
+                redirect_to(url_view('login'));
+            }
+
             http_response_code(422);
             render_view('auth/login', [
                 'error' => 'Token de seguridad invalido. Recarga la pagina.',
