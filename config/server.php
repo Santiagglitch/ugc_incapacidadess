@@ -38,6 +38,7 @@ define('LDAP_PORT', 389);
 define('LDAP_USER', 'cn=Manager,dc=ugc.edu,dc=co');
 define('LDAP_PASSWORD', 'Sl4pdU6Cn3W');
 define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
+define('LDAP_DIRECT_CN_LOGIN', true); // Usa cn=cedula para evitar la busqueda LDAP lenta
 
 
 
