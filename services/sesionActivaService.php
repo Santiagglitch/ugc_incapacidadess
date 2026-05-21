@@ -87,6 +87,7 @@ class sesionActivaService extends mainModelUXXI
         if ($sid === '') {
             $sid = session_id();
         }
+
         if ($sid === '') {
             return;
         }
@@ -114,8 +115,10 @@ class sesionActivaService extends mainModelUXXI
     private function hace(int $segundos): string
     {
         $segundos = max(0, $segundos);
+
         if ($segundos < 60)   return 'hace ' . $segundos . 's';
         if ($segundos < 3600) return 'hace ' . (int)($segundos / 60) . ' min';
+
         return 'hace ' . (int)($segundos / 3600) . 'h';
     }
 }

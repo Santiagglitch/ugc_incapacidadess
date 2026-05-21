@@ -30,6 +30,7 @@ class authController
     {
         return ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
     }
+
     public function loginForm(): void
     {
         if (usuario_autenticado()) {
@@ -208,6 +209,7 @@ class authController
 
         redirect_to(url_view('dashboard'));
     }
+
     public function cambiarModo(): void
     {
         if (!validar_csrf($_POST['_csrf_token'] ?? null)) {

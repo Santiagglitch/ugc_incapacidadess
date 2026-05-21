@@ -91,13 +91,6 @@ class loginBloqueoService extends mainModelUXXI
 
     private function limpiarExpirados(): void
     {
-        $conn = $this->conectar();
-        if ($conn) {
-            $stmt = @oci_parse($conn, "DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < SYSDATE");
-            if ($stmt) {
-                @oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
-                @oci_free_statement($stmt);
-            }
-        }
+        $this->ejecutar("DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < SYSDATE");
     }
 }

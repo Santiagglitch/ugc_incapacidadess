@@ -305,9 +305,7 @@ final class ExportController
             $titulo = 'Hoja';
         }
 
-        return function_exists('mb_substr')
-            ? mb_substr($titulo, 0, 31)
-            : substr($titulo, 0, 31);
+        return mb_substr($titulo, 0, 31);
     }
 }
 

@@ -205,11 +205,6 @@ final class ExportController
         return $resultado;
     }
 
-    private function filtrarPorEstado(array $rows, string $estado): array
-    {
-        return $this->filtrarPorEstados($rows, [$estado]);
-    }
-
     private function filtrarPorEstados(array $rows, array $estados): array
     {
         $estadosNormalizados = array_values(array_unique(array_map(
@@ -344,9 +339,7 @@ final class ExportController
             $titulo = 'Hoja';
         }
 
-        return function_exists('mb_substr')
-            ? mb_substr($titulo, 0, 31)
-            : substr($titulo, 0, 31);
+        return mb_substr($titulo, 0, 31);
     }
 }
 

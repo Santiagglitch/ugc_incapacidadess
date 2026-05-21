@@ -9,7 +9,7 @@ uploads/
 storage/private/
 
 # ── Configuración con credenciales ───────────────────────────────────
-
+.codeium.rules
 # ── Logs ─────────────────────────────────────────────────────────────
 logs/
 *.log

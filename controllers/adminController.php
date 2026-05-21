@@ -7,6 +7,8 @@ require_once __DIR__ . '/../models/empleadoModel.php';
 require_once __DIR__ . '/../models/solicitudModel.php';
 require_once __DIR__ . '/../models/adminRolesModel.php';
 require_once __DIR__ . '/../models/adminAuditoriaModel.php';
+require_once __DIR__ . '/../services/notaAdminService.php';
+require_once __DIR__ . '/../services/sesionActivaService.php';
 
 class adminController
 {
@@ -49,20 +51,16 @@ class adminController
             $todos = array_values(array_filter($todos, fn($emp) => ($emp['CENTRO_COSTO'] ?? '') === $filtroCC));
         }
 
-        usort($todos, function ($a, $b) use ($ordenCol, $ordenDir) {
-            $va = match ($ordenCol) {
-                'nit'    => (string)($a['NIT']            ?? ''),
-                'nivel'  => (string)($a['NIVEL']          ?? ''),
-                'cc'     => (string)($a['CENTRO_COSTO']   ?? ''),
-                default  => mb_strtolower((string)($a['NOMBRE_COMPLETO'] ?? ''), 'UTF-8'),
+        $columnaValor = static function (array $emp, string $col): string {
+            return match ($col) {
+                'nit'   => (string)($emp['NIT']            ?? ''),
+                'nivel' => (string)($emp['NIVEL']          ?? ''),
+                'cc'    => (string)($emp['CENTRO_COSTO']   ?? ''),
+                default => mb_strtolower((string)($emp['NOMBRE_COMPLETO'] ?? ''), 'UTF-8'),
             };
-            $vb = match ($ordenCol) {
-                'nit'    => (string)($b['NIT']            ?? ''),
-                'nivel'  => (string)($b['NIVEL']          ?? ''),
-                'cc'     => (string)($b['CENTRO_COSTO']   ?? ''),
-                default  => mb_strtolower((string)($b['NOMBRE_COMPLETO'] ?? ''), 'UTF-8'),
-            };
-            $cmp = strnatcmp($va, $vb);
+        };
+        usort($todos, static function ($a, $b) use ($ordenCol, $ordenDir, $columnaValor) {
+            $cmp = strnatcmp($columnaValor($a, $ordenCol), $columnaValor($b, $ordenCol));
             return $ordenDir === 'desc' ? -$cmp : $cmp;
         });
 
@@ -172,7 +170,6 @@ class adminController
 
         $auditLog = [];
         if ($esSuperAdmin) {
-            require_once __DIR__ . '/../models/adminAuditoriaModel.php';
             $auditLog = (new adminAuditoriaModel())->getByNitObjetivo($nit, 8);
         }
 
@@ -272,7 +269,6 @@ class adminController
 
         $ok = $model->adminIntervenir($id, $nitAdmin, $obs, $decision);
         if ($ok) {
-            require_once __DIR__ . '/../models/adminAuditoriaModel.php';
             (new adminAuditoriaModel())->registrar(
                 $nitAdmin,
                 'ADMIN_INTERVENIR',
@@ -316,7 +312,6 @@ class adminController
 
         $ok = $model->adminForzarEstado($id, $nitAdmin, $nuevoEstado, $motivo);
         if ($ok) {
-            require_once __DIR__ . '/../models/adminAuditoriaModel.php';
             (new adminAuditoriaModel())->registrar(
                 $nitAdmin,
                 'ADMIN_FORZAR_ESTADO',
@@ -344,7 +339,6 @@ class adminController
             redirect_to($returnTo ?: url_view('dashboard'));
         }
 
-        require_once __DIR__ . '/../services/notaAdminService.php';
         $ok = (new notaAdminService())->guardar($id, (string)($user['cedula'] ?? ''), (string)($user['nombre'] ?? ''), $nota);
 
         flash_set($ok ? 'success' : 'error', $ok ? 'Nota guardada.' : 'No se pudo guardar la nota.');
@@ -365,7 +359,6 @@ class adminController
         $solicitudModel = new solicitudModel();
         $empleadoModel  = new empleadoModel();
 
-        require_once __DIR__ . '/../services/sesionActivaService.php';
         $sesionesActivas = (new sesionActivaService())->getSesionesActivas();
 
         $adminsAdicionales = $adminRoles->getAdminsAdicionales();

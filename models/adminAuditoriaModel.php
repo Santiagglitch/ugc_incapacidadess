@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/mainModelUXXI.php';
+require_once __DIR__ . '/empleadoModel.php';
 
 class adminAuditoriaModel extends mainModelUXXI
 {
@@ -135,7 +136,7 @@ class adminAuditoriaModel extends mainModelUXXI
 
     private function normalizarFilas(array $rows): array
     {
-        return array_map(function (array $row): array {
+        return array_map(static function (array $row): array {
             $meta = [];
             if (!empty($row['META_JSON'])) {
                 $decoded = json_decode((string)$row['META_JSON'], true);
@@ -180,7 +181,6 @@ class adminAuditoriaModel extends mainModelUXXI
         }
 
         try {
-            require_once __DIR__ . '/empleadoModel.php';
             $emp    = (new empleadoModel())->getByNit($nit);
             $nombre = trim((string)($emp['NOMBRE_COMPLETO'] ?? ''));
             if ($nombre !== '') {

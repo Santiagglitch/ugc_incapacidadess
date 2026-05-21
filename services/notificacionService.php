@@ -112,22 +112,38 @@ class notificacionService
 
     public function contarNoLeidas(string $nit): int
     {
-        try { return $this->model->contarNoLeidas($nit); } catch (Throwable $e) { return 0; }
+        try {
+            return $this->model->contarNoLeidas($nit);
+        } catch (Throwable $e) {
+            return 0;
+        }
     }
 
     public function getNoLeidas(string $nit): array
     {
-        try { return $this->model->getNoLeidas($nit); } catch (Throwable $e) { return []; }
+        try {
+            return $this->model->getNoLeidas($nit);
+        } catch (Throwable $e) {
+            return [];
+        }
     }
 
     public function marcarLeida(int $id, string $nit): bool
     {
-        try { return $this->model->marcarLeida($id, $nit); } catch (Throwable $e) { return false; }
+        try {
+            return $this->model->marcarLeida($id, $nit);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function marcarTodasLeidas(string $nit): bool
     {
-        try { return $this->model->marcarTodasLeidas($nit); } catch (Throwable $e) { return false; }
+        try {
+            return $this->model->marcarTodasLeidas($nit);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     private function usuariosRRHH(): array
@@ -189,7 +205,13 @@ class notificacionService
 
     private function safeCrear(string $nit, string $tipo, string $mensaje, int $idSolicitud): void
     {
-        if ($nit === '' || $idSolicitud <= 0) { return; }
-        try { $this->model->crear($nit, $tipo, $mensaje, $idSolicitud); } catch (Throwable $e) { error_log('Notificacion error: ' . $e->getMessage()); }
+        if ($nit === '' || $idSolicitud <= 0) {
+            return;
+        }
+        try {
+            $this->model->crear($nit, $tipo, $mensaje, $idSolicitud);
+        } catch (Throwable $e) {
+            error_log('Notificacion error: ' . $e->getMessage());
+        }
     }
 }
