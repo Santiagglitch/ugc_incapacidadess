@@ -145,8 +145,8 @@ th a:hover{color:var(--green2)}
       &#8595; Exportar CSV
     </a>
     <div class="view-toggle" title="Cambiar vista">
-      <button type="button" id="btn-view-table" class="active" title="Vista tabla" onclick="setView('table')">&#9776;</button>
-      <button type="button" id="btn-view-cards" title="Vista tarjetas" onclick="setView('cards')">&#9638;</button>
+      <button type="button" id="btn-view-table" class="active" title="Vista tabla">&#9776;</button>
+      <button type="button" id="btn-view-cards" title="Vista tarjetas">&#9638;</button>
     </div>
   </div>
 </div>
@@ -266,6 +266,12 @@ ugcRenderPagination([
   }
 
   window.setView = setView;
+
+  var btnTable = document.getElementById('btn-view-table');
+  var btnCards = document.getElementById('btn-view-cards');
+  if (btnTable) btnTable.addEventListener('click', function () { setView('table'); });
+  if (btnCards) btnCards.addEventListener('click', function () { setView('cards'); });
+
   setView(localStorage.getItem(STORAGE_KEY) || 'table');
 
   var searchInput = document.getElementById('emp-search-input');
