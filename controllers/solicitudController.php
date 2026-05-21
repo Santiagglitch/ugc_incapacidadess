@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/helpers.php';
 require_once __DIR__ . '/../models/solicitudModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
 require_once __DIR__ . '/../services/notificacionService.php';
+require_once __DIR__ . '/../services/notaAdminService.php';
 
 class solicitudController
 {
@@ -270,7 +271,12 @@ class solicitudController
             exit('Sin permiso para ver esta solicitud.');
         }
 
-        render_view('shared/detalle', compact('user', 'solicitud'));
+        $notasAdmin = [];
+        if (($user['rol'] ?? '') === ROL_ADMIN) {
+            $notasAdmin = (new notaAdminService())->getByIdSolicitud($id);
+        }
+
+        render_view('shared/detalle', compact('user', 'solicitud', 'notasAdmin'));
     }
 
     public function editarForm(int $id): void

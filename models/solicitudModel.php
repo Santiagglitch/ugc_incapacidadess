@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/mainModelUXXI.php';
 
-if (!defined('ESTADO_CANCELADO_AGENDA')) {
-    define('ESTADO_CANCELADO_AGENDA', 'CANCELADO_AGENDA');
-}
-
 class solicitudModel extends mainModelUXXI
 {
     private const LIST_SELECT = "ID, NIT_EMPLEADO, NIT_JEFE, NIT_RRHH, TIPO_SOLICITUD, DURACION_HORAS, DURACION_DIAS,
@@ -188,21 +184,6 @@ class solicitudModel extends mainModelUXXI
         return $this->getAllPaginado($filtros, $pagina, $porPagina, 'ID ASC');
     }
 
-    public function getGestionadasByJefePaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
-    {
-        $filtros['nit_jefe'] = $nit;
-        $filtros['excluir_empleado'] = $nit;
-        $filtros['estados'] = [
-            ESTADO_APROBADO_JEFE,
-            ESTADO_RECHAZADO_JEFE,
-            ESTADO_APROBADO_RRHH,
-            ESTADO_RECHAZADO_RRHH,
-            ESTADO_CANCELADO_AGENDA,
-        ];
-
-        return $this->getAllPaginado($filtros, $pagina, $porPagina, 'FECHA_GESTION_JEFE DESC');
-    }
-
     public function contarTotal(array $filtros = []): int
     {
         [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
@@ -367,51 +348,6 @@ class solicitudModel extends mainModelUXXI
         }
 
         return array_values($serie);
-    }
-
-    public function getResumenEmpleado(string $nit): array
-    {
-        $row = $this->consultarUno(
-            "SELECT COUNT(*) AS TOTAL,
-                    SUM(CASE WHEN ESTADO='PENDIENTE_JEFE' THEN 1 ELSE 0 END) AS PENDIENTES,
-                    SUM(CASE WHEN ESTADO IN ('APROBADO_JEFE','APROBADO_RRHH') THEN 1 ELSE 0 END) AS APROBADAS,
-                    SUM(CASE WHEN ESTADO IN ('RECHAZADO_JEFE','RECHAZADO_RRHH') THEN 1 ELSE 0 END) AS RECHAZADAS,
-                    SUM(CASE WHEN ESTADO='CANCELADO_AGENDA' THEN 1 ELSE 0 END) AS CANCELADAS
-             FROM SOLICITUDES_PERMISOS
-             WHERE NIT_EMPLEADO=:nit AND ACTIVO=1",
-            [':nit' => $nit]
-        ) ?? [];
-
-        return [
-            'total' => (int)($row['TOTAL'] ?? 0),
-            'pendientes' => (int)($row['PENDIENTES'] ?? 0),
-            'aprobadas' => (int)($row['APROBADAS'] ?? 0),
-            'rechazadas' => (int)($row['RECHAZADAS'] ?? 0),
-            'canceladas' => (int)($row['CANCELADAS'] ?? 0),
-        ];
-    }
-
-    public function getResumenJefe(string $nit): array
-    {
-        return [
-            'pendientes' => $this->contarTotal([
-                'nit_jefe' => $nit,
-                'excluir_empleado' => $nit,
-                'estado' => ESTADO_PENDIENTE_JEFE,
-            ]),
-            'gestionadas' => $this->contarTotal([
-                'nit_jefe' => $nit,
-                'excluir_empleado' => $nit,
-                'estados' => [
-                    ESTADO_APROBADO_JEFE,
-                    ESTADO_RECHAZADO_JEFE,
-                    ESTADO_APROBADO_RRHH,
-                    ESTADO_RECHAZADO_RRHH,
-                    ESTADO_CANCELADO_AGENDA,
-                ],
-            ]),
-            'misSolicitudes' => $this->contarTotal(['nit_empleado' => $nit]),
-        ];
     }
 
     public function aprobarJefe(int $id, string $nit, string $obs): bool

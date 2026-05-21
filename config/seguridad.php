@@ -115,13 +115,6 @@ function usuario_autenticado(): bool
     return !empty(usuario_actual());
 }
 
-function super_admin_modo_pendiente(): bool
-{
-    $usuario = usuario_actual();
-    return !empty($_SESSION['super_admin_modo_pendiente'])
-        && (($usuario['cedula'] ?? '') === SUPER_ADMIN_NIT);
-}
-
 function admin_modo_pendiente(): bool
 {
     return !empty($_SESSION['admin_modo_pendiente']);
