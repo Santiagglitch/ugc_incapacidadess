@@ -13,8 +13,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
         </div>
       </div>
 
-      <h1 class="brand-title">Portal de Solicitudes</h1>
-      <p class="brand-subtitle">Permisos e Incapacidades</p>
+      <h1 class="brand-title">Portal de solicitudes de ausentismos</h1>
     </div>
 
     <?php if (!empty($error)): ?>
@@ -87,21 +86,6 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
         <span class="btn-text">Ingresar al Sistema</span>
       </button>
     </form>
-
-    <?php if (!empty($devUsuarios)): ?>
-      <div class="dev-section">
-        <p class="dev-title">Usuarios de Prueba <span class="dev-hint">pass: prueba123</span></p>
-
-        <div class="dev-chips">
-          <?php foreach ($devUsuarios as $ced => $u): ?>
-            <button type="button" class="dev-chip" data-login-cedula="<?= e($ced) ?>">
-              <span class="chip-role <?= e($u['rol']) ?>"><?= e(strtoupper(substr($u['rol'], 0, 3))) ?></span>
-              <span class="chip-name"><?= e(explode(' ', $u['nombre'])[0]) ?></span>
-            </button>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    <?php endif; ?>
   </div>
 </div>
 
@@ -125,22 +109,6 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
       }
     });
   }
-
-  document.querySelectorAll('[data-login-cedula]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      var cedulaInput = document.getElementById('cedula');
-
-      if (cedulaInput) {
-        cedulaInput.value = button.dataset.loginCedula || '';
-      }
-      if (passwordInput) {
-        passwordInput.value = 'prueba123';
-      }
-      if (loginButton) {
-        loginButton.focus();
-      }
-    });
-  });
 
   document.querySelectorAll('.login-brand img').forEach(function (img) {
     img.addEventListener('dragstart', function (event) {

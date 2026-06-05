@@ -345,7 +345,6 @@ $csrfToken = csrf_token();
     '.stat-card-link',
     '.notificacion-item',
     '.mark-all',
-    '.dev-chip',
     '.ugc-pagination__page',
     '.ugc-pagination__step'
   ].join(',');

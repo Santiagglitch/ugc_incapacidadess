@@ -1058,8 +1058,7 @@ public function cancelarAgenda(?int $id = null): void
             return true;
         }
 
-        return (int)($jefe['NIVEL'] ?? 0) >= NIVEL_MIN_JEFE
-            && !in_array((string)($jefe['CENTRO_COSTO'] ?? ''), CC_RRHH, true);
+        return es_jefe_revisor_nit($nit);
     }
 
     private function validarJefeSeleccionado(

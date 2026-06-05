@@ -88,15 +88,14 @@ class empleadoModel extends mainModel
             return ROL_EMPLEADO;
         }
 
-        $nivel = (int) ($empleado['NIVEL'] ?? 0);
         $cc = (string) ($empleado['CENTRO_COSTO'] ?? '');
+
+        if (es_jefe_revisor_nit($nit)) {
+            return ROL_JEFE;
+        }
 
         if (in_array($cc, CC_RRHH, true)) {
             return ROL_RRHH;
-        }
-
-        if ($nivel >= NIVEL_MIN_JEFE) {
-            return ROL_JEFE;
         }
 
         return ROL_EMPLEADO;
@@ -210,14 +209,26 @@ class empleadoModel extends mainModel
 
     public function getTodosLosJefes(): array
     {
+        if (!defined('NITS_JEFES_REVISORES') || empty(NITS_JEFES_REVISORES)) {
+            return [];
+        }
+
+        [$inClause, $binds] = $this->buildInClause(NITS_JEFES_REVISORES, 'jefe_revisor_');
+
         return $this->consultarTodo(
-            "SELECT DISTINCT NIT,
+            "SELECT NIT,
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL
-             FROM EMPLEADO
-             WHERE EMPRESA='BA2' AND ESTADO='A' AND NIVEL >= :nivel
+             FROM (
+                SELECT NIT, NOMBRE, PRIMER_APELLIDO, SEGUNDO_APELLIDO, CENTRO_COSTO, NIVEL,
+                       ROW_NUMBER() OVER (PARTITION BY NIT ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC) AS RN
+                FROM EMPLEADO
+                WHERE ESTADO='A'
+                  AND NIT IN ($inClause)
+             )
+             WHERE RN=1
              ORDER BY NOMBRE_COMPLETO",
-            [':nivel' => NIVEL_MIN_JEFE]
+            $binds
         );
     }
 

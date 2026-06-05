@@ -30,6 +30,55 @@ define('NIVEL_MIN_JEFE', 4);
 define('NIVEL_MIN_ADMIN', 7);
 define('SUPER_ADMIN_NIT', '1085042421');
 
+define('NITS_JEFES_REVISORES', [
+    '19229766',
+    '38217178',
+    '1020727118',
+    '12647451',
+    '81715536',
+    '52952249',
+    '1015462252',
+    '51937767',
+    '52699570',
+    '12745542',
+    '43733246',
+    '80759522',
+    '1014208217',
+    '52273463',
+    '79544111',
+    '1019066807',
+    '19407592',
+    '39544854',
+    '53165229',
+    '41651999',
+    '19069937',
+    '79792432',
+    '52451211',
+    '51688407',
+    '11039376',
+    '79389155',
+    '79703877',
+    '1070916958',
+    '52109300',
+    '1031134966',
+    '11386108',
+    '4404301',
+    '1085042421',
+    '1014179639',
+    '19260753',
+    '79356948',
+    '52026458',
+    '19318358',
+    '79694291',
+    '1136880553',
+]);
+
+function es_jefe_revisor_nit($nit): bool
+{
+    $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
+    return $nitNormalizado !== '' && in_array($nitNormalizado, NITS_JEFES_REVISORES, true);
+}
+
 define('ESTADO_PENDIENTE_JEFE', 'PENDIENTE_JEFE');
 define('ESTADO_APROBADO_JEFE', 'APROBADO_JEFE');
 define('ESTADO_RECHAZADO_JEFE', 'RECHAZADO_JEFE');
@@ -51,56 +100,6 @@ define('TIPOS_SOLICITUD', [
 ]);
 
 define('USUARIOS_PRUEBA', [
-    '11111111' => [
-        'cedula' => '11111111',
-        'nombre' => 'Juan Empleado (Prueba)',
-        'email' => 'empleado@ugc.edu.co',
-        'rol' => ROL_EMPLEADO,
-        'nivel' => 30,
-        'centro_costo' => '2312101',
-        'nit_jefe' => '22222222',
-        'nombre_jefe' => 'Maria Jefe (Prueba)',
-    ],
-    '22222222' => [
-        'cedula' => '22222222',
-        'nombre' => 'Maria Jefe (Prueba)',
-        'email' => 'jefe@ugc.edu.co',
-        'rol' => ROL_JEFE,
-        'nivel' => 5,
-        'centro_costo' => '2312101',
-        'nit_jefe' => '44444444',
-        'nombre_jefe' => 'Ana Admin (Prueba)',
-    ],
-    '33333333' => [
-        'cedula' => '33333333',
-        'nombre' => 'Carlos Talento Humano (Prueba)',
-        'email' => 'rrhh@ugc.edu.co',
-        'rol' => ROL_RRHH,
-        'nivel' => 60,
-        'centro_costo' => '2413001',
-        'nit_jefe' => '44444444',
-        'nombre_jefe' => 'Ana Admin (Prueba)',
-    ],
-    '44444444' => [
-        'cedula' => '44444444',
-        'nombre' => 'Ana Administrador (Prueba)',
-        'email' => 'admin@ugc.edu.co',
-        'rol' => ROL_ADMIN,
-        'nivel' => 7,
-        'centro_costo' => '1020001',
-        'nit_jefe' => null,
-        'nombre_jefe' => null,
-    ],
-    '55555555' => [
-        'cedula' => '55555555',
-        'nombre' => 'Pedro Aprendiz (Prueba)',
-        'email' => 'aprendiz@ugc.edu.co',
-        'rol' => ROL_EMPLEADO,
-        'nivel' => 10,
-        'centro_costo' => '2411001',
-        'nit_jefe' => null,
-        'nombre_jefe' => null,
-    ],
     SUPER_ADMIN_NIT => [
         'cedula' => SUPER_ADMIN_NIT,
         'nombre' => 'Ingeniero Jefe / Super Admin',

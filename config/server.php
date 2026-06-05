@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 define('APP_NAME', 'Sistema de Solicitudes - UGC');
 define('APP_VERSION', '2.0.0-simple');
-define('APP_ENV', 'development'); // development | production
+define('APP_ENV', 'production'); // development | production
 define('BASE_URL', '/ugc_incapacidadess');
 define('APP_TIMEZONE', 'America/Bogota');
 define('SESSION_SAVE_PATH', ''); // Vacio usa el directorio temporal configurado por PHP
@@ -55,9 +55,8 @@ define('UXXI_CHARSET', 'AL32UTF8');
 
 
 
+
 /*
- * LDAP Universidad.
- * Ajusta estos datos si el ambiente de produccion usa otro servidor.
 define('LDAP_HOST', '10.238.30.115');
 define('LDAP_PORT', 389);
 define('LDAP_USER', 'cn=ConsultaSi,ou=users,dc=ugc.edu,dc=co');

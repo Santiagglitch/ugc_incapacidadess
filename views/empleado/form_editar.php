@@ -253,6 +253,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
   </form>
 </div>
 
+<script src="<?= e(app_asset('assets/js/jefe-picker.js')) ?>"></script>
 <script nonce="<?= e(csp_nonce()) ?>">
 (function () {
 
@@ -261,6 +262,9 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
 
   var form = document.getElementById('formSolicitud');
   var tipoSolicitud = document.getElementById('tipo_solicitud');
+  var jefePicker = window.initJefePicker
+    ? window.initJefePicker(form.querySelector('select[name="nit_jefe_seleccionado"]'))
+    : null;
 
   var controlTipoDuracion = document.getElementById('control_tipo_duracion');
   var bloqueFechasDuracion = document.getElementById('bloque_fechas_duracion');
@@ -665,6 +669,13 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
       e.preventDefault();
       alert('Selecciona el tipo de solicitud.');
       tipoSolicitud.focus();
+      return;
+    }
+
+    if (jefePicker && !jefePicker.isValid()) {
+      e.preventDefault();
+      alert('Selecciona el jefe que revisara esta solicitud.');
+      jefePicker.focus();
       return;
     }
 
