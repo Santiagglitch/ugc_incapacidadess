@@ -76,7 +76,23 @@ define('NITS_JEFES_REVISORES', [
 function es_jefe_revisor_nit($nit): bool
 {
     $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
+    
+    // Primero verificar que no sea un usuario de RRHH
+    if ($nitNormalizado !== '' && in_array($nitNormalizado, CC_RRHH, true)) {
+        return false;
+    }
+    
+    // Luego verificar si es jefe revisor
     return $nitNormalizado !== '' && in_array($nitNormalizado, NITS_JEFES_REVISORES, true);
+}
+
+/**
+ * Obtiene la lista de jefes revisores filtrando los de RRHH
+ * @return array NITS de jefes que no son de RRHH
+ */
+function get_jefes_revisores_filtrados(): array
+{
+    return array_values(array_diff(NITS_JEFES_REVISORES, CC_RRHH));
 }
 
 define('ESTADO_PENDIENTE_JEFE', 'PENDIENTE_JEFE');
