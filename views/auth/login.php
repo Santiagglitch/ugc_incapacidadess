@@ -13,7 +13,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
         </div>
       </div>
 
-      <h1 class="brand-title">Portal de solicitudes de ausentismos</h1>
+      <h1 class="brand-title">Portal Solicitudes De Ausentismo</h1>
     </div>
 
     <?php if (!empty($error)): ?>
