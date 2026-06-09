@@ -32,22 +32,6 @@ class adminAuditoriaModel extends mainModelUXXI
         );
     }
 
-    public function getEntradas(int $limite = 50): array
-    {
-        $limite = max(1, $limite);
-        $rows   = $this->consultarTodo(
-            "SELECT ID, TO_CHAR(FECHA,'YYYY-MM-DD HH24:MI:SS') AS FECHA,
-                    NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP,
-                    NIT_OBJETIVO, ID_SOLICITUD, META_JSON
-             FROM ADMIN_AUDITORIA
-             ORDER BY FECHA DESC
-             FETCH FIRST :limite ROWS ONLY",
-            [':limite' => $limite]
-        );
-
-        return $this->normalizarFilas($rows);
-    }
-
     public function filtrar(string $accion = '', int $pagina = 1, int $porPagina = 20): array
     {
         $pagina    = max(1, $pagina);

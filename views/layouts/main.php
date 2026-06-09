@@ -223,20 +223,7 @@ $csrfToken = csrf_token();
       <?php endif; ?>
     </div>
 
-    <?php if ($esSuperAdmin && $modoActual === 'super_usuario'): ?>
-    <a
-      class="btn-cambiar-modo btn-modo-admin"
-      href="<?= e(url_view('superadmin_panel')) ?>"
-      title="Panel Super Usuario"
-      style="text-decoration:none"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/>
-        <path d="M18 3l3 3-3 3M6 3L3 6l3 3"/>
-      </svg>
-      <span>Super Admin</span>
-    </a>
-    <?php endif; ?>
+    
 
     <?php if ($tieneSelectorModo): ?>
     <form action="<?= e(url_action('cambiar_modo')) ?>" method="post" class="header-cambiar-modo-form">
@@ -358,7 +345,6 @@ $csrfToken = csrf_token();
     '.stat-card-link',
     '.notificacion-item',
     '.mark-all',
-    '.dev-chip',
     '.ugc-pagination__page',
     '.ugc-pagination__step'
   ].join(',');

@@ -610,17 +610,16 @@ class adminController
     private function rolEmpleado(array $emp, array $adminsAdicionales): string
     {
         $nit = (string) ($emp['NIT'] ?? '');
-        $nivel = (int) ($emp['NIVEL'] ?? 0);
         $cc = (string) ($emp['CENTRO_COSTO'] ?? '');
 
         if ($nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true)) {
             return 'admin';
         }
+        if (es_jefe_revisor_nit($nit)) {
+            return 'jefe';
+        }
         if (in_array($cc, CC_RRHH, true)) {
             return 'rrhh';
-        }
-        if ($nivel >= NIVEL_MIN_JEFE) {
-            return 'jefe';
         }
         return 'empleado';
     }

@@ -37,8 +37,8 @@ function _rolBadge(array $emp, array $adminsAdicionales): array {
   $nit = (string)($emp['NIT'] ?? '');
   $esAdmin = $nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true);
   if ($esAdmin) return ['Administrador', 'admin'];
+  if (es_jefe_revisor_nit($nit)) return ['Jefe', 'jefe'];
   if (in_array(($emp['CENTRO_COSTO'] ?? ''), CC_RRHH, true)) return ['Talento Humano', 'rrhh'];
-  if ((int)($emp['NIVEL'] ?? 0) >= NIVEL_MIN_JEFE) return ['Jefe', 'jefe'];
   return ['Empleado', 'empleado'];
 }
 ?>

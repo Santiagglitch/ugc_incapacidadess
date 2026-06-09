@@ -434,6 +434,7 @@ $hoy   = $hoy ?? date('Y-m-d');
   </form>
 </div>
 
+<script src="<?= e(app_asset('assets/js/jefe-picker.js')) ?>"></script>
 <script nonce="<?= e(csp_nonce()) ?>">
 (function () {
 
@@ -441,6 +442,9 @@ $hoy   = $hoy ?? date('Y-m-d');
 
   var form = document.getElementById('formSolicitud');
   var tipoSolicitud = document.getElementById('tipo_solicitud');
+  var jefePicker = window.initJefePicker
+    ? window.initJefePicker(form.querySelector('select[name="nit_jefe_seleccionado"]'))
+    : null;
 
   var controlTipoDuracion = document.getElementById('control_tipo_duracion');
   var bloqueFechasDuracion = document.getElementById('bloque_fechas_duracion');
@@ -872,6 +876,13 @@ $hoy   = $hoy ?? date('Y-m-d');
       e.preventDefault();
       alert('Selecciona el tipo de solicitud.');
       tipoSolicitud.focus();
+      return;
+    }
+
+    if (jefePicker && !jefePicker.isValid()) {
+      e.preventDefault();
+      alert('Selecciona el jefe que revisara esta solicitud.');
+      jefePicker.focus();
       return;
     }
 

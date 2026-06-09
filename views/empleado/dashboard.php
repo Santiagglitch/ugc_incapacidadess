@@ -16,7 +16,7 @@ $historialUrl = static function (string $tipo) use ($q, $tipoFiltro): string {
 };
 ?>
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-  <div><h1 class="page-title">Hola, <?= e($user['nombre'] ?? 'Empleado') ?></h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Resumen de tus solicitudes registradas.</p></div>
+  <div><h1 class="page-title">HOLA, <?= e($user['nombre'] ?? 'Empleado') ?></h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Resumen de tus solicitudes registradas.</p></div>
   <a class="btn btn-green" href="<?= e(url_view('solicitud_crear')) ?>">+ Nueva solicitud</a>
 </section>
 <?php

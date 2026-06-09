@@ -42,7 +42,6 @@ class authController
 
         render_view('auth/login', [
             'error' => $error,
-            'devUsuarios' => APP_ENV === 'development' ? USUARIOS_PRUEBA : [],
         ], 'auth');
     }
 
@@ -93,7 +92,6 @@ class authController
             http_response_code(422);
             render_view('auth/login', [
                 'error' => 'Token de seguridad invalido. Recarga la pagina.',
-                'devUsuarios' => APP_ENV === 'development' ? USUARIOS_PRUEBA : [],
             ], 'auth');
             return;
         }
@@ -106,7 +104,6 @@ class authController
             http_response_code(429);
             render_view('auth/login', [
                 'error' => $bloqueo,
-                'devUsuarios' => APP_ENV === 'development' ? USUARIOS_PRUEBA : [],
             ], 'auth');
             return;
         }
@@ -290,19 +287,16 @@ class authController
 
     private function calcularRolOperativo(string $cedula, ?array $empleado): string
     {
-        // Si tiene centro de costo de RRHH, es RRHH
         $centroCosto = (string) ($empleado['CENTRO_COSTO'] ?? '');
+
+        if (es_jefe_revisor_nit($cedula)) {
+            return ROL_JEFE;
+        }
+
         if (in_array($centroCosto, CC_RRHH, true)) {
             return ROL_RRHH;
         }
 
-        // Si tiene nivel de jefe o superior
-        $nivel = (int) ($empleado['NIVEL'] ?? 0);
-        if ($nivel >= NIVEL_MIN_JEFE) {
-            return ROL_JEFE;
-        }
-
-        // Por defecto es empleado
         return ROL_EMPLEADO;
     }
 

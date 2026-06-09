@@ -61,8 +61,7 @@ $faviconUrl = app_asset('assets/img/favicon.png');
     '.btn-login',
     '.btn-link',
     '.stat-card',
-    '.stat-card-link',
-    '.dev-chip'
+    '.stat-card-link'
   ].join(',');
 
   function closest(target, selector) {

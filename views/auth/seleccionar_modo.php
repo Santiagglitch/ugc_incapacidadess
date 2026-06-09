@@ -10,7 +10,6 @@ $modoAdminDesc = $esSuperAdmin
 $modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
 ?>
 <div class="login-container">
-  <div class="login-bg-pattern"></div>
   <div class="login-card animate-fade-up">
     <div class="login-brand">
       <div class="brand-icon">

@@ -92,18 +92,6 @@ class mainModel
         return true;
     }
 
-    protected function ejecutarConAfectadas(string $sql, array $params = []): int
-    {
-        $stmt = $this->ejecutarConsulta($sql, $params, OCI_COMMIT_ON_SUCCESS);
-        if (!$stmt) {
-            return 0;
-        }
-
-        $n = oci_num_rows($stmt);
-        oci_free_statement($stmt);
-        return (int)$n;
-    }
-
     protected function buildInClause(array $values, string $prefix): array
     {
         $placeholders = [];
@@ -114,34 +102,5 @@ class mainModel
             $binds[$key] = $value;
         }
         return [implode(', ', $placeholders), $binds];
-    }
-
-    public function limpiarCadena($valor): string
-    {
-        return htmlspecialchars(trim((string) $valor), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    }
-
-    protected function toUtf8($valor)
-    {
-        if ($valor === null) {
-            return null;
-        }
-        if (mb_detect_encoding((string) $valor, 'UTF-8', true)) {
-            return $valor;
-        }
-        $out = @iconv('Windows-1252', 'UTF-8//IGNORE', (string) $valor);
-        return $out === false ? $valor : $out;
-    }
-
-    protected function toWin1252($valor)
-    {
-        if ($valor === null) {
-            return null;
-        }
-        $out = @iconv('UTF-8', 'Windows-1252//TRANSLIT', (string) $valor);
-        if ($out === false) {
-            $out = @iconv('UTF-8', 'Windows-1252//IGNORE', (string) $valor);
-        }
-        return $out === false ? $valor : $out;
     }
 }
