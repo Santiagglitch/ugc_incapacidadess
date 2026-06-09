@@ -11,6 +11,8 @@ final class ExportController
     private array $cabeceras = [
         'ID',
         'NIT EMPLEADO',
+        'NOMBRE EMPLEADO',
+        'DEPENDENCIA',
         'NIT JEFE',
         'NIT RRHH',
         'TIPO SOLICITUD',
@@ -28,6 +30,8 @@ final class ExportController
     private array $campos = [
         'ID',
         'NIT_EMPLEADO',
+        'NOMBRE_EMPLEADO',
+        'NOMBRE_DEPENDENCIA',
         'NIT_JEFE',
         'NIT_RRHH',
         'TIPO_SOLICITUD',
@@ -63,7 +67,7 @@ final class ExportController
             $filtrosExport['fecha_hasta'] = $fechaHasta;
         }
 
-        $todasBase = $model->getAll($filtrosExport);
+        $todasBase = $model->getAllConEmpleadoInfo($filtrosExport);
 
         $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todasBase);
 
