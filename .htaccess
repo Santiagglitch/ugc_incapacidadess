@@ -1,6 +1,6 @@
 Options -Indexes
 RewriteEngine On
-RewriteBase /ugc_incapacidadess/
+RewriteBase /sede/bogota/pages/ugc_incapacidadess/
 
 RewriteRule ^(?:\.git|config|controllers|models|services|data|database|logs|storage|uploads)(?:/|$) - [F,L]
 

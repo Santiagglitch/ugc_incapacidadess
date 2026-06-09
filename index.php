@@ -8,9 +8,7 @@ require_once __DIR__ . '/controllers/dashboardController.php';
 require_once __DIR__ . '/controllers/solicitudController.php';
 require_once __DIR__ . '/controllers/adminController.php';
 require_once __DIR__ . '/controllers/notificacionController.php';
-
-iniciar_sesion_segura();
-aplicar_headers_seguridad();
+require_once __DIR__ . '/controllers/pdfStorageController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +25,23 @@ if ($action === '') {
 
 $view = trim((string) ($_GET['view'] ?? 'login'), '/');
 $method = strtoupper((string) ($_POST['_method'] ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET')));
+
+if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+    if ($action === 'pdf_storage_upload') {
+        (new pdfStorageController())->upload();
+    }
+
+    if ($action === 'pdf_storage_delete') {
+        (new pdfStorageController())->delete();
+    }
+}
+
+if ($method === 'GET' && $view === 'pdf_storage_file') {
+    (new pdfStorageController())->file();
+}
+
+iniciar_sesion_segura();
+aplicar_headers_seguridad();
 
 if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
     switch ($action) {
