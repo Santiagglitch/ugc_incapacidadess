@@ -209,11 +209,17 @@ class empleadoModel extends mainModel
 
     public function getTodosLosJefes(): array
     {
-        if (!defined('NITS_JEFES_REVISORES') || empty(NITS_JEFES_REVISORES)) {
+        if (!function_exists('get_jefes_revisores_filtrados')) {
             return [];
         }
 
-        [$inClause, $binds] = $this->buildInClause(NITS_JEFES_REVISORES, 'jefe_revisor_');
+        $jefesFiltrados = get_jefes_revisores_filtrados();
+        
+        if (empty($jefesFiltrados)) {
+            return [];
+        }
+
+        [$inClause, $binds] = $this->buildInClause($jefesFiltrados, 'jefe_revisor_');
 
         return $this->consultarTodo(
             "SELECT NIT,
