@@ -11,6 +11,8 @@ final class ExportController
     private array $cabeceras = [
         'ID',
         'NIT EMPLEADO',
+        'NOMBRE EMPLEADO',
+        'DEPENDENCIA',
         'NIT JEFE',
         'NIT RRHH',
         'TIPO SOLICITUD',
@@ -29,6 +31,8 @@ final class ExportController
     private array $campos = [
         'ID',
         'NIT_EMPLEADO',
+        'NOMBRE_EMPLEADO',
+        'NOMBRE_DEPENDENCIA',
         'NIT_JEFE',
         'NIT_RRHH',
         'TIPO_SOLICITUD',
@@ -57,7 +61,7 @@ final class ExportController
         $nitRrhh = (string)($user['cedula'] ?? '');
         $model = new \solicitudModel();
 
-        $todas = $model->getAll();
+        $todas = $model->getAllConEmpleadoInfo();
 
         $pendientesRRHH = $this->ordenarPorFechaCreacionAsc(
             $this->filtrarPorEstados($todas, [

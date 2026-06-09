@@ -11,6 +11,8 @@ final class ExportController
     private array $cabeceras = [
         'ID',
         'NIT EMPLEADO',
+        'NOMBRE EMPLEADO',
+        'DEPENDENCIA',
         'NIT JEFE',
         'TIPO SOLICITUD',
         'FECHA INICIO',
@@ -28,6 +30,8 @@ final class ExportController
     private array $campos = [
         'ID',
         'NIT_EMPLEADO',
+        'NOMBRE_EMPLEADO',
+        'NOMBRE_DEPENDENCIA',
         'NIT_JEFE',
         'TIPO_SOLICITUD',
         'FECHA_INICIO',
