@@ -7,14 +7,17 @@ require_once __DIR__ . '/../models/solicitudModel.php';
 require_once __DIR__ . '/../models/empleadoModel.php';
 require_once __DIR__ . '/../services/notificacionService.php';
 require_once __DIR__ . '/../services/notaAdminService.php';
+require_once __DIR__ . '/../services/pdfStorageService.php';
 
 class solicitudController
 {
     private solicitudModel $model;
+    private pdfStorageService $pdfStorage;
 
     public function __construct()
     {
         $this->model = new solicitudModel();
+        $this->pdfStorage = new pdfStorageService();
     }
 
     public function listar(): void
@@ -228,11 +231,7 @@ class solicitudController
         ]);
 
         if (!$ok && $rutaPdf) {
-            $abs = dirname(__DIR__) . '/' . $rutaPdf;
-
-            if (is_file($abs)) {
-                @unlink($abs);
-            }
+            $this->pdfStorage->eliminarRuta($rutaPdf);
         }
 
         if ($ok) {
@@ -380,19 +379,11 @@ class solicitudController
         ]);
 
         if (!$ok && $rutaPdfNueva) {
-            $nuevoAbs = dirname(__DIR__) . '/' . $rutaPdfNueva;
-
-            if (is_file($nuevoAbs)) {
-                @unlink($nuevoAbs);
-            }
+            $this->pdfStorage->eliminarRuta($rutaPdfNueva);
         }
 
         if ($ok && $rutaPdfNueva && $rutaPdfActual !== '' && $rutaPdfActual !== $rutaPdfNueva) {
-            $anteriorAbs = dirname(__DIR__) . '/' . $rutaPdfActual;
-
-            if (is_file($anteriorAbs)) {
-                @unlink($anteriorAbs);
-            }
+            $this->pdfStorage->eliminarRuta($rutaPdfActual);
         }
 
         flash_set(
@@ -663,28 +654,10 @@ public function cancelarAgenda(?int $id = null): void
             exit('Sin permiso para ver este archivo.');
         }
 
-        $nombre = basename((string)$solicitud['RUTA_COMPROBANTE']);
-        $ruta = dirname(__DIR__) . '/storage/solicitudes/' . $nombre;
-
-        if (!is_file($ruta)) {
+        if (!$this->pdfStorage->servirRuta((string)$solicitud['RUTA_COMPROBANTE'])) {
             http_response_code(404);
             exit('Archivo no encontrado fisicamente.');
         }
-
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-
-        header_remove('Content-Security-Policy');
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="' . $nombre . '"');
-        header('Content-Length: ' . filesize($ruta));
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('X-Content-Type-Options: nosniff');
-
-        readfile($ruta);
         exit;
     }
 
@@ -851,32 +824,14 @@ public function cancelarAgenda(?int $id = null): void
             return false;
         }
 
-        $uploadDir = dirname(__DIR__) . '/storage/solicitudes';
+        $ruta = $this->pdfStorage->guardarArchivoSubido($archivo, $nitEmpleado);
 
-        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
-            flash_set('error', 'No se pudo crear el directorio de almacenamiento.');
+        if ($ruta === null) {
+            flash_set('error', 'No se pudo guardar el archivo PDF en el servidor central.');
             return false;
         }
 
-        $baseName = preg_replace('/[^A-Za-z0-9_-]/', '', pathinfo((string)$archivo['name'], PATHINFO_FILENAME));
-        $baseName = $baseName !== '' ? substr($baseName, 0, 30) : 'documento';
-
-        $nombreFinal = sprintf(
-            '%s_%s_%s_%s.pdf',
-            preg_replace('/\D/', '', $nitEmpleado),
-            date('Ymd'),
-            str_replace('.', '', uniqid('', true)),
-            $baseName
-        );
-
-        $destino = $uploadDir . '/' . $nombreFinal;
-
-        if (!move_uploaded_file($archivo['tmp_name'], $destino)) {
-            flash_set('error', 'No se pudo guardar el archivo PDF.');
-            return false;
-        }
-
-        return 'storage/solicitudes/' . $nombreFinal;
+        return $ruta;
     }
 
     private function numeroOpcional($valor): ?float
