@@ -196,8 +196,8 @@ class solicitudModel extends mainModelUXXI
                 TO_CHAR(s.FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE,
                 TO_CHAR(s.FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH
              FROM SOLICITUDES_PERMISOS s
-             LEFT JOIN EMPLEADO_PLANTILLA e ON e.NIT = s.NIT_EMPLEADO AND e.EMPRESA = 'BA2' AND e.ESTADO = 'A'
-             LEFT JOIN DEPENDENCIA d ON d.DEPENDENCIA = e.DEPENDENCIA AND d.EMPRESA = 'BA2'
+             LEFT JOIN EMPLEADO_PLANTILLA e ON e.NIT = s.NIT_EMPLEADO AND e.EMPRESA IN ('BA2', 'BDO') AND e.ESTADO = 'A'
+             LEFT JOIN DEPENDENCIA d ON d.DEPENDENCIA = e.DEPENDENCIA AND d.EMPRESA = e.EMPRESA
              WHERE $whereSql
              ORDER BY s.FECHA_CREACION DESC",
             $binds
@@ -694,8 +694,9 @@ class solicitudModel extends mainModelUXXI
                 "EXISTS (
                     SELECT 1
                     FROM ICEBERG.EMPLEADO emp
-                    WHERE emp.EMPRESA='BA2'
+                    WHERE emp.EMPRESA IN ('BA2', 'BDO')
                       AND emp.ESTADO='A'
+                      AND emp.DEPARTAMENTO IN ('11', '25')
                       AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
                       AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
                 )",

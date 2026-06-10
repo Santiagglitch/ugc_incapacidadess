@@ -35,6 +35,10 @@ class authModel
 
         $empleadoModel = new empleadoModel();
         $empleado = $empleadoModel->getByNit($cedula);
+        if (!$empleado) {
+            return ['ok' => false, 'error' => 'Usuario no autorizado.'];
+        }
+
         $rol = $empleadoModel->getRol($cedula, $empleado);
 
         return [

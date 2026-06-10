@@ -15,7 +15,10 @@ class empleadoModel extends mainModel
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL, ESTADO, FECHA_INGRESO
              FROM EMPLEADO
-             WHERE EMPRESA='BA2' AND ESTADO='A' AND NIT=:nit
+             WHERE EMPRESA IN ('BA2', 'BDO')
+               AND ESTADO='A'
+               AND DEPARTAMENTO IN ('11', '25')
+               AND NIT=:nit
              ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
              FETCH FIRST 1 ROWS ONLY",
             [':nit' => $nit]
@@ -42,8 +45,9 @@ class empleadoModel extends mainModel
                     SELECT NIT, NOMBRE, PRIMER_APELLIDO, SEGUNDO_APELLIDO,
                            ROW_NUMBER() OVER (PARTITION BY NIT ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC) AS RN
                     FROM EMPLEADO
-                    WHERE EMPRESA='BA2'
+                    WHERE EMPRESA IN ('BA2', 'BDO')
                       AND ESTADO='A'
+                      AND DEPARTAMENTO IN ('11', '25')
                       AND NIT IN ($inClause)
                  )
                  WHERE RN=1",
@@ -61,14 +65,16 @@ class empleadoModel extends mainModel
         return $nombres;
     }
 
-   public function getTodos(): array
+    public function getTodos(): array
     {
         return $this->consultarTodo(
             "SELECT NIT,
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL, ESTADO
              FROM EMPLEADO
-             WHERE EMPRESA IN ('BA2', 'BDO') AND ESTADO='A' AND DEPARTAMENTO IN ('11', '25')
+             WHERE EMPRESA IN ('BA2', 'BDO')
+               AND ESTADO='A'
+               AND DEPARTAMENTO IN ('11', '25')
              ORDER BY NOMBRE_COMPLETO"
         );
     }
@@ -108,8 +114,9 @@ class empleadoModel extends mainModel
                        e.NIVEL,
                        e.ESTADO
                   FROM EMPLEADO e
-                 WHERE e.EMPRESA = 'BA2'
+                 WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
+                   AND e.DEPARTAMENTO IN ('11', '25')
                    AND e.NIT = :nit
             ),
             base AS (
@@ -122,8 +129,9 @@ class empleadoModel extends mainModel
                        e.NIVEL,
                        e.ESTADO
                   FROM EMPLEADO e
-                 WHERE e.EMPRESA = 'BA2'
+                 WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
+                   AND e.DEPARTAMENTO IN ('11', '25')
             ),
             cc_map AS (
                 SELECT DISTINCT
@@ -159,7 +167,8 @@ class empleadoModel extends mainModel
                        ROW_NUMBER() OVER (PARTITION BY b1.rid_emp ORDER BY b2.NIVEL DESC) AS rn
                   FROM emp_buscado b1
                   JOIN base b2
-                    ON b2.CENTRO_COSTO = b1.CENTRO_COSTO
+                    ON b2.EMPRESA = b1.EMPRESA
+                   AND b2.CENTRO_COSTO = b1.CENTRO_COSTO
                    AND b2.NIVEL > b1.NIVEL
             ),
             jefe_cabecera AS (
@@ -172,7 +181,8 @@ class empleadoModel extends mainModel
                   JOIN cc_map m
                     ON m.CENTRO_COSTO = b1.CENTRO_COSTO
                   JOIN base b2
-                    ON b2.CENTRO_COSTO = m.CC_CABECERA
+                    ON b2.EMPRESA = b1.EMPRESA
+                   AND b2.CENTRO_COSTO = m.CC_CABECERA
                    AND b2.NIVEL > b1.NIVEL
             )
             SELECT COALESCE(j1.NIT, j2.NIT) AS NIT_JEFE,
@@ -223,7 +233,9 @@ class empleadoModel extends mainModel
                 SELECT NIT, NOMBRE, PRIMER_APELLIDO, SEGUNDO_APELLIDO, CENTRO_COSTO, NIVEL,
                        ROW_NUMBER() OVER (PARTITION BY NIT ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC) AS RN
                 FROM EMPLEADO
-                WHERE ESTADO='A'
+                WHERE EMPRESA IN ('BA2', 'BDO')
+                  AND ESTADO='A'
+                  AND DEPARTAMENTO IN ('11', '25')
                   AND NIT IN ($inClause)
              )
              WHERE RN=1
@@ -250,7 +262,10 @@ class empleadoModel extends mainModel
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL, ESTADO
              FROM EMPLEADO
-             WHERE EMPRESA='BA2' AND ESTADO='A' AND CENTRO_COSTO IN ($inClause)
+             WHERE EMPRESA IN ('BA2', 'BDO')
+               AND ESTADO='A'
+               AND DEPARTAMENTO IN ('11', '25')
+               AND CENTRO_COSTO IN ($inClause)
              ORDER BY NOMBRE_COMPLETO",
             $binds
         );
