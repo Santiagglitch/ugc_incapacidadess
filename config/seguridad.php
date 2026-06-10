@@ -127,6 +127,9 @@ function usuario_tiene_selector_modo(): bool
     if ($cedula === SUPER_ADMIN_NIT) {
         return true;
     }
+    if (in_array($cedula, NITS_TALENTO_HUMANO, true)) {
+        return true;
+    }
     require_once __DIR__ . '/../models/adminRolesModel.php';
     return (new adminRolesModel())->esAdminAdicional($cedula);
 }

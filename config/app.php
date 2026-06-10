@@ -23,12 +23,15 @@ define('ROL_RRHH', 'talento_humano');
 define('ROL_JEFE', 'jefe_inmediato');
 define('ROL_EMPLEADO', 'solicitante');
 
-define('CC_RRHH', ['2413001', '2413002', '2413003', '2413004']);
+define('CC_RRHH', []);
 define('CC_APRENDICES', ['2411001', '2411002', '2411004']);
 
 define('NIVEL_MIN_JEFE', 4);
 define('NIVEL_MIN_ADMIN', 7);
 define('SUPER_ADMIN_NIT', '1085042421');
+define('TALENTO_HUMANO_NIT', '11039376');
+define('TALENTO_HUMANO_NIT_2', '1022941616');
+define('NITS_TALENTO_HUMANO', [TALENTO_HUMANO_NIT, TALENTO_HUMANO_NIT_2]);
 
 define('NITS_JEFES_REVISORES', [
     '19229766',
@@ -55,7 +58,6 @@ define('NITS_JEFES_REVISORES', [
     '79792432',
     '52451211',
     '51688407',
-    '11039376',
     '79389155',
     '79703877',
     '1070916958',
@@ -71,19 +73,28 @@ define('NITS_JEFES_REVISORES', [
     '19318358',
     '79694291',
     '1136880553',
+    '11039376',
 ]);
 
 function es_jefe_revisor_nit($nit): bool
 {
     $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
-    
-    // Primero verificar que no sea un usuario de RRHH
-    if ($nitNormalizado !== '' && in_array($nitNormalizado, CC_RRHH, true)) {
+
+    if ($nitNormalizado === '') {
         return false;
     }
-    
-    // Luego verificar si es jefe revisor
-    return $nitNormalizado !== '' && in_array($nitNormalizado, NITS_JEFES_REVISORES, true);
+
+    // Los usuarios de Talento Humano fijos nunca son tratados como jefe revisor
+    if (in_array($nitNormalizado, NITS_TALENTO_HUMANO, true)) {
+        return false;
+    }
+
+    // Verificar que no sea un usuario de RRHH por centro de costo
+    if (!empty(CC_RRHH) && in_array($nitNormalizado, CC_RRHH, true)) {
+        return false;
+    }
+
+    return in_array($nitNormalizado, NITS_JEFES_REVISORES, true);
 }
 
 /**
@@ -93,6 +104,12 @@ function es_jefe_revisor_nit($nit): bool
 function get_jefes_revisores_filtrados(): array
 {
     return array_values(array_diff(NITS_JEFES_REVISORES, CC_RRHH));
+}
+
+function es_talento_humano_nit($nit): bool
+{
+    $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
+    return $nitNormalizado !== '' && in_array($nitNormalizado, NITS_TALENTO_HUMANO, true);
 }
 
 define('ESTADO_PENDIENTE_JEFE', 'PENDIENTE_JEFE');
@@ -117,15 +134,37 @@ define('TIPOS_SOLICITUD', [
 
 define('USUARIOS_PRUEBA', [
     SUPER_ADMIN_NIT => [
-        'cedula' => SUPER_ADMIN_NIT,
-        'nombre' => 'Ingeniero Jefe / Super Admin',
-        'email' => 'superadmin@ugc.edu.co',
-        'rol' => ROL_JEFE,
-        'nivel' => 5,
+        'cedula'       => SUPER_ADMIN_NIT,
+        'nombre'       => 'Ingeniero Jefe / Super Admin',
+        'email'        => 'superadmin@ugc.edu.co',
+        'rol'          => ROL_JEFE,
+        'nivel'        => 5,
         'centro_costo' => '2312101',
-        'nit_jefe' => null,
-        'nombre_jefe' => null,
+        'nit_jefe'     => null,
+        'nombre_jefe'  => null,
     ],
+    // --- USUARIOS DE PRUEBA LOCAL: eliminar antes de subir a produccion ---
+    TALENTO_HUMANO_NIT => [
+        'cedula'       => TALENTO_HUMANO_NIT,
+        'nombre'       => 'ARLEM ANTONIO GARCIA PEINADO',
+        'email'        => 'arlem.garcia@ugc.edu.co',
+        'rol'          => ROL_JEFE,
+        'nivel'        => 4,
+        'centro_costo' => '2411001',
+        'nit_jefe'     => null,
+        'nombre_jefe'  => null,
+    ],
+    TALENTO_HUMANO_NIT_2 => [
+        'cedula'       => TALENTO_HUMANO_NIT_2,
+        'nombre'       => 'JULIE ANABEL MARTINEZ COTE',
+        'email'        => 'julie.martinez@ugc.edu.co',
+        'rol'          => ROL_JEFE,
+        'nivel'        => 4,
+        'centro_costo' => '2411001',
+        'nit_jefe'     => null,
+        'nombre_jefe'  => null,
+    ],
+    // --- FIN USUARIOS DE PRUEBA LOCAL ---
 ]);
 
 function app_base_url(string $path = ''): string

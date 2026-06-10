@@ -38,7 +38,6 @@ function _rolBadge(array $emp, array $adminsAdicionales): array {
   $esAdmin = $nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true);
   if ($esAdmin) return ['Administrador', 'admin'];
   if (es_jefe_revisor_nit($nit)) return ['Jefe', 'jefe'];
-  if (in_array(($emp['CENTRO_COSTO'] ?? ''), CC_RRHH, true)) return ['Talento Humano', 'rrhh'];
   return ['Empleado', 'empleado'];
 }
 ?>
@@ -83,7 +82,6 @@ th a:hover{color:var(--green2)}
 <div class="stats-row">
   <a class="<?= e($statCardClass('')) ?>"       href="<?= e($empleadosUrl()) ?>">      <div class="num"><?= e($stats['total']    ?? 0) ?></div><div class="lbl">Total</div></a>
   <a class="<?= e($statCardClass('admin')) ?>"  href="<?= e($empleadosUrl('admin')) ?>"><div class="num"><?= e($stats['admin']    ?? 0) ?></div><div class="lbl">Administradores</div></a>
-  <a class="<?= e($statCardClass('rrhh')) ?>"   href="<?= e($empleadosUrl('rrhh')) ?>"> <div class="num"><?= e($stats['rrhh']     ?? 0) ?></div><div class="lbl">Talento Humano</div></a>
   <a class="<?= e($statCardClass('jefe')) ?>"   href="<?= e($empleadosUrl('jefe')) ?>"> <div class="num"><?= e($stats['jefe']     ?? 0) ?></div><div class="lbl">Jefes</div></a>
   <a class="<?= e($statCardClass('empleado')) ?>" href="<?= e($empleadosUrl('empleado')) ?>"><div class="num"><?= e($stats['empleado'] ?? 0) ?></div><div class="lbl">Empleados</div></a>
 </div>
@@ -103,7 +101,6 @@ th a:hover{color:var(--green2)}
     <select name="rol">
       <option value="">Todos los roles</option>
       <option value="admin"    <?= $filtroRol === 'admin'    ? 'selected' : '' ?>>Administrador</option>
-      <option value="rrhh"     <?= $filtroRol === 'rrhh'     ? 'selected' : '' ?>>Talento Humano</option>
       <option value="jefe"     <?= $filtroRol === 'jefe'     ? 'selected' : '' ?>>Jefe</option>
       <option value="empleado" <?= $filtroRol === 'empleado' ? 'selected' : '' ?>>Empleado</option>
     </select>
