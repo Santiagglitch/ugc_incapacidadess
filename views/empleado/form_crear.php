@@ -576,10 +576,10 @@ $hoy   = $hoy ?? date('Y-m-d');
       return;
     }
 
-    if (valorHoras > 8) {
-      horas.setCustomValidity('El valor debe ser inferior a 9 horas. Máximo permitido: 8 horas.');
-      return;
-    }
+  if (valorHoras > 5) {
+  horas.setCustomValidity('El valor debe ser máximo 5 horas.');
+  return;
+}
     if (Math.abs((valorHoras * 2) - Math.round(valorHoras * 2)) > 0.00001) {
       horas.setCustomValidity('Usa incrementos de media hora.');
     }
