@@ -61,14 +61,14 @@ class empleadoModel extends mainModel
         return $nombres;
     }
 
-    public function getTodos(): array
+   public function getTodos(): array
     {
         return $this->consultarTodo(
             "SELECT NIT,
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
                     CENTRO_COSTO, NIVEL, ESTADO
              FROM EMPLEADO
-             WHERE EMPRESA='BA2' AND ESTADO='A'
+             WHERE EMPRESA IN ('BA2', 'BDO') AND ESTADO='A' AND DEPARTAMENTO IN ('11', '25')
              ORDER BY NOMBRE_COMPLETO"
         );
     }
