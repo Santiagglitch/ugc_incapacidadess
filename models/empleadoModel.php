@@ -65,6 +65,58 @@ class empleadoModel extends mainModel
         return $nombres;
     }
 
+    public function getInfoExportacionPorNits(array $nits): array
+    {
+        $nits = array_values(array_unique(array_filter(
+            array_map(static fn($nit): string => trim((string)$nit), $nits),
+            static fn(string $nit): bool => $nit !== ''
+        )));
+
+        if (empty($nits)) {
+            return [];
+        }
+
+        $empleados = [];
+
+        foreach (array_chunk($nits, 900) as $chunkIndex => $chunk) {
+            [$inClause, $binds] = $this->buildInClause($chunk, 'nit_export_' . $chunkIndex . '_');
+
+            $rows = $this->consultarTodo(
+                "SELECT NIT, NOMBRE_EMPLEADO, NOMBRE_DEPENDENCIA
+                 FROM (
+                    SELECT NIT,
+                           TRIM(NOMBRE || ' ' || PRIMER_APELLIDO || ' ' || NVL(SEGUNDO_APELLIDO, '')) AS NOMBRE_EMPLEADO,
+                           NOMBRE_DEPENDENCIA,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY NIT
+                               ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
+                           ) AS RN
+                    FROM V_EMPLEADO
+                    WHERE EMPRESA IN ('BA2', 'BDO')
+                      AND ESTADO='A'
+                      AND DEPARTAMENTO IN ('11', '25')
+                      AND NIT IN ($inClause)
+                 )
+                 WHERE RN=1",
+                $binds
+            );
+
+            foreach ($rows as $row) {
+                $nit = trim((string)($row['NIT'] ?? ''));
+                if ($nit === '') {
+                    continue;
+                }
+
+                $empleados[$nit] = [
+                    'NOMBRE_EMPLEADO' => trim((string)($row['NOMBRE_EMPLEADO'] ?? '')),
+                    'NOMBRE_DEPENDENCIA' => trim((string)($row['NOMBRE_DEPENDENCIA'] ?? '')),
+                ];
+            }
+        }
+
+        return $empleados;
+    }
+
     public function getTodos(): array
     {
         return $this->consultarTodo(

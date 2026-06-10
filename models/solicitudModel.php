@@ -168,42 +168,6 @@ class solicitudModel extends mainModelUXXI
         );
     }
 
-    /**
-     * Obtiene todas las solicitudes con informacion del empleado (nombre y dependencia)
-     * para exportacion Excel. Usa LEFT JOIN para no excluir solicitudes sin empleado registrado.
-     */
-    public function getAllConEmpleadoInfo(array $filtros = []): array
-    {
-        [$whereSql, $binds] = $this->buildSolicitudWhere($filtros);
-
-        return $this->consultarTodo(
-            "SELECT s.ID,
-                s.NIT_EMPLEADO,
-                TRIM(e.NOMBRE || ' ' || e.PRIMER_APELLIDO || ' ' || NVL(e.SEGUNDO_APELLIDO, '')) AS NOMBRE_EMPLEADO,
-                d.NOMBRE_DEPENDENCIA,
-                s.NIT_JEFE,
-                s.NIT_RRHH,
-                s.TIPO_SOLICITUD,
-                s.DURACION_HORAS,
-                s.DURACION_DIAS,
-                s.OBSERVACIONES,
-                s.OBSERVACION_JEFE,
-                s.OBSERVACION_RRHH,
-                s.ESTADO,
-                TO_CHAR(s.FECHA_INICIO, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_INICIO,
-                TO_CHAR(s.FECHA_FIN, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_FIN,
-                TO_CHAR(s.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION,
-                TO_CHAR(s.FECHA_GESTION_JEFE, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_JEFE,
-                TO_CHAR(s.FECHA_GESTION_RRHH, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_GESTION_RRHH
-             FROM SOLICITUDES_PERMISOS s
-             LEFT JOIN EMPLEADO_PLANTILLA e ON e.NIT = s.NIT_EMPLEADO AND e.EMPRESA IN ('BA2', 'BDO') AND e.ESTADO = 'A'
-             LEFT JOIN DEPENDENCIA d ON d.DEPENDENCIA = e.DEPENDENCIA AND d.EMPRESA = e.EMPRESA
-             WHERE $whereSql
-             ORDER BY s.FECHA_CREACION DESC",
-            $binds
-        );
-    }
-
     public function getByEmpleadoPaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array
     {
         $filtros['nit_empleado'] = $nit;

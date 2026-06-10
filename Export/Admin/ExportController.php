@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Export\Admin;
 
+use App\Export\Shared\EmpleadoInfoEnricher;
+use App\Export\Shared\SafeXlsx;
 use Shuchkin\SimpleXLSXGen;
 
 final class ExportController
@@ -11,7 +13,7 @@ final class ExportController
     private array $cabeceras = [
         'ID',
         'NIT EMPLEADO',
-        'NOMBRE EMPLEADO',
+        'NOMBRE COMPLETO',
         'DEPENDENCIA',
         'NIT JEFE',
         'NIT RRHH',
@@ -50,6 +52,8 @@ final class ExportController
     {
         require_once __DIR__ . '/../../config/helpers.php';
         require_once __DIR__ . '/../Libraries/SimpleXLSXGen.php';
+        require_once __DIR__ . '/../Shared/EmpleadoInfoEnricher.php';
+        require_once __DIR__ . '/../Shared/SafeXlsx.php';
         require_once __DIR__ . '/../../models/solicitudModel.php';
 
         \iniciar_sesion_segura();
@@ -67,7 +71,7 @@ final class ExportController
             $filtrosExport['fecha_hasta'] = $fechaHasta;
         }
 
-        $todasBase = $model->getAllConEmpleadoInfo($filtrosExport);
+        $todasBase = $model->getAll($filtrosExport);
 
         $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todasBase);
 
@@ -111,6 +115,8 @@ final class ExportController
             'Rechazadas RRHH' => $rechazadasRRHH,
             'Cancelado por el usuario' => $canceladoPorUsuario,
         ];
+
+        $data = (new EmpleadoInfoEnricher())->enriquecerHojas($data);
 
         $this->generarExcelPorHojas($data, 'reporte_admin');
     }
@@ -285,7 +291,7 @@ final class ExportController
             ob_end_clean();
         }
 
-        $xlsx->downloadAs($nombreArchivo . '_' . date('Ymd_His') . '.xlsx');
+        SafeXlsx::descargar($xlsx, $nombreArchivo . '_' . date('Ymd_His') . '.xlsx');
         exit;
     }
 
@@ -307,7 +313,7 @@ final class ExportController
                     $valor = \TIPOS_SOLICITUD[$valor];
                 }
 
-                $fila[] = $this->normalizarValor($valor);
+                $fila[] = SafeXlsx::valor($valor);
             }
 
             $filas[] = $fila;
@@ -324,15 +330,6 @@ final class ExportController
     private function normalizarEstado(string $estado): string
     {
         return strtoupper(trim($estado));
-    }
-
-    private function normalizarValor($valor): string
-    {
-        if ($valor === null || is_array($valor) || is_object($valor)) {
-            return '';
-        }
-
-        return (string)$valor;
     }
 
     private function limpiarTituloHoja(string $titulo): string
