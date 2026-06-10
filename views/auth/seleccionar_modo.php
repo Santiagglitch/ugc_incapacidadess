@@ -1,13 +1,34 @@
 <?php
 $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $nombreUsuario = e($user['nombre'] ?? 'Usuario');
-$esSuperAdmin = $esSuperAdmin ?? false;
-$modoAdminValue = $esSuperAdmin ? 'super_usuario' : 'admin';
-$modoAdminTitulo = $esSuperAdmin ? 'Modo Super Usuario' : 'Modo Administrador';
-$modoAdminDesc = $esSuperAdmin
-    ? 'Acceso total administrativo. Gestion de empleados, todas las solicitudes, aprobaciones RRHH y configuracion del sistema.'
-    : 'Acceso administrativo. Gestion de empleados, todas las solicitudes y aprobaciones RRHH.';
-$modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
+$esSuperAdmin        = $esSuperAdmin        ?? false;
+$esTalentoHumanoFijo = $esTalentoHumanoFijo ?? false;
+
+if ($esTalentoHumanoFijo) {
+    $modoAdminValue  = 'admin';
+    $modoAdminTitulo = 'Modo Talento Humano';
+    $modoAdminDesc   = 'Acceso como Talento Humano. Gestion y aprobacion de todas las solicitudes de permisos e incapacidades.';
+    $modoAdminBadge  = 'Talento Humano';
+    $modoEmpleadoTitulo = 'Modo Jefe / Solicitante';
+    $modoEmpleadoDesc   = 'Flujo operativo normal. Crear solicitudes y aprobar como jefe inmediato. <strong>Sin acceso a funciones de Talento Humano.</strong>';
+    $modoEmpleadoBadge  = 'Operativo Normal';
+} elseif ($esSuperAdmin) {
+    $modoAdminValue  = 'super_usuario';
+    $modoAdminTitulo = 'Modo Super Usuario';
+    $modoAdminDesc   = 'Acceso total administrativo. Gestion de empleados, todas las solicitudes, aprobaciones RRHH y configuracion del sistema.';
+    $modoAdminBadge  = 'Super Administrador';
+    $modoEmpleadoTitulo = 'Modo Empleado / Jefe';
+    $modoEmpleadoDesc   = 'Flujo operativo normal. Crear solicitudes, aprobaciones como jefe inmediato. <strong>Sin acceso a funciones administrativas.</strong>';
+    $modoEmpleadoBadge  = 'Operativo Normal';
+} else {
+    $modoAdminValue  = 'admin';
+    $modoAdminTitulo = 'Modo Administrador';
+    $modoAdminDesc   = 'Acceso administrativo. Gestion de empleados, todas las solicitudes y aprobaciones RRHH.';
+    $modoAdminBadge  = 'Administrador';
+    $modoEmpleadoTitulo = 'Modo Empleado / Jefe';
+    $modoEmpleadoDesc   = 'Flujo operativo normal. Crear solicitudes, aprobaciones como jefe inmediato. <strong>Sin acceso a funciones administrativas.</strong>';
+    $modoEmpleadoBadge  = 'Operativo Normal';
+}
 ?>
 <div class="login-container">
   <div class="login-card animate-fade-up">
@@ -33,6 +54,14 @@ $modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
           <input type="radio" name="modo" value="<?= e($modoAdminValue) ?>" required>
           <div class="modo-card">
             <div class="modo-icon">
+              <?php if ($esTalentoHumanoFijo): ?>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <?php else: ?>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -40,6 +69,7 @@ $modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
                 <path d="M16 8v-2a2 2 0 0 1 2-2h2"/>
                 <circle cx="20" cy="4" r="1"/>
               </svg>
+              <?php endif; ?>
             </div>
             <div class="modo-info">
               <h3><?= e($modoAdminTitulo) ?></h3>
@@ -59,9 +89,9 @@ $modoAdminBadge = $esSuperAdmin ? 'Super Administrador' : 'Administrador';
               </svg>
             </div>
             <div class="modo-info">
-              <h3>Modo Empleado / Jefe</h3>
-              <p>Flujo operativo normal. Crear solicitudes, aprobaciones como jefe inmediato. <strong>Sin acceso a funciones administrativas.</strong></p>
-              <span class="modo-badge jefe">Operativo Normal</span>
+              <h3><?= e($modoEmpleadoTitulo) ?></h3>
+              <p><?= $modoEmpleadoDesc ?></p>
+              <span class="modo-badge jefe"><?= e($modoEmpleadoBadge) ?></span>
             </div>
           </div>
         </label>

@@ -12,12 +12,15 @@ require_once __DIR__ . '/../services/loginBloqueoService.php';
 class authController
 {
     /**
-     * Verifica si el usuario tiene acceso al selector de modo (Super Admin o Admin Adicional).
+     * Verifica si el usuario tiene acceso al selector de modo (Super Admin, Admin Adicional o TH fijo).
      */
     private function usuarioTieneSelectorModo(array $user): bool
     {
         $cedula = $user['cedula'] ?? '';
         if ($cedula === SUPER_ADMIN_NIT) {
+            return true;
+        }
+        if (in_array($cedula, NITS_TALENTO_HUMANO, true)) {
             return true;
         }
         return (new adminRolesModel())->esAdminAdicional($cedula);
@@ -29,6 +32,14 @@ class authController
     private function esSuperAdmin(array $user): bool
     {
         return ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+    }
+
+    /**
+     * Determina si el usuario es el Talento Humano fijo hardcodeado.
+     */
+    private function esTalentoHumanoFijo(array $user): bool
+    {
+        return in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
     }
 
     public function loginForm(): void
@@ -121,16 +132,27 @@ class authController
         $_SESSION['last_activity'] = time();
         $_SESSION['notificacion_sonar_login'] = true;
 
-        // Si es Super Admin o Admin Adicional, redirigir a selección de modo
+        // Si es Super Admin, TH fijo o Admin Adicional, redirigir a selección de modo
         if ($this->usuarioTieneSelectorModo($result['user'])) {
             $_SESSION['admin_modo_pendiente'] = true;
             $cedula = $result['user']['cedula'] ?? '';
             $esSuperAdmin = ($cedula === SUPER_ADMIN_NIT);
+            $esTH = $this->esTalentoHumanoFijo($result['user']);
+            if ($esSuperAdmin) {
+                $tipoLog = 'LOGIN_SA';
+                $msgLog  = 'Super Usuario inicio sesion';
+            } elseif ($esTH) {
+                $tipoLog = 'LOGIN_TH';
+                $msgLog  = 'Talento Humano inicio sesion';
+            } else {
+                $tipoLog = 'LOGIN_ADMIN';
+                $msgLog  = 'Administrador adicional inicio sesion';
+            }
             try {
                 (new adminAuditoriaModel())->registrar(
                     $cedula,
-                    $esSuperAdmin ? 'LOGIN_SA' : 'LOGIN_ADMIN',
-                    $esSuperAdmin ? 'Super Usuario inicio sesion' : 'Administrador adicional inicio sesion',
+                    $tipoLog,
+                    $msgLog,
                     [],
                     $result['user']['nombre'] ?? 'Usuario'
                 );
@@ -158,9 +180,10 @@ class authController
         unset($_SESSION['modo_error']);
 
         render_view('auth/seleccionar_modo', [
-            'user' => $user,
-            'error' => $error,
-            'esSuperAdmin' => $this->esSuperAdmin($user),
+            'user'                => $user,
+            'error'               => $error,
+            'esSuperAdmin'        => $this->esSuperAdmin($user),
+            'esTalentoHumanoFijo' => $this->esTalentoHumanoFijo($user),
         ], 'auth');
     }
 
@@ -182,9 +205,12 @@ class authController
         }
 
         $modo = limpiar_texto($_POST['modo'] ?? '');
-        $modosValidos = ['admin', 'empleado'];
-        if ($this->esSuperAdmin($user)) {
+        if ($this->esTalentoHumanoFijo($user)) {
+            $modosValidos = ['admin', 'empleado'];
+        } elseif ($this->esSuperAdmin($user)) {
             $modosValidos = ['super_usuario', 'empleado'];
+        } else {
+            $modosValidos = ['admin', 'empleado'];
         }
 
         if (!in_array($modo, $modosValidos, true)) {
@@ -202,6 +228,8 @@ class authController
             $empleado = $empleadoModel->getByNit($user['cedula']);
             $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
             $_SESSION['usuario']['rol'] = $rolReal;
+        } elseif ($modo === 'admin' && $this->esTalentoHumanoFijo($user)) {
+            $_SESSION['usuario']['rol'] = ROL_RRHH;
         }
 
         redirect_to(url_view('dashboard'));
@@ -230,6 +258,7 @@ class authController
         }
 
         $esSuperAdmin = $this->esSuperAdmin($user);
+        $esTalentoHumanoFijo = $this->esTalentoHumanoFijo($user);
         $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
         $modoActual = $_SESSION['admin_modo'] ?? $modoAdminKey;
         $modoDestino = limpiar_texto($_POST['modo_destino'] ?? '');
@@ -246,15 +275,15 @@ class authController
 
         // Cambiar al modo solicitado. Esto evita que un doble envio revierta el cambio.
         if ($modoDestino === 'empleado') {
-            // Cambiar a modo empleado
+            // Cambiar a modo empleado/jefe
             $_SESSION['admin_modo'] = 'empleado';
             $empleadoModel = new empleadoModel();
             $empleado = $empleadoModel->getByNit($user['cedula']);
             $rolReal = $this->calcularRolOperativo($user['cedula'], $empleado);
             $_SESSION['usuario']['rol'] = $rolReal;
+            $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : ($esTalentoHumanoFijo ? 'Talento Humano' : 'Administrador');
             flash_set('success', 'Modo cambiado a Empleado/Jefe. Permisos administrativos desactivados.');
             try {
-                $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : 'Administrador';
                 (new adminAuditoriaModel())->registrar(
                     (string)($user['cedula'] ?? ''),
                     'CAMBIO_MODO',
@@ -265,20 +294,35 @@ class authController
             } catch (Throwable $e) {
             }
         } else {
-            // Cambiar a modo admin/super usuario
+            // Cambiar a modo admin/super usuario/talento humano
             $_SESSION['admin_modo'] = $modoAdminKey;
-            $_SESSION['usuario']['rol'] = ROL_ADMIN;
-            $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : 'Administrador';
-            flash_set('success', 'Modo cambiado a ' . $tipoAdmin . '. Acceso administrativo activado.');
-            try {
-                (new adminAuditoriaModel())->registrar(
-                    (string)($user['cedula'] ?? ''),
-                    'CAMBIO_MODO',
-                    $tipoAdmin . ' cambio a modo ' . $tipoAdmin,
-                    ['modo_destino' => $modoAdminKey],
-                    (string)($user['nombre'] ?? '')
-                );
-            } catch (Throwable $e) {
+            if ($esTalentoHumanoFijo) {
+                $_SESSION['usuario']['rol'] = ROL_RRHH;
+                flash_set('success', 'Modo cambiado a Talento Humano. Acceso RRHH activado.');
+                try {
+                    (new adminAuditoriaModel())->registrar(
+                        (string)($user['cedula'] ?? ''),
+                        'CAMBIO_MODO',
+                        'Talento Humano cambio a modo Talento Humano',
+                        ['modo_destino' => 'admin'],
+                        (string)($user['nombre'] ?? '')
+                    );
+                } catch (Throwable $e) {
+                }
+            } else {
+                $_SESSION['usuario']['rol'] = ROL_ADMIN;
+                $tipoAdmin = $esSuperAdmin ? 'Super Usuario' : 'Administrador';
+                flash_set('success', 'Modo cambiado a ' . $tipoAdmin . '. Acceso administrativo activado.');
+                try {
+                    (new adminAuditoriaModel())->registrar(
+                        (string)($user['cedula'] ?? ''),
+                        'CAMBIO_MODO',
+                        $tipoAdmin . ' cambio a modo ' . $tipoAdmin,
+                        ['modo_destino' => $modoAdminKey],
+                        (string)($user['nombre'] ?? '')
+                    );
+                } catch (Throwable $e) {
+                }
             }
         }
 
@@ -287,16 +331,14 @@ class authController
 
     private function calcularRolOperativo(string $cedula, ?array $empleado): string
     {
-        $centroCosto = (string) ($empleado['CENTRO_COSTO'] ?? '');
-
-        if (es_jefe_revisor_nit($cedula)) {
+        // Verificar directamente en NITS_JEFES_REVISORES — cubre Super Admin, usuarios TH
+        // que también son jefe, y jefes normales. Es la fuente de verdad para modo empleado.
+        $nitNormalizado = preg_replace('/\D+/', '', $cedula) ?? '';
+        if (in_array($nitNormalizado, NITS_JEFES_REVISORES, true)) {
             return ROL_JEFE;
         }
 
-        if (in_array($centroCosto, CC_RRHH, true)) {
-            return ROL_RRHH;
-        }
-
+        // Admins adicionales de BD que no están en NITS_JEFES_REVISORES → empleado
         return ROL_EMPLEADO;
     }
 

@@ -936,21 +936,7 @@ public function cancelarAgenda(?int $id = null): void
             return false;
         }
 
-        if (APP_ENV === 'development') {
-            foreach (USUARIOS_PRUEBA as $cedula => $datos) {
-                if (normalizar_documento((string)$cedula) !== $nitEmpleado) {
-                    continue;
-                }
-
-                return ($datos['rol'] ?? '') === ROL_RRHH
-                    || in_array((string)($datos['centro_costo'] ?? ''), CC_RRHH, true);
-            }
-        }
-
-        $empleadoModel = new empleadoModel();
-        $empleado = $empleadoModel->getByNit($nitEmpleado);
-
-        return in_array((string)($empleado['CENTRO_COSTO'] ?? ''), CC_RRHH, true);
+        return es_talento_humano_nit($nitEmpleado);
     }
 
     private function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array
@@ -1010,6 +996,13 @@ public function cancelarAgenda(?int $id = null): void
         }
 
         if ($nit === SUPER_ADMIN_NIT || $adminRolesModel->esAdminAdicional($nit)) {
+            return true;
+        }
+
+        // Verificar directamente en NITS_JEFES_REVISORES para incluir usuarios que
+        // también son TH fijo pero siguen siendo jefe inmediato de otros empleados
+        $nitNormalizado = preg_replace('/\D+/', '', $nit) ?? '';
+        if (in_array($nitNormalizado, NITS_JEFES_REVISORES, true)) {
             return true;
         }
 

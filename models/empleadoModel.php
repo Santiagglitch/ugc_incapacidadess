@@ -88,14 +88,8 @@ class empleadoModel extends mainModel
             return ROL_EMPLEADO;
         }
 
-        $cc = (string) ($empleado['CENTRO_COSTO'] ?? '');
-
         if (es_jefe_revisor_nit($nit)) {
             return ROL_JEFE;
-        }
-
-        if (in_array($cc, CC_RRHH, true)) {
-            return ROL_RRHH;
         }
 
         return ROL_EMPLEADO;

@@ -21,14 +21,31 @@ $rolesLabel = [
 
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
-// Variables para el modo Admin (Super Admin o Admin Adicional)
-$esSuperAdmin = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
-$tieneSelectorModo = usuario_tiene_selector_modo();
+// Variables para el modo Admin (Super Admin, Admin Adicional o TH fijo)
+$esSuperAdmin        = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$esTalentoHumanoFijo = in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
+$tieneSelectorModo   = usuario_tiene_selector_modo();
 $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
-$modoActual = $_SESSION['admin_modo'] ?? $modoAdminKey;
-$modoLabel = ($modoActual === 'super_usuario' || $modoActual === 'admin')
-    ? ($esSuperAdmin ? 'Super Usuario' : 'Administrador')
-    : 'Modo Empleado';
+$modoActual   = $_SESSION['admin_modo'] ?? $modoAdminKey;
+if ($modoActual === 'super_usuario' || $modoActual === 'admin') {
+    if ($esSuperAdmin) {
+        $modoLabel = 'Super Usuario';
+    } elseif ($esTalentoHumanoFijo) {
+        $modoLabel = 'Talento Humano';
+    } else {
+        $modoLabel = 'Administrador';
+    }
+} else {
+    // En modo empleado usar el rol real en sesión para el label
+    $rolEnSesion = $_SESSION['usuario']['rol'] ?? '';
+    if ($rolEnSesion === ROL_JEFE) {
+        $modoLabel = 'Jefe Inmediato';
+    } elseif ($rolEnSesion === ROL_EMPLEADO) {
+        $modoLabel = 'Solicitante';
+    } else {
+        $modoLabel = 'Modo Empleado';
+    }
+}
 
 $notifCountUrl = url_view('notif_count');
 $notifListUrl = url_view('notif_list');
@@ -231,7 +248,9 @@ $csrfToken = csrf_token();
       <?php
         $esModoAdmin = ($modoActual === 'super_usuario' || $modoActual === 'admin');
         $modoDestino = $esModoAdmin ? 'empleado' : $modoAdminKey;
-        $tituloDestino = $esModoAdmin ? 'Modo Empleado' : ($esSuperAdmin ? 'Super Usuario' : 'Administrador');
+        $tituloDestino = $esModoAdmin
+            ? ($esTalentoHumanoFijo ? 'Jefe / Solicitante' : 'Modo Empleado')
+            : ($esSuperAdmin ? 'Super Usuario' : ($esTalentoHumanoFijo ? 'Talento Humano' : 'Administrador'));
         $btnClase = $esModoAdmin ? 'btn-modo-admin' : 'btn-modo-empleado';
       ?>
       <input type="hidden" name="modo_destino" value="<?= e($modoDestino) ?>">

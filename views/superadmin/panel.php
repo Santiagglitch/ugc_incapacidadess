@@ -382,8 +382,8 @@ $nitActual = (string)($user['cedula'] ?? '');
       <span class="sa-health-val" style="font-family:monospace"><?= e(NIVEL_MIN_ADMIN) ?></span>
     </div>
     <div class="sa-health-row">
-      <span class="sa-health-label">Centros costo RRHH</span>
-      <span class="sa-health-val" style="font-family:monospace;font-size:11px"><?= e(implode(', ', CC_RRHH)) ?></span>
+      <span class="sa-health-label">Talento Humano fijo</span>
+      <span class="sa-health-val" style="font-family:monospace;font-size:11px"><?= e(implode(', ', NITS_TALENTO_HUMANO)) ?></span>
     </div>
     <div class="sa-health-row">
       <span class="sa-health-label">Centros costo aprendices</span>

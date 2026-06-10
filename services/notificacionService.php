@@ -36,8 +36,7 @@ class notificacionService
 
     public function notificarAprobacionFinalJefeTalentoHumano(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
     {
-        $nombre = $this->nombreEmpleado($nitJefe, 'Tu jefe');
-        $mensaje = $nombre . ' aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud) . '. La solicitud quedo aprobada.';
+        $mensaje = 'Talento Humano aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud) . '. La solicitud quedo aprobada.';
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_FINAL', $mensaje, $idSolicitud);
     }
 
@@ -155,6 +154,10 @@ class notificacionService
         $rrhh = [];
         foreach ($this->empleadoModel()->getPorCentrosCosto(CC_RRHH) as $emp) {
             if (!empty($emp['NIT'])) { $rrhh[] = (string)$emp['NIT']; }
+        }
+        // Los usuarios TH fijos siempre reciben notificaciones de revision RRHH
+        foreach (NITS_TALENTO_HUMANO as $nitTh) {
+            $rrhh[] = $nitTh;
         }
         if (APP_ENV === 'development') {
             foreach (USUARIOS_PRUEBA as $cedula => $datos) {

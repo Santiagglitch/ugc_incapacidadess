@@ -107,7 +107,7 @@ class adminController
             $todos = array_values(array_filter($todos, fn($emp) => ($emp['CENTRO_COSTO'] ?? '') === $filtroCC));
         }
 
-        $rolLabel = ['admin' => 'Administrador', 'rrhh' => 'Talento Humano', 'jefe' => 'Jefe', 'empleado' => 'Empleado'];
+        $rolLabel = ['admin' => 'Administrador', 'jefe' => 'Jefe', 'empleado' => 'Empleado'];
         $cabeceras = ['NIT', 'Nombre', 'Centro Costo', 'Nivel', 'Rol'];
         $escape = fn(string $v): string => (strpbrk($v, ",\"\r\n") !== false) ? '"' . str_replace('"', '""', $v) . '"' : $v;
 
@@ -610,7 +610,6 @@ class adminController
     private function rolEmpleado(array $emp, array $adminsAdicionales): string
     {
         $nit = (string) ($emp['NIT'] ?? '');
-        $cc = (string) ($emp['CENTRO_COSTO'] ?? '');
 
         if ($nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true)) {
             return 'admin';
@@ -618,15 +617,12 @@ class adminController
         if (es_jefe_revisor_nit($nit)) {
             return 'jefe';
         }
-        if (in_array($cc, CC_RRHH, true)) {
-            return 'rrhh';
-        }
         return 'empleado';
     }
 
     private function calcularStats(array $empleados, array $adminsAdicionales): array
     {
-        $stats = ['total' => count($empleados), 'admin' => 0, 'rrhh' => 0, 'jefe' => 0, 'empleado' => 0];
+        $stats = ['total' => count($empleados), 'admin' => 0, 'jefe' => 0, 'empleado' => 0];
         foreach ($empleados as $emp) {
             $rol = $this->rolEmpleado($emp, $adminsAdicionales);
             $stats[$rol]++;
