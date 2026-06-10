@@ -28,7 +28,7 @@ class adminController
         $adminRoles        = new adminRolesModel();
         $solicitudModel    = new solicitudModel();
         $adminsAdicionales = $adminRoles->getAdminsAdicionales();
-        $todos             = $empleadoModel->getTodos();
+        $todos             = $this->deduplicarPorNit($empleadoModel->getTodos());
 
         $stats        = $this->calcularStats($todos, $adminsAdicionales);
         $centrosCosto = array_values(array_unique(array_filter(array_column($todos, 'CENTRO_COSTO'))));
@@ -92,7 +92,7 @@ class adminController
         $empleadoModel     = new empleadoModel();
         $adminRoles        = new adminRolesModel();
         $adminsAdicionales = $adminRoles->getAdminsAdicionales();
-        $todos             = $empleadoModel->getTodos();
+        $todos             = $this->deduplicarPorNit($empleadoModel->getTodos());
 
         if ($busqueda !== '') {
             $todos = array_values(array_filter($todos, function ($emp) use ($busqueda) {
@@ -618,6 +618,21 @@ class adminController
             return 'jefe';
         }
         return 'empleado';
+    }
+
+    private function deduplicarPorNit(array $empleados): array
+    {
+        $unicos = [];
+        foreach ($empleados as $emp) {
+            $nit = (string)($emp['NIT'] ?? '');
+            if ($nit === '') {
+                continue;
+            }
+            if (!isset($unicos[$nit]) || (int)($emp['NIVEL'] ?? 0) > (int)($unicos[$nit]['NIVEL'] ?? 0)) {
+                $unicos[$nit] = $emp;
+            }
+        }
+        return array_values($unicos);
     }
 
     private function calcularStats(array $empleados, array $adminsAdicionales): array

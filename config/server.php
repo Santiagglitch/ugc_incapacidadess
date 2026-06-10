@@ -63,7 +63,7 @@ define('UXXI_HOST', '172.20.100.92');
 define('UXXI_PORT', '1521');
 define('UXXI_USER', 'PERMISOS');
 define('UXXI_PASS', 'Permisos123');
-define('UXXI_SERVICE', 'FREEPDB1');
+define('UXXI_SERVICE', 'Ugc$2026*');
 define('UXXI_CHARSET', 'AL32UTF8');
 
 
