@@ -59,4 +59,13 @@ class notificacionModel extends mainModelUXXI
             [':nit' => $nit]
         );
     }
+
+    public function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool
+    {
+        return $this->ejecutar(
+            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=SYSDATE
+             WHERE ID_SOLICITUD=:solicitud AND NIT_DESTINATARIO=:nit AND LEIDA=0",
+            [':solicitud' => $idSolicitud, ':nit' => $nit]
+        );
+    }
 }

@@ -563,7 +563,7 @@ class adminController
             'app_env'           => APP_ENV,
             'app_version'       => defined('APP_VERSION') ? APP_VERSION : '—',
             'timezone'          => date_default_timezone_get(),
-            'timestamp'         => date('Y-m-d H:i:s'),
+            'timestamp'         => date('d/m/Y h:i A'),
         ];
     }
 

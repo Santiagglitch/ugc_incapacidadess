@@ -91,6 +91,48 @@ function flash_get(): ?array
     return is_array($flash) ? $flash : null;
 }
 
+/**
+ * Formatea un string de fecha+hora ISO ('YYYY-MM-DD HH:MM:SS') al formato
+ * colombiano con hora en 12h AM/PM: 'DD/MM/YYYY hh:mm AM/PM'.
+ * Si el valor está vacío o es inválido devuelve '' o $default.
+ */
+function fecha_hora_co(string $valor, string $default = ''): string
+{
+    $valor = trim($valor);
+    if ($valor === '') {
+        return $default;
+    }
+
+    $dt = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $valor);
+    if ($dt === false) {
+        $dt = DateTimeImmutable::createFromFormat('Y-m-d H:i', substr($valor, 0, 16));
+    }
+    if ($dt === false) {
+        return $default;
+    }
+
+    return $dt->format('d/m/Y h:i A');
+}
+
+/**
+ * Formatea un string de fecha ISO ('YYYY-MM-DD...') al formato colombiano: 'DD/MM/YYYY'.
+ * Útil para fechas sin hora.
+ */
+function fecha_co(string $valor, string $default = ''): string
+{
+    $valor = trim($valor);
+    if ($valor === '') {
+        return $default;
+    }
+
+    $dt = DateTimeImmutable::createFromFormat('Y-m-d', substr($valor, 0, 10));
+    if ($dt === false) {
+        return $default;
+    }
+
+    return $dt->format('d/m/Y');
+}
+
 function render_view(string $view, array $data = [], string $layout = 'main'): void
 {
     iniciar_sesion_segura();

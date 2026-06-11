@@ -479,7 +479,7 @@ $nitActual = (string)($user['cedula'] ?? '');
               &mdash; IP: <?= e($entrada['ip'] ?? '—') ?>
             </div>
           </div>
-          <div class="sa-log-fecha"><?= e(substr((string)($entrada['fecha'] ?? ''), 0, 16)) ?></div>
+          <div class="sa-log-fecha"><?= e(fecha_hora_co((string)($entrada['fecha'] ?? ''))) ?></div>
         </li>
       <?php endforeach; ?>
     </ul>

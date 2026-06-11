@@ -378,7 +378,7 @@ $hoy   = $hoy ?? date('Y-m-d');
             <div class="form-group" id="grupo_duracion_horas">
               <label id="label_duracion_horas">Duración en horas *</label>
               <input type="number" id="duracion_horas" name="duracion_horas"
-                     min="0.5" max="8" step="0.5" placeholder="Ej: 4">
+                     min="0.5" max="5" step="0.5" placeholder="Ej: 2.5">
             </div>
 
             <div class="form-group" id="grupo_duracion_dias">
@@ -500,10 +500,8 @@ $hoy   = $hoy ?? date('Y-m-d');
     return formatoISO(f);
   }
 
-  function esSabadoODomingo(fecha) {
-    var diaSemana = fecha.getDay();
-
-    return diaSemana === 0 || diaSemana === 6;
+  function esDomingo(fecha) {
+    return fecha.getDay() === 0;
   }
 
   function calcularDiasHabiles(fechaInicio, fechaFin) {
@@ -522,7 +520,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     var actual = new Date(inicio);
 
     while (actual <= final) {
-      if (!esSabadoODomingo(actual)) {
+      if (!esDomingo(actual)) {
         total++;
       }
 
@@ -611,12 +609,12 @@ $hoy   = $hoy ?? date('Y-m-d');
 
     if (modo === 'DIAS' && dias.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong>. No se cuentan sábados ni domingos.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong>. No se cuentan los domingos.';
     }
 
     if (modo === 'AMBAS' && dias.value && horas.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong> más <strong>' + horas.value + ' hora(s) adicional(es)</strong>. No se cuentan sábados ni domingos.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> el empleado pidió <strong>' + dias.value + ' día(s) hábil(es)</strong> más <strong>' + horas.value + ' hora(s) adicional(es)</strong>. No se cuentan los domingos.';
     }
   }
 
@@ -660,7 +658,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     ini.required = true;
 
     if (modo === 'HORAS') {
-      subtituloFechas.textContent = 'Selecciona la fecha del permiso e ingresa la cantidad de horas solicitadas. Debe ser mayor a 0 y máximo 8 horas.';
+      subtituloFechas.textContent = 'Selecciona la fecha del permiso e ingresa la cantidad de horas solicitadas. Debe ser mayor a 0 y máximo 5 horas.';
 
       labelFechaInicio.textContent = 'Fecha del permiso *';
       labelDuracionHoras.textContent = 'Duración en horas *';
@@ -681,7 +679,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     }
 
     if (modo === 'DIAS') {
-      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calculará automáticamente solo los días hábiles, sin contar sábados ni domingos.';
+      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calculará automáticamente los días hábiles, sin contar domingos.';
 
       labelFechaInicio.textContent = 'Fecha inicio *';
 
@@ -699,7 +697,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     }
 
     if (modo === 'AMBAS') {
-      subtituloFechas.textContent = 'Selecciona los días hábiles de ausencia y agrega las horas adicionales. No se cuentan sábados ni domingos. Ejemplo: 1 día hábil completo + 4 horas adicionales.';
+      subtituloFechas.textContent = 'Selecciona los días hábiles de ausencia y agrega las horas adicionales. No se cuentan los domingos. Ejemplo: 1 día hábil completo + 4 horas adicionales.';
 
       labelFechaInicio.textContent = 'Fecha inicio *';
       labelDuracionHoras.textContent = 'Horas adicionales *';
@@ -776,8 +774,8 @@ $hoy   = $hoy ?? date('Y-m-d');
       return false;
     }
 
-    if (valorHoras <= 0 || valorHoras > 8) {
-      alert('No se puede registrar la solicitud. La duración debe ser mayor a 0 e inferior a 9 horas. Máximo permitido: 8 horas.');
+    if (valorHoras <= 0 || valorHoras > 5) {
+      alert('No se puede registrar la solicitud. La duración debe ser mayor a 0 y máximo 5 horas.');
       horas.value = '';
       horas.setCustomValidity('');
       actualizarResumen();
@@ -798,7 +796,7 @@ $hoy   = $hoy ?? date('Y-m-d');
     var valorDias = parseInt(dias.value, 10);
 
     if (!dias.value || isNaN(valorDias) || valorDias <= 0) {
-      alert('No se puede registrar la solicitud porque el rango seleccionado no tiene días hábiles. Los sábados y domingos no cuentan.');
+      alert('No se puede registrar la solicitud porque el rango seleccionado no tiene días hábiles. Los domingos no cuentan.');
       fin.focus();
       return false;
     }

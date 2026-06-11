@@ -680,6 +680,38 @@ $csrfToken = csrf_token();
     });
   }
 
+  function formatFechaCo(valor) {
+    if (!valor) return '';
+    var partes = String(valor).split(' ');
+    if (partes.length < 2) return valor;
+    var fechaParts = partes[0].split('-');
+    if (fechaParts.length !== 3) return valor;
+    var tiempo = partes[1].split(':');
+
+    var utcMs = Date.UTC(
+      parseInt(fechaParts[0], 10),
+      parseInt(fechaParts[1], 10) - 1,
+      parseInt(fechaParts[2], 10),
+      parseInt(tiempo[0], 10),
+      parseInt(tiempo[1] || '0', 10),
+      parseInt(tiempo[2] || '0', 10)
+    );
+    var coMs = utcMs - (5 * 60 * 60 * 1000);
+    var d = new Date(coMs);
+
+    var dd  = d.getUTCDate();    dd  = dd  < 10 ? '0' + dd  : String(dd);
+    var mm  = d.getUTCMonth() + 1; mm = mm  < 10 ? '0' + mm  : String(mm);
+    var yy  = d.getUTCFullYear();
+    var h   = d.getUTCHours();
+    var min = d.getUTCMinutes(); min = min < 10 ? '0' + min : String(min);
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    var hStr = h < 10 ? '0' + h : String(h);
+
+    return dd + '/' + mm + '/' + yy + ' ' + hStr + ':' + min + ' ' + ampm;
+  }
+
   function iconClass(tipo) {
     tipo = String(tipo || '').toLowerCase();
 
@@ -717,7 +749,7 @@ $csrfToken = csrf_token();
         '<span class="notificacion-icon ' + cls + '"></span>' +
         '<span class="notificacion-content">' +
           '<p>' + escapeHtml(item.MENSAJE) + '</p>' +
-          '<span class="notificacion-time">' + escapeHtml(item.FECHA_CREACION) + '</span>' +
+          '<span class="notificacion-time">' + escapeHtml(formatFechaCo(item.FECHA_CREACION)) + '</span>' +
         '</span>' +
       '</button>';
     }).join('');

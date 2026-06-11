@@ -521,7 +521,8 @@ class solicitudController
                     $id,
                     (string)$solicitud['NIT_EMPLEADO'],
                     (string)$solicitud['NIT_JEFE'],
-                    (string)$solicitud['TIPO_SOLICITUD']
+                    (string)$solicitud['TIPO_SOLICITUD'],
+                    (string)$user['cedula']
                 );
             } else {
                 $notificaciones->notificarRechazoRRHH(
@@ -529,7 +530,8 @@ class solicitudController
                     (string)$solicitud['NIT_EMPLEADO'],
                     (string)$solicitud['NIT_JEFE'],
                     (string)$solicitud['TIPO_SOLICITUD'],
-                    $obs
+                    $obs,
+                    (string)$user['cedula']
                 );
             }
         }
@@ -693,7 +695,7 @@ public function cancelarAgenda(?int $id = null): void
             $errores[] = 'Selecciona si la solicitud se registra por horas, por dias o por dias mas horas adicionales.';
         }
 
-        if ($horas !== null && ($horas <= 0 || $horas > 8)) {
+        if ($horas !== null && ($horas <= 0 || $horas > 5)) {
             $errores[] = 'La duracion en horas no es valida.';
         }
 
@@ -773,7 +775,7 @@ public function cancelarAgenda(?int $id = null): void
         $dias = 0;
 
         for ($fecha = $fechaInicio; $fecha <= $fechaFin; $fecha = $fecha->modify('+1 day')) {
-            if ((int)$fecha->format('N') <= 5) {
+            if ((int)$fecha->format('N') !== 7) {
                 $dias++;
             }
         }

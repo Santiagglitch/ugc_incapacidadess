@@ -138,7 +138,6 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
   <table class="ugc-table">
     <thead>
       <tr>
-        <th>ID</th>
         <th>Empleado</th>
         <th>Jefe</th>
         <th>Tipo</th>
@@ -188,9 +187,6 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
         ?>
 
         <tr>
-          <td data-label="ID">
-            #<?= e($s['ID'] ?? '') ?>
-          </td>
 
           <td data-label="Empleado">
             <strong><?= e($nombreEmpleado) ?></strong>
