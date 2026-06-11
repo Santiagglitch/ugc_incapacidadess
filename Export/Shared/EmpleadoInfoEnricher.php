@@ -45,7 +45,7 @@ final class EmpleadoInfoEnricher
                 $info = $infoEmpleados[$nit] ?? [];
 
                 $row['NOMBRE_EMPLEADO'] = (string)($info['NOMBRE_EMPLEADO'] ?? '');
-                $row['NOMBRE_DEPENDENCIA'] = (string)($info['NOMBRE_DEPENDENCIA'] ?? '');
+                $row['NOMBRE_CENTRO_COSTO'] = (string)($info['NOMBRE_CENTRO_COSTO'] ?? '');
             }
             unset($row);
         }
