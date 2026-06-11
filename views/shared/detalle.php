@@ -76,11 +76,11 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
   <div class="detail-grid">
     <div class="detail-item">
       <span class="detail-label">Fecha de Inicio</span>
-      <span class="detail-value date-value"><?= e($solicitud['FECHA_INICIO'] ?? '') ?></span>
+      <span class="detail-value date-value"><?= e(fecha_co((string)($solicitud['FECHA_INICIO'] ?? ''))) ?></span>
     </div>
     <div class="detail-item">
       <span class="detail-label">Fecha de Fin</span>
-      <span class="detail-value date-value"><?= e($solicitud['FECHA_FIN'] ?? '') ?></span>
+      <span class="detail-value date-value"><?= e(fecha_co((string)($solicitud['FECHA_FIN'] ?? ''))) ?></span>
     </div>
     <?php if (!empty($solicitud['DURACION_HORAS'])): ?>
     <div class="detail-item">
