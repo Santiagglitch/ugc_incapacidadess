@@ -82,20 +82,24 @@ class empleadoModel extends mainModel
             [$inClause, $binds] = $this->buildInClause($chunk, 'nit_export_' . $chunkIndex . '_');
 
             $rows = $this->consultarTodo(
-                "SELECT NIT, NOMBRE_EMPLEADO, NOMBRE_DEPENDENCIA
+                "SELECT NIT, NOMBRE_EMPLEADO, NOMBRE_CENTRO_COSTO
                  FROM (
-                    SELECT NIT,
-                           TRIM(NOMBRE || ' ' || PRIMER_APELLIDO || ' ' || NVL(SEGUNDO_APELLIDO, '')) AS NOMBRE_EMPLEADO,
-                           NOMBRE_DEPENDENCIA,
+                    SELECT e.NIT,
+                           TRIM(e.NOMBRE || ' ' || e.PRIMER_APELLIDO || ' ' || NVL(e.SEGUNDO_APELLIDO, '')) AS NOMBRE_EMPLEADO,
+                           cc.NOMBRE_CENTRO_COSTO,
                            ROW_NUMBER() OVER (
-                               PARTITION BY NIT
-                               ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
+                               PARTITION BY e.NIT
+                               ORDER BY e.FECHA_INGRESO DESC, e.EMPLEADO DESC
                            ) AS RN
-                    FROM V_EMPLEADO
-                    WHERE EMPRESA IN ('BA2', 'BDO')
-                      AND ESTADO='A'
-                      AND DEPARTAMENTO IN ('11', '25')
-                      AND NIT IN ($inClause)
+                    FROM EMPLEADO e
+                    LEFT JOIN CENTRO_COSTO cc
+                      ON cc.ORGANIZACION = e.ORGANIZACION
+                     AND cc.CENTRO_COSTO = e.CENTRO_COSTO
+                     AND cc.ESTADO = 'A'
+                    WHERE e.EMPRESA IN ('BA2', 'BDO')
+                      AND e.ESTADO='A'
+                      AND e.DEPARTAMENTO IN ('11', '25')
+                      AND e.NIT IN ($inClause)
                  )
                  WHERE RN=1",
                 $binds
@@ -109,7 +113,7 @@ class empleadoModel extends mainModel
 
                 $empleados[$nit] = [
                     'NOMBRE_EMPLEADO' => trim((string)($row['NOMBRE_EMPLEADO'] ?? '')),
-                    'NOMBRE_DEPENDENCIA' => trim((string)($row['NOMBRE_DEPENDENCIA'] ?? '')),
+                    'NOMBRE_CENTRO_COSTO' => trim((string)($row['NOMBRE_CENTRO_COSTO'] ?? '')),
                 ];
             }
         }
