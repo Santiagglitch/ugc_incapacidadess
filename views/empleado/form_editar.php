@@ -317,10 +317,8 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
     return formatoISO(f);
   }
 
-  function esSabadoODomingo(fecha) {
-    var diaSemana = fecha.getDay();
-
-    return diaSemana === 0 || diaSemana === 6;
+  function esDomingo(fecha) {
+    return fecha.getDay() === 0;
   }
 
   function calcularDiasHabiles(fechaInicio, fechaFin) {
@@ -339,7 +337,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
     var actual = new Date(inicio);
 
     while (actual <= final) {
-      if (!esSabadoODomingo(actual)) {
+      if (!esDomingo(actual)) {
         total++;
       }
 
@@ -397,12 +395,12 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
 
     if (modo === 'DIAS' && dias.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) habil(es)</strong>. No se cuentan sabados ni domingos.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) habil(es)</strong>. No se cuentan los domingos.';
     }
 
     if (modo === 'AMBAS' && dias.value && horas.value) {
       resumenDuracion.style.display = 'block';
-      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) habil(es)</strong> mas <strong>' + horas.value + ' hora(s) adicional(es)</strong>. No se cuentan sabados ni domingos.';
+      resumenDuracion.innerHTML = '<strong>Resumen:</strong> la solicitud queda por <strong>' + dias.value + ' dia(s) habil(es)</strong> mas <strong>' + horas.value + ' hora(s) adicional(es)</strong>. No se cuentan los domingos.';
     }
   }
 
@@ -445,8 +443,8 @@ if (valorHoras > 5) {
       return false;
     }
 
-    if (valorHoras <= 0 || valorHoras > 8) {
-      alert('No se puede guardar la solicitud. La duracion debe ser mayor a 0 y maximo 8 horas.');
+    if (valorHoras <= 0 || valorHoras > 5) {
+      alert('No se puede guardar la solicitud. La duracion debe ser mayor a 0 y maximo 5 horas.');
       horas.value = '';
       horas.setCustomValidity('');
       actualizarResumen();
@@ -467,7 +465,7 @@ if (valorHoras > 5) {
     var valorDias = parseInt(dias.value, 10);
 
     if (!dias.value || isNaN(valorDias) || valorDias <= 0) {
-      alert('No se puede guardar la solicitud porque el rango seleccionado no tiene dias habiles. Los sabados y domingos no cuentan.');
+      alert('No se puede guardar la solicitud porque el rango seleccionado no tiene dias habiles. Los domingos no cuentan.');
       fin.focus();
       return false;
     }
@@ -574,7 +572,7 @@ if (valorHoras > 5) {
     }
 
     if (modo === 'DIAS') {
-      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calcula automaticamente solo los dias habiles, sin contar sabados ni domingos.';
+      subtituloFechas.textContent = 'Selecciona el rango de fechas. El sistema calcula automaticamente los dias habiles, sin contar domingos.';
       labelFechaInicio.textContent = 'Fecha inicio *';
 
       grupoFechaFin.classList.remove('field-hidden');
@@ -589,7 +587,7 @@ if (valorHoras > 5) {
     }
 
     if (modo === 'AMBAS') {
-      subtituloFechas.textContent = 'Selecciona los dias habiles de ausencia y agrega las horas adicionales. No se cuentan sabados ni domingos.';
+      subtituloFechas.textContent = 'Selecciona los dias habiles de ausencia y agrega las horas adicionales. No se cuentan los domingos.';
       labelFechaInicio.textContent = 'Fecha inicio *';
       labelDuracionHoras.textContent = 'Horas adicionales *';
       horas.placeholder = 'Ej: 4';

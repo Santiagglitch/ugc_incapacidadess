@@ -32,12 +32,14 @@ class notificacionService
         $mensaje = $nombre . ' aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud);
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_JEFE', $mensaje, $idSolicitud);
         $this->notificarRevisionRRHH($idSolicitud, $nitEmpleado, $tipoSolicitud);
+        $this->marcarLeidasPorSolicitud($idSolicitud, $nitJefe);
     }
 
     public function notificarAprobacionFinalJefeTalentoHumano(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
     {
         $mensaje = 'Talento Humano aprobo tu solicitud de ' . $this->tipoLabel($tipoSolicitud) . '. La solicitud quedo aprobada.';
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_FINAL', $mensaje, $idSolicitud);
+        $this->marcarLeidasPorSolicitud($idSolicitud, $nitJefe);
     }
 
     public function notificarRechazoJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
@@ -48,6 +50,7 @@ class notificacionService
             $mensaje .= '. Observacion: ' . substr($obs, 0, 100);
         }
         $this->safeCrear($nitEmpleado, 'SOLICITUD_RECHAZADA_JEFE', $mensaje, $idSolicitud);
+        $this->marcarLeidasPorSolicitud($idSolicitud, $nitJefe);
     }
 
     public function notificarRevisionRRHH(int $idSolicitud, string $nitEmpleado, string $tipoSolicitud): void
@@ -59,16 +62,22 @@ class notificacionService
         }
     }
 
-    public function notificarAprobacionRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void
+    public function notificarAprobacionRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $nitGestor = ''): void
     {
         $tipo = $this->tipoLabel($tipoSolicitud);
         $this->safeCrear($nitEmpleado, 'SOLICITUD_APROBADA_RRHH', 'Talento Humano aprobo tu solicitud de ' . $tipo, $idSolicitud);
         if (normalizar_documento($nitJefe) !== normalizar_documento($nitEmpleado)) {
             $this->safeCrear($nitJefe, 'SOLICITUD_APROBADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue aprobada por Talento Humano', $idSolicitud);
         }
+        foreach ($this->usuariosRRHH() as $nit) {
+            $this->marcarLeidasPorSolicitud($idSolicitud, $nit);
+        }
+        if ($nitGestor !== '' && !in_array(normalizar_documento($nitGestor), array_map('normalizar_documento', $this->usuariosRRHH()), true)) {
+            $this->marcarLeidasPorSolicitud($idSolicitud, $nitGestor);
+        }
     }
 
-    public function notificarRechazoRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void
+    public function notificarRechazoRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = '', string $nitGestor = ''): void
     {
         $tipo = $this->tipoLabel($tipoSolicitud);
         $msg = 'Talento Humano rechazo tu solicitud de ' . $tipo;
@@ -78,6 +87,12 @@ class notificacionService
         $this->safeCrear($nitEmpleado, 'SOLICITUD_RECHAZADA_RRHH', $msg, $idSolicitud);
         if (normalizar_documento($nitJefe) !== normalizar_documento($nitEmpleado)) {
             $this->safeCrear($nitJefe, 'SOLICITUD_RECHAZADA_RRHH', 'La solicitud de ' . $tipo . ' de tu colaborador fue rechazada por Talento Humano', $idSolicitud);
+        }
+        foreach ($this->usuariosRRHH() as $nit) {
+            $this->marcarLeidasPorSolicitud($idSolicitud, $nit);
+        }
+        if ($nitGestor !== '' && !in_array(normalizar_documento($nitGestor), array_map('normalizar_documento', $this->usuariosRRHH()), true)) {
+            $this->marcarLeidasPorSolicitud($idSolicitud, $nitGestor);
         }
     }
 
@@ -107,6 +122,8 @@ class notificacionService
         foreach ($this->usuariosRRHH() as $nit) {
             $notificar((string)$nit);
         }
+
+        $this->marcarLeidasPorSolicitud($idSolicitud, $nitEmpleado);
     }
 
     public function contarNoLeidas(string $nit): int
@@ -140,6 +157,15 @@ class notificacionService
     {
         try {
             return $this->model->marcarTodasLeidas($nit);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool
+    {
+        try {
+            return $this->model->marcarLeidasPorSolicitud($idSolicitud, $nit);
         } catch (Throwable $e) {
             return false;
         }

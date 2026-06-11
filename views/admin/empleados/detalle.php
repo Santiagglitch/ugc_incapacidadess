@@ -243,7 +243,7 @@ $iniciales = implode('', array_map(
         <?php foreach ($auditLog as $entry): ?>
           <?php $esAsignar = ($entry['accion'] ?? '') === 'ASIGNAR_ADMIN'; ?>
           <tr>
-            <td style="white-space:nowrap;color:var(--muted)"><?= e(substr((string)($entry['fecha'] ?? ''), 0, 16)) ?></td>
+            <td style="white-space:nowrap;color:var(--muted)"><?= e(fecha_hora_co((string)($entry['fecha'] ?? ''))) ?></td>
             <td><span class="audit-accion <?= $esAsignar ? '' : 'red' ?>"><?= $esAsignar ? 'Asignado' : 'Removido' ?></span></td>
             <td><?= e((string)($entry['nombre_actor'] ?? $entry['nit_actor'] ?? '')) ?></td>
             <td style="color:var(--muted)"><?= e((string)($entry['descripcion'] ?? '')) ?></td>

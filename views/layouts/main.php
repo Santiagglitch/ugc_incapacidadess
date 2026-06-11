@@ -680,6 +680,22 @@ $csrfToken = csrf_token();
     });
   }
 
+  function formatFechaCo(valor) {
+    if (!valor) return '';
+    var partes = String(valor).split(' ');
+    if (partes.length < 2) return valor;
+    var fecha = partes[0].split('-');
+    if (fecha.length !== 3) return valor;
+    var tiempo = partes[1].split(':');
+    var h = parseInt(tiempo[0], 10);
+    var m = tiempo[1] || '00';
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    var hStr = h < 10 ? '0' + h : String(h);
+    return fecha[2] + '/' + fecha[1] + '/' + fecha[0] + ' ' + hStr + ':' + m + ' ' + ampm;
+  }
+
   function iconClass(tipo) {
     tipo = String(tipo || '').toLowerCase();
 
@@ -717,7 +733,7 @@ $csrfToken = csrf_token();
         '<span class="notificacion-icon ' + cls + '"></span>' +
         '<span class="notificacion-content">' +
           '<p>' + escapeHtml(item.MENSAJE) + '</p>' +
-          '<span class="notificacion-time">' + escapeHtml(item.FECHA_CREACION) + '</span>' +
+          '<span class="notificacion-time">' + escapeHtml(formatFechaCo(item.FECHA_CREACION)) + '</span>' +
         '</span>' +
       '</button>';
     }).join('');

@@ -113,14 +113,14 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
   <?php if (!empty($solicitud['FECHA_GESTION_JEFE'])): ?>
   <div class="detail-meta-row">
     <span class="detail-meta-label">Gestionado por Jefe:</span>
-    <span class="detail-meta-value"><?= e($solicitud['FECHA_GESTION_JEFE'] ?? '') ?></span>
+    <span class="detail-meta-value"><?= e(fecha_hora_co((string)($solicitud['FECHA_GESTION_JEFE'] ?? ''))) ?></span>
   </div>
   <?php endif; ?>
 
   <?php if (!empty($solicitud['FECHA_GESTION_RRHH'])): ?>
   <div class="detail-meta-row">
     <span class="detail-meta-label">Gestionado por RRHH:</span>
-    <span class="detail-meta-value"><?= e($solicitud['FECHA_GESTION_RRHH'] ?? '') ?></span>
+    <span class="detail-meta-value"><?= e(fecha_hora_co((string)($solicitud['FECHA_GESTION_RRHH'] ?? ''))) ?></span>
   </div>
   <?php endif; ?>
 </div>
@@ -406,7 +406,7 @@ document.getElementById('formAdminIntervenir').addEventListener('submit', functi
       <li style="background:var(--surface2,#f8fafc);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between">
           <span style="font-weight:600"><?= e($n['nombre'] ?? $n['nit'] ?? '') ?></span>
-          <span><?= e(substr((string)($n['fecha'] ?? ''), 0, 16)) ?></span>
+          <span><?= e(fecha_hora_co((string)($n['fecha'] ?? ''))) ?></span>
         </div>
         <div style="font-size:13px;white-space:pre-wrap"><?= nl2br(e((string)($n['nota'] ?? ''))) ?></div>
       </li>
