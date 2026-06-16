@@ -20,14 +20,6 @@ class authModel
             return ['ok' => false, 'error' => 'Ingresa documento y contrasena.'];
         }
 
-        if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$cedula]) && $password === 'prueba123') {
-            $user = USUARIOS_PRUEBA[$cedula];
-            if ($cedula === SUPER_ADMIN_NIT) {
-                $user['rol'] = ROL_ADMIN;
-            }
-            return ['ok' => true, 'user' => $user];
-        }
-
         $ldap = ldap_autenticar_usuario($cedula, $password);
         if (!$ldap) {
             return ['ok' => false, 'error' => 'Credenciales incorrectas.'];

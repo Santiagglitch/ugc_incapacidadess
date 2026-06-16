@@ -27,7 +27,7 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
 ?>
 <section class="page-header">
   <div>
-    <h1 class="page-title">Solicitud #<?= e($solicitud['ID'] ?? '') ?></h1>
+    <h1 class="page-title">Solicitud</h1>
     <p style="color:var(--muted)"><?= e(TIPOS_SOLICITUD[$solicitud['TIPO_SOLICITUD'] ?? ''] ?? ($solicitud['TIPO_SOLICITUD'] ?? '')) ?></p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">

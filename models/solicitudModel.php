@@ -660,7 +660,7 @@ class solicitudModel extends mainModelUXXI
                     FROM ICEBERG.EMPLEADO emp
                     WHERE emp.EMPRESA IN ('BA2', 'BDO')
                       AND emp.ESTADO='A'
-                      AND emp.DEPARTAMENTO IN ('11', '25')
+                      AND emp.DEPARTAMENTO IN ('11', '25', '17')
                       AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
                       AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
                 )",

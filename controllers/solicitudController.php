@@ -997,7 +997,7 @@ public function cancelarAgenda(?int $id = null): void
             return false;
         }
 
-        if ($nit === SUPER_ADMIN_NIT || $adminRolesModel->esAdminAdicional($nit)) {
+        if (es_super_admin_nit($nit) || $adminRolesModel->esAdminAdicional($nit)) {
             return true;
         }
 

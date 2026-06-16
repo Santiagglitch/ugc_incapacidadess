@@ -7,7 +7,8 @@ $logAccionesUnicas  = $logAccionesUnicas  ?? [];
 $countsSolicitudes  = $countsSolicitudes  ?? [];
 $totalSolicitudes   = $totalSolicitudes   ?? 0;
 $totalEmpleados     = $totalEmpleados     ?? 0;
-$totalAdmins        = $totalAdmins        ?? 1;
+$superAdminNits     = super_admin_nits();
+$totalAdmins        = $totalAdmins        ?? count($superAdminNits);
 $estadoSistema      = $estadoSistema      ?? [];
 $sesionesActivas    = $sesionesActivas    ?? [];
 $tendenciaMeses     = $tendenciaMeses     ?? [];
@@ -310,13 +311,15 @@ $nitActual = (string)($user['cedula'] ?? '');
     </div>
 
     <ul class="sa-admins-list" style="margin-top:12px">
-      <li>
-        <div>
-          <div style="font-weight:600;font-size:13px">Super Usuario <span class="badge-sa">SA</span></div>
-          <div class="sa-admins-nit"><?= e(SUPER_ADMIN_NIT) ?></div>
-        </div>
-        <span class="badge-ok">Permanente</span>
-      </li>
+      <?php foreach ($superAdminNits as $idx => $nitSuperAdmin): ?>
+        <li>
+          <div>
+            <div style="font-weight:600;font-size:13px">Super Usuario<?= $idx > 0 ? ' ' . e($idx + 1) : '' ?> <span class="badge-sa">SA</span></div>
+            <div class="sa-admins-nit"><?= e($nitSuperAdmin) ?></div>
+          </div>
+          <span class="badge-ok">Permanente</span>
+        </li>
+      <?php endforeach; ?>
       <?php if (empty($adminsAdicionales)): ?>
         <li><span class="sa-empty">Sin administradores adicionales asignados.</span></li>
       <?php else: ?>

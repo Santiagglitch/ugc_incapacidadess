@@ -160,7 +160,7 @@ class adminAuditoriaModel extends mainModelUXXI
             }
         }
 
-        if (defined('SUPER_ADMIN_NIT') && $nit === SUPER_ADMIN_NIT) {
+        if (function_exists('es_super_admin_nit') && es_super_admin_nit($nit)) {
             return 'Super Usuario';
         }
 

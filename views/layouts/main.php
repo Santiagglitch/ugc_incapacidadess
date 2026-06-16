@@ -22,7 +22,7 @@ $rolesLabel = [
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
 // Variables para el modo Admin (Super Admin, Admin Adicional o TH fijo)
-$esSuperAdmin        = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$esSuperAdmin        = es_super_admin_nit($user['cedula'] ?? '');
 $esTalentoHumanoFijo = in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
 $tieneSelectorModo   = usuario_tiene_selector_modo();
 $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
