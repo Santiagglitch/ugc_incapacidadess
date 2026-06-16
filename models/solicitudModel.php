@@ -29,6 +29,7 @@ class solicitudModel extends mainModelUXXI
         $estado = (string)($data['estado'] ?? 'PENDIENTE_JEFE');
 
         $tipoDuracion = isset($data['tipo_duracion']) && $data['tipo_duracion'] !== '' ? $data['tipo_duracion'] : null;
+        $ahoraCo = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "INSERT INTO SOLICITUDES_PERMISOS
@@ -39,7 +40,7 @@ class solicitudModel extends mainModelUXXI
                 (:nit_empleado, :nit_jefe, :tipo_solicitud,
                  TO_DATE(:fecha_inicio, 'YYYY-MM-DD'), TO_DATE(:fecha_fin, 'YYYY-MM-DD'),
                  :duracion_horas, :duracion_dias, :tipo_duracion, :observaciones, :ruta_comprobante,
-                 :estado, 1, SYSDATE, SYSDATE)",
+                 :estado, 1, $ahoraCo, $ahoraCo)",
             [
                 ':nit_empleado'     => $data['nit_empleado'],
                 ':nit_jefe'         => $data['nit_jefe'],
@@ -357,13 +358,15 @@ class solicitudModel extends mainModelUXXI
 
     public function aprobarJefeTalentoHumano(int $id, string $nitJefe, string $obs): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
-                 FECHA_GESTION_JEFE=SYSDATE,
+                 FECHA_GESTION_JEFE=$ahoraCo,
                  OBSERVACION_JEFE=:obs_jefe,
                  NIT_RRHH=NULL,
-                 FECHA_GESTION_RRHH=SYSDATE,
+                 FECHA_GESTION_RRHH=$ahoraCo,
                  OBSERVACION_RRHH=:obs_rrhh
              WHERE ID=:id
                AND NIT_JEFE=:nit_jefe
@@ -413,13 +416,14 @@ class solicitudModel extends mainModelUXXI
             ESTADO_RECHAZADO_RRHH,
         ];
         [$inClause, $estadoBinds] = $this->buildInClause($estadosIntervenibles, 'admin_intervenir_estado_');
+        $ahoraCo = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  NIT_RRHH=:nit_admin,
-                 FECHA_GESTION_RRHH=SYSDATE,
-                 FECHA_MODIFICACION=SYSDATE,
+                 FECHA_GESTION_RRHH=$ahoraCo,
+                 FECHA_MODIFICACION=$ahoraCo,
                  OBSERVACION_RRHH=CASE
                     WHEN OBSERVACION_RRHH IS NULL THEN :obs
                     ELSE SUBSTR(OBSERVACION_RRHH || CHR(10) || :obs2, 1, 2000)
@@ -458,13 +462,14 @@ class solicitudModel extends mainModelUXXI
         $esEstadoRrhh = in_array($nuevoEstado, [ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH], true) ? 1 : 0;
         $esEstadoJefe = in_array($nuevoEstado, [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE], true) ? 1 : 0;
         $obsAdmin = 'Estado forzado por admin a ' . $nuevoEstado . ': ' . $motivo;
+        $ahoraCo = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
-                 FECHA_MODIFICACION=SYSDATE,
+                 FECHA_MODIFICACION=$ahoraCo,
                  NIT_RRHH=CASE WHEN :es_rrhh=1 THEN :nit_admin ELSE NIT_RRHH END,
-                 FECHA_GESTION_RRHH=CASE WHEN :es_rrhh2=1 THEN SYSDATE ELSE FECHA_GESTION_RRHH END,
+                 FECHA_GESTION_RRHH=CASE WHEN :es_rrhh2=1 THEN $ahoraCo ELSE FECHA_GESTION_RRHH END,
                  OBSERVACION_RRHH=CASE
                     WHEN :es_rrhh3=1 THEN
                         CASE
@@ -473,7 +478,7 @@ class solicitudModel extends mainModelUXXI
                         END
                     ELSE OBSERVACION_RRHH
                  END,
-                 FECHA_GESTION_JEFE=CASE WHEN :es_jefe=1 THEN SYSDATE ELSE FECHA_GESTION_JEFE END,
+                 FECHA_GESTION_JEFE=CASE WHEN :es_jefe=1 THEN $ahoraCo ELSE FECHA_GESTION_JEFE END,
                  OBSERVACION_JEFE=CASE
                     WHEN :es_jefe2=1 THEN
                         CASE
@@ -534,14 +539,16 @@ class solicitudModel extends mainModelUXXI
             return false;
         }
 
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO = :estado,
-                 FECHA_MODIFICACION = SYSDATE,
-                 FECHA_GESTION_JEFE = SYSDATE,
+                 FECHA_MODIFICACION = $ahoraCo,
+                 FECHA_GESTION_JEFE = $ahoraCo,
                  MOTIVO_CANCELACION = :motivo_cancelacion,
                  NIT_CANCELADOR = :nit_cancelador,
-                 FECHA_CANCELACION = SYSDATE
+                 FECHA_CANCELACION = $ahoraCo
              WHERE ID = :id
                AND ACTIVO = 1
                AND ESTADO IN ('APROBADO_JEFE', 'APROBADO_RRHH', 'PENDIENTE_APROBACION_RRHH')
@@ -563,11 +570,12 @@ class solicitudModel extends mainModelUXXI
     public function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool
     {
         $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
+        $ahoraCo = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ACTIVO=0,
-                 FECHA_MODIFICACION=SYSDATE
+                 FECHA_MODIFICACION=$ahoraCo
              WHERE ID=:id
                AND NIT_EMPLEADO=:nit
                AND (
@@ -798,6 +806,7 @@ class solicitudModel extends mainModelUXXI
     public function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data, bool $permitirAprobadoJefe = false): bool
     {
         $permitirAprobadoJefe = $permitirAprobadoJefe ? 1 : 0;
+        $ahoraCo = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
@@ -809,7 +818,7 @@ class solicitudModel extends mainModelUXXI
                  DURACION_DIAS=:duracion_dias,
                  OBSERVACIONES=:observaciones,
                  RUTA_COMPROBANTE=:ruta_comprobante,
-                 FECHA_MODIFICACION=SYSDATE
+                 FECHA_MODIFICACION=$ahoraCo
              WHERE ID=:id
                AND NIT_EMPLEADO=:nit_empleado
                AND (
@@ -835,10 +844,12 @@ class solicitudModel extends mainModelUXXI
 
     private function gestionarJefe(int $id, string $nit, string $obs, string $estado): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
-                 FECHA_GESTION_JEFE=SYSDATE,
+                 FECHA_GESTION_JEFE=$ahoraCo,
                  OBSERVACION_JEFE=:obs
              WHERE ID=:id
                AND NIT_JEFE=:nit
@@ -856,11 +867,13 @@ class solicitudModel extends mainModelUXXI
 
     private function gestionarRRHH(int $id, string $nit, string $obs, string $estado): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "UPDATE SOLICITUDES_PERMISOS
              SET ESTADO=:estado,
                  NIT_RRHH=:nit,
-                 FECHA_GESTION_RRHH=SYSDATE,
+                 FECHA_GESTION_RRHH=$ahoraCo,
                  OBSERVACION_RRHH=:obs
              WHERE ID=:id
                AND ESTADO='APROBADO_JEFE'
