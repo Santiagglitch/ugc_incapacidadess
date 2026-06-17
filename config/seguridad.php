@@ -124,7 +124,7 @@ function usuario_tiene_selector_modo(): bool
 {
     $usuario = usuario_actual();
     $cedula = $usuario['cedula'] ?? '';
-    if ($cedula === SUPER_ADMIN_NIT) {
+    if (es_super_admin_nit($cedula)) {
         return true;
     }
     if (in_array($cedula, NITS_TALENTO_HUMANO, true)) {

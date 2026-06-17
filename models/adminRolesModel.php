@@ -46,9 +46,10 @@ class adminRolesModel extends mainModelUXXI
         }
 
         $asignadoPor = $nitAsignadoPor !== '' ? $nitAsignadoPor : null;
+        $ahoraCo = self::SQL_NOW_CO;
         $ok = $this->ejecutar(
             "INSERT INTO ADMIN_ROLES (ID, NIT_ADMIN, ACTIVO, FECHA_ASIGNADO, NIT_ASIGNADO_POR)
-             VALUES (SEQ_ADMIN_ROLES.NEXTVAL, :nit, 1, SYSDATE, :asignado_por)",
+             VALUES (SEQ_ADMIN_ROLES.NEXTVAL, :nit, 1, $ahoraCo, :asignado_por)",
             [':nit' => $nit, ':asignado_por' => $asignadoPor]
         );
 

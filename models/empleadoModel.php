@@ -17,7 +17,7 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
                AND NIT=:nit
              ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
              FETCH FIRST 1 ROWS ONLY",
@@ -47,7 +47,7 @@ class empleadoModel extends mainModel
                     FROM EMPLEADO
                     WHERE EMPRESA IN ('BA2', 'BDO')
                       AND ESTADO='A'
-                      AND DEPARTAMENTO IN ('11', '25')
+                      AND DEPARTAMENTO IN ('11', '25', '17')
                       AND NIT IN ($inClause)
                  )
                  WHERE RN=1",
@@ -98,7 +98,7 @@ class empleadoModel extends mainModel
                      AND cc.ESTADO = 'A'
                     WHERE e.EMPRESA IN ('BA2', 'BDO')
                       AND e.ESTADO='A'
-                      AND e.DEPARTAMENTO IN ('11', '25')
+                      AND e.DEPARTAMENTO IN ('11', '25', '17')
                       AND e.NIT IN ($inClause)
                  )
                  WHERE RN=1",
@@ -130,14 +130,14 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
              ORDER BY NOMBRE_COMPLETO"
         );
     }
 
     public function getRol(string $nit, ?array $empleado = null): string
     {
-        if ($nit === SUPER_ADMIN_NIT) {
+        if (es_super_admin_nit($nit)) {
             return ROL_ADMIN;
         }
 
@@ -172,7 +172,7 @@ class empleadoModel extends mainModel
                   FROM EMPLEADO e
                  WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
-                   AND e.DEPARTAMENTO IN ('11', '25')
+                   AND e.DEPARTAMENTO IN ('11', '25', '17')
                    AND e.NIT = :nit
             ),
             base AS (
@@ -187,7 +187,7 @@ class empleadoModel extends mainModel
                   FROM EMPLEADO e
                  WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
-                   AND e.DEPARTAMENTO IN ('11', '25')
+                   AND e.DEPARTAMENTO IN ('11', '25', '17')
             ),
             cc_map AS (
                 SELECT DISTINCT
@@ -291,7 +291,7 @@ class empleadoModel extends mainModel
                 FROM EMPLEADO
                 WHERE EMPRESA IN ('BA2', 'BDO')
                   AND ESTADO='A'
-                  AND DEPARTAMENTO IN ('11', '25')
+                  AND DEPARTAMENTO IN ('11', '25', '17')
                   AND NIT IN ($inClause)
              )
              WHERE RN=1
@@ -320,7 +320,7 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
                AND CENTRO_COSTO IN ($inClause)
              ORDER BY NOMBRE_COMPLETO",
             $binds

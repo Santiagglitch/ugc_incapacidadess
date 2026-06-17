@@ -8,11 +8,13 @@ class notificacionModel extends mainModelUXXI
 {
     public function crear(string $nitDestinatario, string $tipo, string $mensaje, int $idSolicitud): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "INSERT INTO NOTIFICACIONES
                 (NIT_DESTINATARIO, TIPO, MENSAJE, ID_SOLICITUD, LEIDA, FECHA_CREACION)
              VALUES
-                (:nit, :tipo, :mensaje, :solicitud, 0, SYSDATE)",
+                (:nit, :tipo, :mensaje, :solicitud, 0, $ahoraCo)",
             [':nit' => $nitDestinatario, ':tipo' => $tipo, ':mensaje' => $mensaje, ':solicitud' => $idSolicitud]
         );
     }
@@ -46,24 +48,30 @@ class notificacionModel extends mainModelUXXI
 
     public function marcarLeida(int $id, string $nit): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
-            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=SYSDATE WHERE ID=:id AND NIT_DESTINATARIO=:nit",
+            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=$ahoraCo WHERE ID=:id AND NIT_DESTINATARIO=:nit",
             [':id' => $id, ':nit' => $nit]
         );
     }
 
     public function marcarTodasLeidas(string $nit): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
-            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=SYSDATE WHERE NIT_DESTINATARIO=:nit AND LEIDA=0",
+            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=$ahoraCo WHERE NIT_DESTINATARIO=:nit AND LEIDA=0",
             [':nit' => $nit]
         );
     }
 
     public function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
-            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=SYSDATE
+            "UPDATE NOTIFICACIONES SET LEIDA=1, FECHA_LECTURA=$ahoraCo
              WHERE ID_SOLICITUD=:solicitud AND NIT_DESTINATARIO=:nit AND LEIDA=0",
             [':solicitud' => $idSolicitud, ':nit' => $nit]
         );

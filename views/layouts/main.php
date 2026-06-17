@@ -22,7 +22,7 @@ $rolesLabel = [
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
 // Variables para el modo Admin (Super Admin, Admin Adicional o TH fijo)
-$esSuperAdmin        = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$esSuperAdmin        = es_super_admin_nit($user['cedula'] ?? '');
 $esTalentoHumanoFijo = in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
 $tieneSelectorModo   = usuario_tiene_selector_modo();
 $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
@@ -688,22 +688,20 @@ $csrfToken = csrf_token();
     if (fechaParts.length !== 3) return valor;
     var tiempo = partes[1].split(':');
 
-    var utcMs = Date.UTC(
-      parseInt(fechaParts[0], 10),
-      parseInt(fechaParts[1], 10) - 1,
-      parseInt(fechaParts[2], 10),
-      parseInt(tiempo[0], 10),
-      parseInt(tiempo[1] || '0', 10),
-      parseInt(tiempo[2] || '0', 10)
-    );
-    var coMs = utcMs - (5 * 60 * 60 * 1000);
-    var d = new Date(coMs);
+    var yy = parseInt(fechaParts[0], 10);
+    var mm = parseInt(fechaParts[1], 10);
+    var dd = parseInt(fechaParts[2], 10);
+    var h = parseInt(tiempo[0] || '0', 10);
+    var min = parseInt(tiempo[1] || '0', 10);
 
-    var dd  = d.getUTCDate();    dd  = dd  < 10 ? '0' + dd  : String(dd);
-    var mm  = d.getUTCMonth() + 1; mm = mm  < 10 ? '0' + mm  : String(mm);
-    var yy  = d.getUTCFullYear();
-    var h   = d.getUTCHours();
-    var min = d.getUTCMinutes(); min = min < 10 ? '0' + min : String(min);
+    if (isNaN(yy) || isNaN(mm) || isNaN(dd) || isNaN(h) || isNaN(min)) {
+      return valor;
+    }
+
+    dd = dd < 10 ? '0' + dd : String(dd);
+    mm = mm < 10 ? '0' + mm : String(mm);
+    yy = String(yy);
+    min = min < 10 ? '0' + min : String(min);
     var ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
     if (h === 0) h = 12;

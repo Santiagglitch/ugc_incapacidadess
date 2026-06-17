@@ -26,12 +26,12 @@ $exportUrl = 'Export/Admin/ExportController.php?download=1'
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div><h1 class="page-title">Panel de Administrador</h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Vista general del sistema de solicitudes</p></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <?php $esSuperAdminModoEmpleado = (($user['cedula'] ?? '') === SUPER_ADMIN_NIT) && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'empleado'); ?>
+    <?php $esSuperAdminModoEmpleado = es_super_admin_nit($user['cedula'] ?? '') && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'empleado'); ?>
     <?php if ($esSuperAdminModoEmpleado): ?>
       <a class="btn btn-green" href="<?= e(url_view('solicitud_crear')) ?>">+ Nueva solicitud</a>
     <?php endif; ?>
     <a class="btn btn-outline" href="<?= e(url_view('admin_empleados')) ?>">Gestionar empleados</a>
-    <?php if ((($user['cedula'] ?? '') === SUPER_ADMIN_NIT) && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'super_usuario')): ?>
+    <?php if (es_super_admin_nit($user['cedula'] ?? '') && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'super_usuario')): ?>
       <a class="btn btn-green" href="<?= e(url_view('superadmin_panel')) ?>">&#9733; Panel Super Admin</a>
     <?php endif; ?>
     <a class="btn btn-green" href="<?= e($exportUrl) ?>">&#8659; Exportar datos</a>

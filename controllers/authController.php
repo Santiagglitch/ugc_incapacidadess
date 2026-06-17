@@ -17,7 +17,7 @@ class authController
     private function usuarioTieneSelectorModo(array $user): bool
     {
         $cedula = $user['cedula'] ?? '';
-        if ($cedula === SUPER_ADMIN_NIT) {
+        if (es_super_admin_nit($cedula)) {
             return true;
         }
         if (in_array($cedula, NITS_TALENTO_HUMANO, true)) {
@@ -31,7 +31,7 @@ class authController
      */
     private function esSuperAdmin(array $user): bool
     {
-        return ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+        return es_super_admin_nit($user['cedula'] ?? '');
     }
 
     /**
@@ -136,7 +136,7 @@ class authController
         if ($this->usuarioTieneSelectorModo($result['user'])) {
             $_SESSION['admin_modo_pendiente'] = true;
             $cedula = $result['user']['cedula'] ?? '';
-            $esSuperAdmin = ($cedula === SUPER_ADMIN_NIT);
+            $esSuperAdmin = es_super_admin_nit($cedula);
             $esTH = $this->esTalentoHumanoFijo($result['user']);
             if ($esSuperAdmin) {
                 $tipoLog = 'LOGIN_SA';
