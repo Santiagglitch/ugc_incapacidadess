@@ -270,6 +270,8 @@ class solicitudController
             exit('Sin permiso para ver esta solicitud.');
         }
 
+        $solicitud = $this->enriquecerSolicitudDetalle($solicitud);
+
         $notasAdmin = [];
         if (($user['rol'] ?? '') === ROL_ADMIN) {
             $notasAdmin = (new notaAdminService())->getByIdSolicitud($id);
@@ -885,6 +887,44 @@ public function cancelarAgenda(?int $id = null): void
         return normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '') === $cedula
             || normalizar_documento($solicitud['NIT_JEFE'] ?? '') === $cedula
             || in_array($user['rol'] ?? '', [ROL_ADMIN, ROL_RRHH], true);
+    }
+
+    private function enriquecerSolicitudDetalle(array $solicitud): array
+    {
+        $nits = [];
+
+        foreach (['NIT_EMPLEADO', 'NIT_JEFE'] as $campo) {
+            $nit = (string)($solicitud[$campo] ?? '');
+            if ($nit !== '') {
+                $nits[$nit] = $nit;
+            }
+        }
+
+        if (empty($nits)) {
+            $solicitud['NOMBRE_EMPLEADO'] = '';
+            $solicitud['NOMBRE_JEFE'] = '';
+            return $solicitud;
+        }
+
+        $nombres = [];
+
+        foreach ($nits as $nit) {
+            if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$nit])) {
+                $nombres[$nit] = (string)(USUARIOS_PRUEBA[$nit]['nombre'] ?? $nit);
+                unset($nits[$nit]);
+            }
+        }
+
+        if (!empty($nits)) {
+            $nombres += (new empleadoModel())->getNombresPorNit(array_values($nits));
+        }
+
+        foreach (['NIT_EMPLEADO' => 'NOMBRE_EMPLEADO', 'NIT_JEFE' => 'NOMBRE_JEFE'] as $nitCampo => $nombreCampo) {
+            $nit = (string)($solicitud[$nitCampo] ?? '');
+            $solicitud[$nombreCampo] = trim((string)($nombres[$nit] ?? ''));
+        }
+
+        return $solicitud;
     }
 
     private function puedeEditar(array $solicitud, array $user): bool
