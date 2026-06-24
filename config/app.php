@@ -98,26 +98,6 @@ function es_super_admin_nit($nit): bool
     return $nitNormalizado !== '' && in_array($nitNormalizado, super_admin_nits(), true);
 }
 
-function super_admin_nits(): array
-{
-    static $nits = null;
-
-    if ($nits === null) {
-        $nits = array_values(array_unique(array_filter(array_map(
-            static fn($nit): string => preg_replace('/\D+/', '', (string)$nit) ?? '',
-            SUPER_ADMIN_NITS
-        ), static fn($nit): bool => $nit !== '')));
-    }
-
-    return $nits;
-}
-
-function es_super_admin_nit($nit): bool
-{
-    $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
-    return $nitNormalizado !== '' && in_array($nitNormalizado, super_admin_nits(), true);
-}
-
 function es_jefe_revisor_nit($nit): bool
 {
     $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
@@ -174,12 +154,6 @@ define('TIPOS_SOLICITUD', [
     'OTROS' => 'Otros',
 ]);
 
-$usuariosPruebaSuperAdmins = [];
-foreach (super_admin_nits() as $i => $nitSuperAdmin) {
-    $usuariosPruebaSuperAdmins[$nitSuperAdmin] = [
-        'cedula'       => $nitSuperAdmin,
-        'nombre'       => $i === 0 ? 'Ingeniero Jefe / Super Admin' : 'Super Admin ' . ($i + 1),
-        'email'        => $i === 0 ? 'superadmin@ugc.edu.co' : 'superadmin' . ($i + 1) . '@ugc.edu.co',
 $usuariosPruebaSuperAdmins = [];
 foreach (super_admin_nits() as $i => $nitSuperAdmin) {
     $usuariosPruebaSuperAdmins[$nitSuperAdmin] = [
