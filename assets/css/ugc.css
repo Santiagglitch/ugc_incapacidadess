@@ -466,12 +466,12 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
     0 0 0 5px rgba(255,255,255,.22);
 }
 
-/* CAPIBARA MÁS GRANDE */
+/* CAPIBARA DEL LOGIN */
 .login-capibara{
   position:absolute;
-  right:-95px;
-  bottom:-10px;
-  width:160px;
+  right:-70px;
+  bottom:-8px;
+  width:120px;
   max-width:none;
   height:auto;
   object-fit:contain;
@@ -681,9 +681,9 @@ body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font
   }
 
   .login-capibara{
-    width:120px;
-    right:-65px;
-    bottom:-8px;
+    width:90px;
+    right:-48px;
+    bottom:-6px;
   }
 
   .brand-title{

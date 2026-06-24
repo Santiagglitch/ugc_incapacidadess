@@ -28,13 +28,9 @@ class pdfStorageService
             return false;
         }
 
-        if ($this->esServidorCentral()) {
-            $rutaLocal = $this->rutaLocal($nombre);
+        $rutaLocal = $this->rutaLocal($nombre);
 
-            if (!is_file($rutaLocal)) {
-                return false;
-            }
-
+        if (is_file($rutaLocal)) {
             $contenido = file_get_contents($rutaLocal);
 
             if (!is_string($contenido)) {
@@ -43,6 +39,10 @@ class pdfStorageService
 
             $this->enviarPdf($contenido, $nombre);
             return true;
+        }
+
+        if ($this->esServidorCentral()) {
+            return false;
         }
 
         if (!function_exists('curl_init')) {

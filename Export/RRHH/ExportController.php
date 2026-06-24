@@ -11,7 +11,6 @@ use Shuchkin\SimpleXLSXGen;
 final class ExportController
 {
     private array $cabeceras = [
-        'ID',
         'NIT EMPLEADO',
         'NOMBRE COMPLETO',
         'FACULTAD / CENTRO DE COSTO',
@@ -31,7 +30,6 @@ final class ExportController
     ];
 
     private array $campos = [
-        'ID',
         'NIT_EMPLEADO',
         'NOMBRE_EMPLEADO',
         'NOMBRE_CENTRO_COSTO',
@@ -67,6 +65,10 @@ final class ExportController
 
         $todas = $model->getAll();
 
+        if (!is_array($todas)) {
+            $todas = [];
+        }
+
         $pendientesRRHH = $this->ordenarPorFechaCreacionAsc(
             $this->filtrarPorEstados($todas, [
                 $this->constante('ESTADO_APROBADO_JEFE', 'APROBADO_JEFE'),
@@ -89,6 +91,10 @@ final class ExportController
 
         $canceladoPorUsuario = $this->obtenerCanceladasPorUsuario($model, $todas);
         $misSolicitudes = $model->getByEmpleado($nitRrhh);
+
+        if (!is_array($misSolicitudes)) {
+            $misSolicitudes = [];
+        }
 
         /*
             MISMO ORDEN Y MISMOS NOMBRES DE LAS TARJETAS DEL PANEL RRHH
@@ -219,14 +225,15 @@ final class ExportController
 
     private function ordenarPorFechaCreacionAsc(array $rows): array
     {
-        usort($rows, static function (array $a, array $b): int {
-            $fecha = strcmp(
-                (string)($a['FECHA_CREACION'] ?? ''),
-                (string)($b['FECHA_CREACION'] ?? '')
-            );
+        usort($rows, function (array $a, array $b): int {
+            $fechaA = $this->parsearFecha($a['FECHA_CREACION'] ?? null);
+            $fechaB = $this->parsearFecha($b['FECHA_CREACION'] ?? null);
 
-            if ($fecha !== 0) {
-                return $fecha;
+            $timeA = $fechaA ? $fechaA->getTimestamp() : 0;
+            $timeB = $fechaB ? $fechaB->getTimestamp() : 0;
+
+            if ($timeA !== $timeB) {
+                return $timeA <=> $timeB;
             }
 
             return (int)($a['ID'] ?? 0) <=> (int)($b['ID'] ?? 0);
@@ -246,6 +253,10 @@ final class ExportController
                     continue;
                 }
 
+                /*
+                    El ID ya no se exporta, pero se sigue usando internamente
+                    para evitar solicitudes duplicadas entre hojas.
+                */
                 $id = (string)($row['ID'] ?? '');
 
                 if ($id === '') {
@@ -268,11 +279,30 @@ final class ExportController
     {
         $xlsx = new SimpleXLSXGen();
 
+        if (method_exists($xlsx, 'setDefaultFont')) {
+            $xlsx->setDefaultFont('Calibri');
+        }
+
+        if (method_exists($xlsx, 'setDefaultFontSize')) {
+            $xlsx->setDefaultFontSize(11);
+        }
+
         foreach ($data as $tituloHoja => $rows) {
+            if (!is_array($rows)) {
+                $rows = [];
+            }
+
             $xlsx->addSheet(
                 $this->prepararFilas($rows),
                 $this->limpiarTituloHoja($tituloHoja)
             );
+
+            /*
+                Importante:
+                Los anchos se aplican después de crear la hoja.
+                Si se aplican antes, SimpleXLSXGen puede lanzar error con rows.
+            */
+            $this->aplicarAnchosColumnas($xlsx);
         }
 
         while (ob_get_level() > 0) {
@@ -285,9 +315,18 @@ final class ExportController
 
     private function prepararFilas(array $rows): array
     {
-        $filas = [$this->cabeceras];
+        $filas = [];
+
+        /*
+            Primera fila con diseño.
+        */
+        $filas[] = $this->prepararCabecerasConDiseno();
 
         foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
             $fila = [];
 
             foreach ($this->campos as $campo) {
@@ -301,13 +340,230 @@ final class ExportController
                     $valor = \TIPOS_SOLICITUD[$valor];
                 }
 
-                $fila[] = SafeXlsx::valor($valor);
+                /*
+                    FECHA INICIO y FECHA FIN:
+                    solo fecha, sin hora 00:00.
+                    Ejemplo: 18/06/2026
+                */
+                if (in_array($campo, ['FECHA_INICIO', 'FECHA_FIN'], true)) {
+                    $valor = $this->formatearFechaSolo($valor);
+                }
+
+                /*
+                    FECHA CREACION y FECHA GESTION RRHH:
+                    fecha + hora en formato AM/PM.
+                    Ejemplo: 17/06/2026 08:57 AM
+                */
+                if (in_array($campo, ['FECHA_CREACION', 'FECHA_GESTION_RRHH'], true)) {
+                    $valor = $this->formatearFechaHoraAmPm($valor);
+                }
+
+                $fila[] = $this->celdaConDiseno($valor, $campo);
             }
 
             $filas[] = $fila;
         }
 
         return $filas;
+    }
+
+    private function prepararCabecerasConDiseno(): array
+    {
+        $cabeceras = [];
+
+        foreach ($this->cabeceras as $cabecera) {
+            $valor = $this->limpiarValorParaExcel($cabecera);
+
+            $cabeceras[] =
+                '<style bgcolor="#063125" color="#FFFFFF" border="thin">' .
+                '<b><center><middle><raw>' . $valor . '</raw></middle></center></b>' .
+                '</style>';
+        }
+
+        return $cabeceras;
+    }
+
+    private function celdaConDiseno($valor, string $campo): string
+    {
+        $valor = $this->limpiarValorParaExcel($valor);
+
+        /*
+            Columnas de texto largo.
+            Quedan con wraptext para que el texto no se riegue hacia otras columnas.
+        */
+        if (in_array($campo, ['OBSERVACIONES', 'OBSERVACION_JEFE', 'OBSERVACION_RRHH'], true)) {
+            return
+                '<style border="thin">' .
+                '<wraptext><top><left><raw>' . $valor . '</raw></left></top></wraptext>' .
+                '</style>';
+        }
+
+        /*
+            Nombre y centro de costo pueden ser largos.
+        */
+        if (in_array($campo, ['NOMBRE_EMPLEADO', 'NOMBRE_CENTRO_COSTO'], true)) {
+            return
+                '<style border="thin">' .
+                '<wraptext><middle><left><raw>' . $valor . '</raw></left></middle></wraptext>' .
+                '</style>';
+        }
+
+        /*
+            Resto de columnas centradas.
+        */
+        return
+            '<style border="thin">' .
+            '<center><middle><raw>' . $valor . '</raw></middle></center>' .
+            '</style>';
+    }
+
+    private function aplicarAnchosColumnas(SimpleXLSXGen $xlsx): void
+    {
+        if (!method_exists($xlsx, 'setColWidth')) {
+            return;
+        }
+
+        try {
+            /*
+                Columnas después de quitar ID:
+
+                1  A NIT EMPLEADO
+                2  B NOMBRE COMPLETO
+                3  C FACULTAD / CENTRO DE COSTO
+                4  D NIT JEFE
+                5  E NIT RRHH
+                6  F TIPO SOLICITUD
+                7  G FECHA INICIO
+                8  H FECHA FIN
+                9  I HORAS
+                10 J DIAS
+                11 K ESTADO
+                12 L OBSERVACIONES
+                13 M OBSERVACION JEFE
+                14 N OBSERVACION RRHH
+                15 O FECHA CREACION
+                16 P FECHA GESTION RRHH
+            */
+            $xlsx
+                ->setColWidth(1, 18)
+                ->setColWidth(2, 35)
+                ->setColWidth(3, 38)
+                ->setColWidth(4, 18)
+                ->setColWidth(5, 18)
+                ->setColWidth(6, 25)
+                ->setColWidth(7, 16)
+                ->setColWidth(8, 16)
+                ->setColWidth(9, 10)
+                ->setColWidth(10, 10)
+                ->setColWidth(11, 24)
+                ->setColWidth(12, 90)
+                ->setColWidth(13, 45)
+                ->setColWidth(14, 45)
+                ->setColWidth(15, 24)
+                ->setColWidth(16, 24);
+        } catch (\Throwable $e) {
+            /*
+                Si tu versión de SimpleXLSXGen falla con setColWidth,
+                no detenemos la exportación.
+            */
+        }
+    }
+
+    private function limpiarValorParaExcel($valor): string
+    {
+        if ($valor === null) {
+            return '';
+        }
+
+        if ($valor instanceof \DateTimeInterface) {
+            $valor = $valor->format('Y-m-d H:i:s');
+        }
+
+        $valor = trim((string)$valor);
+
+        /*
+            Normaliza saltos de línea.
+        */
+        $valor = str_replace(["\r\n", "\r"], "\n", $valor);
+
+        /*
+            Evita que textos que empiezan con =, +, - o @ se interpreten como fórmulas.
+        */
+        if ($valor !== '' && in_array($valor[0], ['=', '+', '-', '@'], true)) {
+            $valor = "'" . $valor;
+        }
+
+        return htmlspecialchars($valor, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function formatearFechaSolo($valor): string
+    {
+        $fecha = $this->parsearFecha($valor);
+
+        if (!$fecha) {
+            return is_scalar($valor) ? trim((string)$valor) : '';
+        }
+
+        return $fecha->format('d/m/Y');
+    }
+
+    private function formatearFechaHoraAmPm($valor): string
+    {
+        $fecha = $this->parsearFecha($valor);
+
+        if (!$fecha) {
+            return is_scalar($valor) ? trim((string)$valor) : '';
+        }
+
+        return $fecha->format('d/m/Y h:i A');
+    }
+
+    private function parsearFecha($valor): ?\DateTimeImmutable
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        if ($valor instanceof \DateTimeImmutable) {
+            return $valor;
+        }
+
+        if ($valor instanceof \DateTimeInterface) {
+            return new \DateTimeImmutable($valor->format('Y-m-d H:i:s'));
+        }
+
+        $valor = trim((string)$valor);
+
+        if ($valor === '') {
+            return null;
+        }
+
+        $formatos = [
+            'd/m/Y H:i:s',
+            'd/m/Y H:i',
+            'd/m/Y G:i',
+            'd/m/Y h:i A',
+            'd/m/Y h:i:s A',
+            'Y-m-d H:i:s',
+            'Y-m-d H:i',
+            'Y-m-d\TH:i:s',
+            'Y-m-d',
+            'd/m/Y',
+        ];
+
+        foreach ($formatos as $formato) {
+            $fecha = \DateTimeImmutable::createFromFormat($formato, $valor);
+
+            if ($fecha instanceof \DateTimeImmutable) {
+                return $fecha;
+            }
+        }
+
+        try {
+            return new \DateTimeImmutable($valor);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     private function constante(string $nombre, string $valorDefecto): string

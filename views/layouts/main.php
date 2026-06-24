@@ -22,7 +22,7 @@ $rolesLabel = [
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
 // Variables para el modo Admin (Super Admin, Admin Adicional o TH fijo)
-$esSuperAdmin        = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$esSuperAdmin        = es_super_admin_nit($user['cedula'] ?? '');
 $esTalentoHumanoFijo = in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
 $tieneSelectorModo   = usuario_tiene_selector_modo();
 $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
@@ -510,7 +510,8 @@ $csrfToken = csrf_token();
     read: '<?= e($notifReadUrl) ?>',
     readAll: '<?= e($notifReadAllUrl) ?>',
     detail: '<?= e($solicitudDetalleUrl) ?>',
-    sound: '<?= e($notifSoundUrl) ?>'
+    sound: '<?= e($notifSoundUrl) ?>',
+    login: '<?= e(url_view('login')) ?>'
   };
 
   var csrf = '<?= e($csrfToken) ?>';
@@ -612,6 +613,31 @@ $csrfToken = csrf_token();
   document.addEventListener('click', unlockNotificationSound, { once: true });
   document.addEventListener('keydown', unlockNotificationSound, { once: true });
 
+  function fetchJson(url, options) {
+    options = options || {};
+    options.credentials = 'same-origin';
+
+    if (!options.headers) {
+      options.headers = {};
+    }
+
+    options.headers['X-Requested-With'] = 'XMLHttpRequest';
+
+    return fetch(url, options).then(function (res) {
+      return res.json().then(function (payload) {
+        if (res.status === 401 || (payload && payload.redirect)) {
+          if (payload && payload.redirect) {
+            window.location.href = payload.redirect;
+          } else {
+            window.location.href = urls.login || window.location.href;
+          }
+          throw new Error('Sesion expirada');
+        }
+        return payload;
+      });
+    });
+  }
+
   function post(url, data) {
     var body = new FormData();
 
@@ -621,15 +647,12 @@ $csrfToken = csrf_token();
 
     body.append('_csrf_token', csrf);
 
-    return fetch(url, {
+    return fetchJson(url, {
       method: 'POST',
-      credentials: 'same-origin',
       headers: {
         'X-CSRF-Token': csrf
       },
       body: body
-    }).then(function (res) {
-      return res.json();
     });
   }
 
@@ -688,22 +711,20 @@ $csrfToken = csrf_token();
     if (fechaParts.length !== 3) return valor;
     var tiempo = partes[1].split(':');
 
-    var utcMs = Date.UTC(
-      parseInt(fechaParts[0], 10),
-      parseInt(fechaParts[1], 10) - 1,
-      parseInt(fechaParts[2], 10),
-      parseInt(tiempo[0], 10),
-      parseInt(tiempo[1] || '0', 10),
-      parseInt(tiempo[2] || '0', 10)
-    );
-    var coMs = utcMs - (5 * 60 * 60 * 1000);
-    var d = new Date(coMs);
+    var yy = parseInt(fechaParts[0], 10);
+    var mm = parseInt(fechaParts[1], 10);
+    var dd = parseInt(fechaParts[2], 10);
+    var h = parseInt(tiempo[0] || '0', 10);
+    var min = parseInt(tiempo[1] || '0', 10);
 
-    var dd  = d.getUTCDate();    dd  = dd  < 10 ? '0' + dd  : String(dd);
-    var mm  = d.getUTCMonth() + 1; mm = mm  < 10 ? '0' + mm  : String(mm);
-    var yy  = d.getUTCFullYear();
-    var h   = d.getUTCHours();
-    var min = d.getUTCMinutes(); min = min < 10 ? '0' + min : String(min);
+    if (isNaN(yy) || isNaN(mm) || isNaN(dd) || isNaN(h) || isNaN(min)) {
+      return valor;
+    }
+
+    dd = dd < 10 ? '0' + dd : String(dd);
+    mm = mm < 10 ? '0' + mm : String(mm);
+    yy = String(yy);
+    min = min < 10 ? '0' + min : String(min);
     var ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
     if (h === 0) h = 12;
@@ -756,32 +777,26 @@ $csrfToken = csrf_token();
   }
 
   function loadCount() {
-    fetch(urls.count, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+    fetchJson(urls.count)
       .then(function (data) {
         handleCount(data.contador || 0);
       })
-      .catch(function () {
-        setCount(0);
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          setCount(0);
+        }
       });
   }
 
   function loadList() {
-    fetch(urls.list, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+    fetchJson(urls.list)
       .then(function (data) {
         drawList(data.notificaciones || []);
       })
-      .catch(function () {
-        list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+        }
       });
   }
 
@@ -847,9 +862,32 @@ $csrfToken = csrf_token();
     });
   });
 
-  loadCount();
+  var countInterval = null;
 
-  window.setInterval(loadCount, 60000);
+  function startPolling() {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+    }
+    loadCount();
+    countInterval = window.setInterval(loadCount, 60000);
+  }
+
+  function stopPolling() {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+      countInterval = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      stopPolling();
+    } else {
+      startPolling();
+    }
+  });
+
+  startPolling();
 })();
 </script>
 

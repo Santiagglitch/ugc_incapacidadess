@@ -9,7 +9,7 @@ $esAprendiz = $esAprendiz ?? false;
 $rolLabel   = $rolLabel   ?? 'empleado';
 $jefeInmediato = $jefeInmediato ?? null;
 $limiteAdmins    = $limiteAdmins    ?? 10;
-$usadosAdmins    = $usadosAdmins    ?? 1;
+$usadosAdmins    = $usadosAdmins    ?? 0;
 $auditLog        = $auditLog        ?? [];
 $esSuperAdmin    = $esSuperAdmin    ?? false;
 $esAdminAdicional = $esAdminAdicional ?? false;
@@ -206,7 +206,7 @@ $iniciales = implode('', array_map(
         <div class="admin-quota-fill <?= $cupoLleno ? 'full' : '' ?>" style="width:<?= $pct ?>%"></div>
       </div>
       <span class="admin-quota-label <?= $cupoLleno ? 'color:var(--red)' : '' ?>">
-        <?= e($usadosAdmins) ?> / <?= e($limiteAdmins) ?> admins
+        <?= e($usadosAdmins) ?> / <?= e($limiteAdmins) ?> admins adicionales
         <?php if ($cupoLleno): ?> &mdash; <span style="color:var(--red)">cupo lleno</span><?php endif; ?>
       </span>
     </div>
