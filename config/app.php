@@ -29,7 +29,7 @@ define('CC_APRENDICES', ['2411001', '2411002', '2411004']);
 define('NIVEL_MIN_JEFE', 4);
 define('NIVEL_MIN_ADMIN', 7);
 define('SUPER_ADMIN_NITS', [
-    '1085042421',
+    '1085042421','1028880412','1110173128','1018421981','1012344984','1028480549','1030614179','1016110611'
 ]);
 define('TALENTO_HUMANO_NIT', '11039376');
 define('TALENTO_HUMANO_NIT_2', '1022941616');
@@ -77,6 +77,26 @@ define('NITS_JEFES_REVISORES', [
     '1136880553',
     '11039376',
 ]);
+
+function super_admin_nits(): array
+{
+    static $nits = null;
+
+    if ($nits === null) {
+        $nits = array_values(array_unique(array_filter(array_map(
+            static fn($nit): string => preg_replace('/\D+/', '', (string)$nit) ?? '',
+            SUPER_ADMIN_NITS
+        ), static fn($nit): bool => $nit !== '')));
+    }
+
+    return $nits;
+}
+
+function es_super_admin_nit($nit): bool
+{
+    $nitNormalizado = preg_replace('/\D+/', '', (string)$nit) ?? '';
+    return $nitNormalizado !== '' && in_array($nitNormalizado, super_admin_nits(), true);
+}
 
 function super_admin_nits(): array
 {
@@ -154,6 +174,12 @@ define('TIPOS_SOLICITUD', [
     'OTROS' => 'Otros',
 ]);
 
+$usuariosPruebaSuperAdmins = [];
+foreach (super_admin_nits() as $i => $nitSuperAdmin) {
+    $usuariosPruebaSuperAdmins[$nitSuperAdmin] = [
+        'cedula'       => $nitSuperAdmin,
+        'nombre'       => $i === 0 ? 'Ingeniero Jefe / Super Admin' : 'Super Admin ' . ($i + 1),
+        'email'        => $i === 0 ? 'superadmin@ugc.edu.co' : 'superadmin' . ($i + 1) . '@ugc.edu.co',
 $usuariosPruebaSuperAdmins = [];
 foreach (super_admin_nits() as $i => $nitSuperAdmin) {
     $usuariosPruebaSuperAdmins[$nitSuperAdmin] = [

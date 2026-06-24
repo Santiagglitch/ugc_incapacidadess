@@ -510,7 +510,8 @@ $csrfToken = csrf_token();
     read: '<?= e($notifReadUrl) ?>',
     readAll: '<?= e($notifReadAllUrl) ?>',
     detail: '<?= e($solicitudDetalleUrl) ?>',
-    sound: '<?= e($notifSoundUrl) ?>'
+    sound: '<?= e($notifSoundUrl) ?>',
+    login: '<?= e(url_view('login')) ?>'
   };
 
   var csrf = '<?= e($csrfToken) ?>';
@@ -612,6 +613,31 @@ $csrfToken = csrf_token();
   document.addEventListener('click', unlockNotificationSound, { once: true });
   document.addEventListener('keydown', unlockNotificationSound, { once: true });
 
+  function fetchJson(url, options) {
+    options = options || {};
+    options.credentials = 'same-origin';
+
+    if (!options.headers) {
+      options.headers = {};
+    }
+
+    options.headers['X-Requested-With'] = 'XMLHttpRequest';
+
+    return fetch(url, options).then(function (res) {
+      return res.json().then(function (payload) {
+        if (res.status === 401 || (payload && payload.redirect)) {
+          if (payload && payload.redirect) {
+            window.location.href = payload.redirect;
+          } else {
+            window.location.href = urls.login || window.location.href;
+          }
+          throw new Error('Sesion expirada');
+        }
+        return payload;
+      });
+    });
+  }
+
   function post(url, data) {
     var body = new FormData();
 
@@ -621,15 +647,12 @@ $csrfToken = csrf_token();
 
     body.append('_csrf_token', csrf);
 
-    return fetch(url, {
+    return fetchJson(url, {
       method: 'POST',
-      credentials: 'same-origin',
       headers: {
         'X-CSRF-Token': csrf
       },
       body: body
-    }).then(function (res) {
-      return res.json();
     });
   }
 
@@ -754,32 +777,26 @@ $csrfToken = csrf_token();
   }
 
   function loadCount() {
-    fetch(urls.count, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+    fetchJson(urls.count)
       .then(function (data) {
         handleCount(data.contador || 0);
       })
-      .catch(function () {
-        setCount(0);
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          setCount(0);
+        }
       });
   }
 
   function loadList() {
-    fetch(urls.list, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+    fetchJson(urls.list)
       .then(function (data) {
         drawList(data.notificaciones || []);
       })
-      .catch(function () {
-        list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+        }
       });
   }
 
@@ -845,9 +862,32 @@ $csrfToken = csrf_token();
     });
   });
 
-  loadCount();
+  var countInterval = null;
 
-  window.setInterval(loadCount, 60000);
+  function startPolling() {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+    }
+    loadCount();
+    countInterval = window.setInterval(loadCount, 60000);
+  }
+
+  function stopPolling() {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+      countInterval = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      stopPolling();
+    } else {
+      startPolling();
+    }
+  });
+
+  startPolling();
 })();
 </script>
 

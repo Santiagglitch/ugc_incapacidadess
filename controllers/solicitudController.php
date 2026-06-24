@@ -1081,10 +1081,7 @@ public function cancelarAgenda(?int $id = null): void
 
     private function validarPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            http_response_code(422);
-            exit('Token de seguridad invalido.');
-        }
+        csrf_requerido();
     }
 
     private function validarObservacionGestion(string $accion, string $observacion, string $mensajeRechazo): void

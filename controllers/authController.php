@@ -94,18 +94,7 @@ class authController
 
     public function loginPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            if ($this->esperaHtml()) {
-                $_SESSION['login_error'] = 'Token de seguridad invalido. Recarga la pagina.';
-                redirect_to(url_view('login'));
-            }
-
-            http_response_code(422);
-            render_view('auth/login', [
-                'error' => 'Token de seguridad invalido. Recarga la pagina.',
-            ], 'auth');
-            return;
-        }
+        csrf_requerido();
 
         $cedula = limpiar_texto($_POST['cedula'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
@@ -127,7 +116,8 @@ class authController
         }
 
         $this->limpiarIntentosFallidos($cedula);
-        session_regenerate_id(true);
+        session_regenerate_id(false);
+        csrf_regenerate_after_login();
         $_SESSION['usuario'] = $result['user'];
         $_SESSION['last_activity'] = time();
         $_SESSION['notificacion_sonar_login'] = true;
@@ -189,10 +179,7 @@ class authController
 
     public function seleccionarModoPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            $_SESSION['modo_error'] = 'Token de seguridad invalido.';
-            redirect_to(url_view('seleccionar_modo'));
-        }
+        csrf_requerido();
 
         if (!usuario_autenticado() || empty($_SESSION['admin_modo_pendiente'])) {
             redirect_to(url_view('dashboard'));
@@ -237,10 +224,7 @@ class authController
 
     public function cambiarModo(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            flash_set('error', 'Token de seguridad invalido.');
-            redirect_to(url_view('dashboard'));
-        }
+        csrf_requerido();
 
         if (!usuario_autenticado()) {
             redirect_to(url_view('login'));
@@ -344,9 +328,7 @@ class authController
 
     public function logout(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            redirect_to(url_view('login'));
-        }
+        csrf_requerido();
 
         cerrar_sesion();
         redirect_to(url_view('login'));

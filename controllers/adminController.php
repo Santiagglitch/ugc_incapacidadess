@@ -591,10 +591,7 @@ class adminController
 
     private function validarPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            flash_set('error', 'Token de seguridad invalido. Recarga la pagina.');
-            redirect_to(url_view('dashboard'));
-        }
+        csrf_requerido();
     }
 
     private function verificarRateLimit(string $clave): void
