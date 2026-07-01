@@ -22,7 +22,7 @@ if (is_array($paginationData)) {
 }
 
 $paginationData = null;
-$returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
+$returnTo = $returnTo ?? (app_base_url('index.php') . '?' . http_build_query($_GET));
 ?>
 
 <style>

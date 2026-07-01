@@ -653,28 +653,40 @@ class solicitudModel extends mainModelUXXI
         $busqueda = $this->normalizarFiltroBusqueda((string)($filtros['q'] ?? ''));
 
         if ($busqueda !== '') {
-            $like = '%' . $this->escapeLike(mb_strtoupper($busqueda, 'UTF-8')) . '%';
+            $like = '%' . $this->escapeLike($this->toUpper($busqueda)) . '%';
 
             $condicionesBusqueda = [
                 "TO_CHAR(s.ID) LIKE :q_like ESCAPE '\\'",
-                "UPPER(s.NIT_EMPLEADO) LIKE :q_like ESCAPE '\\'",
-                "UPPER(s.NIT_JEFE) LIKE :q_like ESCAPE '\\'",
-                "UPPER(NVL(s.NIT_RRHH, '')) LIKE :q_like ESCAPE '\\'",
                 "UPPER(s.TIPO_SOLICITUD) LIKE :q_like ESCAPE '\\'",
                 "UPPER(s.ESTADO) LIKE :q_like ESCAPE '\\'",
                 "UPPER(NVL(s.OBSERVACIONES, '')) LIKE :q_like ESCAPE '\\'",
-                "EXISTS (
-                    SELECT 1
-                    FROM ICEBERG.EMPLEADO emp
-                    WHERE emp.EMPRESA IN ('BA2', 'BDO')
-                      AND emp.ESTADO='A'
-                      AND emp.DEPARTAMENTO IN ('11', '25', '17')
-                      AND emp.NIT IN (s.NIT_EMPLEADO, s.NIT_JEFE)
-                      AND UPPER(TRIM(emp.NOMBRE || ' ' || emp.PRIMER_APELLIDO || ' ' || NVL(emp.SEGUNDO_APELLIDO, ''))) LIKE :q_like ESCAPE '\\'
-                )",
             ];
 
             $binds[':q_like'] = $like;
+
+            if (!empty($filtros['buscar_empleado'])) {
+                $condicionesBusqueda[] = "UPPER(s.NIT_EMPLEADO) LIKE :q_like ESCAPE '\\'";
+
+                $documento = preg_replace('/\D+/', '', $busqueda) ?? '';
+                if ($documento !== '') {
+                    $binds[':q_documento_like'] = '%' . $this->escapeLike($documento) . '%';
+                    $condicionesBusqueda[] = "s.NIT_EMPLEADO LIKE :q_documento_like ESCAPE '\\'";
+                }
+
+                $nitsEmpleadoBusqueda = $filtros['nits_empleado_busqueda'] ?? [];
+                if (is_array($nitsEmpleadoBusqueda)) {
+                    $nitsEmpleadoBusqueda = array_values(array_unique(array_filter(
+                        array_map('strval', $nitsEmpleadoBusqueda),
+                        static fn(string $nit): bool => trim($nit) !== ''
+                    )));
+
+                    if (!empty($nitsEmpleadoBusqueda)) {
+                        [$inClause, $nitBinds] = $this->buildInClause($nitsEmpleadoBusqueda, 'nit_busqueda_');
+                        $condicionesBusqueda[] = "s.NIT_EMPLEADO IN ($inClause)";
+                        $binds += $nitBinds;
+                    }
+                }
+            }
 
             $tipos = $this->tiposSolicitudCoincidentes($busqueda);
 
@@ -701,6 +713,20 @@ class solicitudModel extends mainModelUXXI
         return function_exists('mb_substr')
             ? mb_substr($busqueda, 0, 100, 'UTF-8')
             : substr($busqueda, 0, 100);
+    }
+
+    private function toUpper(string $valor): string
+    {
+        return function_exists('mb_strtoupper')
+            ? mb_strtoupper($valor, 'UTF-8')
+            : strtoupper($valor);
+    }
+
+    private function toLower(string $valor): string
+    {
+        return function_exists('mb_strtolower')
+            ? mb_strtolower($valor, 'UTF-8')
+            : strtolower($valor);
     }
 
     private function escapeLike(string $valor): string
@@ -737,7 +763,7 @@ class solicitudModel extends mainModelUXXI
             return '';
         }
 
-        $texto = mb_strtolower($texto, 'UTF-8');
+        $texto = $this->toLower($texto);
 
         if (function_exists('iconv')) {
             $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto);

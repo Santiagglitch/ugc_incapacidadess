@@ -300,7 +300,7 @@ document.getElementById('formGestionRrhh').addEventListener('submit', function(e
         <span class="archivo-hint">Documento PDF de respaldo</span>
       </div>
     </div>
-    <a class="btn btn-green btn-ver-archivo" target="_blank" href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode((string)($solicitud['ID'] ?? ''))) ?>">
+    <a class="btn btn-green btn-ver-archivo" target="_blank" rel="noopener" data-notif-silent-return href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode((string)($solicitud['ID'] ?? ''))) ?>">
       Ver documento
     </a>
   </div>

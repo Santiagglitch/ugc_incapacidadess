@@ -116,6 +116,8 @@ $dashboardKpiCards = [
    'svg'=>'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>'],
   ['tipo'=>'pendiente_jefe', 'color'=>'#f59e0b', 'bg'=>'#fffbeb', 'lbl'=>'Pendientes jefe',    'val'=>$stats[ESTADO_PENDIENTE_JEFE] ?? 0,
    'svg'=>'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+  ['tipo'=>'rechazado_jefe', 'color'=>'#f97316', 'bg'=>'#fff7ed', 'lbl'=>'Rechazadas jefe',    'val'=>$stats[ESTADO_RECHAZADO_JEFE] ?? 0,
+   'svg'=>'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'],
   ['tipo'=>'aprobado_jefe',  'color'=>'#3b82f6', 'bg'=>'#eff6ff', 'lbl'=>'Pendientes RRHH',   'val'=>$stats[ESTADO_APROBADO_JEFE] ?? 0,
    'svg'=>'<polyline points="20 6 9 17 4 12"/>'],
   ['tipo'=>'aprobado_rrhh',  'color'=>'#10b981', 'bg'=>'#ecfdf5', 'lbl'=>'Aprobadas RRHH',    'val'=>$stats[ESTADO_APROBADO_RRHH] ?? 0,

@@ -12,6 +12,8 @@ require_once __DIR__ . '/../services/sesionActivaService.php';
 
 class adminController
 {
+    private array $nombreEmpleadoCache = [];
+
     public function empleados(): void
     {
         requiere_rol([ROL_ADMIN]);
@@ -146,7 +148,6 @@ class adminController
             redirect_to(url_view('admin_empleados'));
         }
 
-        $jefeInmediato     = $empleadoModel->getJefeInmediato($nit);
         $esAprendiz        = $empleadoModel->esAprendiz((string)($empleado['CENTRO_COSTO'] ?? ''));
         $adminsAdicionales = $adminRoles->getAdminsAdicionales();
         $esAdminAdicional  = in_array($nit, $adminsAdicionales, true);
@@ -156,14 +157,10 @@ class adminController
         $fechaIngreso  = (string)($empleado['FECHA_INGRESO'] ?? '');
         $antiguedad    = $this->calcularAntiguedad($fechaIngreso);
 
-        $solicitudes = $solicitudModel->getByEmpleado($nit);
-        $stats = [
-            'total'      => count($solicitudes),
-            'pendientes' => count(array_filter($solicitudes, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE)),
-            'aprobadas'  => count(array_filter($solicitudes, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true))),
-            'rechazadas' => count(array_filter($solicitudes, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH], true))),
-        ];
-
+        $paginaSolicitudes = max(1, (int)($_GET['pag_solicitudes'] ?? 1));
+        $solicitudesPage = $solicitudModel->getByEmpleadoPaginado($nit, $paginaSolicitudes, APP_ROWS_PER_PAGE);
+        $solicitudes = $this->enriquecerSolicitudes($solicitudesPage['rows'] ?? [], $empleadoModel);
+        $solicitudesPaginationData = $solicitudesPage['pagination'] ?? null;
         $rolLabel    = $this->rolEmpleado($empleado, $adminsAdicionales);
         $limiteAdmins = $adminRoles->getLimiteMaximo();
         $usadosAdmins = count($adminsAdicionales);
@@ -174,9 +171,9 @@ class adminController
         }
 
         render_view('admin/empleados/detalle', compact(
-            'user', 'empleado', 'solicitudes', 'stats',
+            'user', 'empleado', 'solicitudes', 'solicitudesPaginationData',
             'esAdminAdicional', 'puedeGestionarAdmin',
-            'jefeInmediato', 'esAprendiz', 'antiguedad', 'rolLabel',
+            'esAprendiz', 'antiguedad', 'rolLabel',
             'limiteAdmins', 'usadosAdmins', 'auditLog', 'esSuperAdmin'
         ));
     }
@@ -638,6 +635,47 @@ class adminController
             $stats[$rol]++;
         }
         return $stats;
+    }
+
+    private function enriquecerSolicitudes(array $solicitudes, empleadoModel $empleadoModel): array
+    {
+        $nitsPendientes = [];
+
+        foreach ($solicitudes as $solicitud) {
+            foreach (['NIT_EMPLEADO', 'NIT_JEFE'] as $nitCampo) {
+                $nit = (string)($solicitud[$nitCampo] ?? '');
+                if ($nit === '' || array_key_exists($nit, $this->nombreEmpleadoCache)) {
+                    continue;
+                }
+
+                if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$nit])) {
+                    $this->nombreEmpleadoCache[$nit] = (string)(USUARIOS_PRUEBA[$nit]['nombre'] ?? $nit);
+                    continue;
+                }
+
+                $nitsPendientes[$nit] = $nit;
+            }
+        }
+
+        if (!empty($nitsPendientes)) {
+            foreach ($empleadoModel->getNombresPorNit(array_values($nitsPendientes)) as $nit => $nombre) {
+                $this->nombreEmpleadoCache[(string)$nit] = (string)$nombre;
+            }
+
+            foreach ($nitsPendientes as $nit) {
+                $this->nombreEmpleadoCache[$nit] ??= '';
+            }
+        }
+
+        foreach ($solicitudes as &$solicitud) {
+            foreach (['NIT_EMPLEADO' => 'NOMBRE_EMPLEADO', 'NIT_JEFE' => 'NOMBRE_JEFE'] as $nitCampo => $nombreCampo) {
+                $nit = (string)($solicitud[$nitCampo] ?? '');
+                $solicitud[$nombreCampo] = $nit !== '' ? ($this->nombreEmpleadoCache[$nit] ?? '') : '';
+            }
+        }
+        unset($solicitud);
+
+        return $solicitudes;
     }
 
     private function calcularAntiguedad(string $fechaIngreso): string

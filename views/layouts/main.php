@@ -80,15 +80,18 @@ $csrfToken = csrf_token();
   <style>
     /* Estilos para el botón Cambiar Modo - Super Admin */
     .user-modo-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
       font-size: 0.65rem;
       font-weight: 700;
       padding: 0.2rem 0.6rem;
       border-radius: 9999px;
-      margin-left: 0.5rem;
+      margin-left: 0;
       text-transform: uppercase;
       letter-spacing: 0.03em;
       border: 1px solid rgba(255,255,255,0.3);
+      white-space: nowrap;
     }
     .user-modo-badge.modo-admin {
       background: #ffd700;
@@ -102,6 +105,7 @@ $csrfToken = csrf_token();
     }
     .header-cambiar-modo-form {
       display: inline-flex;
+      flex: 0 0 auto;
     }
     .btn-cambiar-modo {
       display: inline-flex;
@@ -116,6 +120,8 @@ $csrfToken = csrf_token();
       transition: all 0.2s ease;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
     .btn-cambiar-modo svg {
       width: 16px;
@@ -233,7 +239,7 @@ $csrfToken = csrf_token();
     </div>
 
     <div class="user-chip">
-      <?= e($user['nombre'] ?? '') ?>
+      <span class="user-name"><?= e($user['nombre'] ?? '') ?></span>
       <span class="user-role"><?= e($rolLabel) ?></span>
       <?php if ($tieneSelectorModo): ?>
         <span class="user-modo-badge <?= ($modoActual === 'super_usuario' || $modoActual === 'admin') ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
@@ -465,39 +471,6 @@ $csrfToken = csrf_token();
 })();
 
 (function () {
-  var form = document.querySelector('.header-search');
-
-  if (!form) {
-    return;
-  }
-
-  var input = form.querySelector('input[name="q"]');
-  var tipo = form.querySelector('select[name="tipo_solicitud"]');
-
-  if (!input || !tipo) {
-    return;
-  }
-
-  input.addEventListener('input', function () {
-    if (input.value.trim() !== '') {
-      tipo.value = '';
-    }
-  });
-
-  tipo.addEventListener('change', function () {
-    if (tipo.value !== '') {
-      input.value = '';
-    }
-  });
-
-  form.addEventListener('submit', function () {
-    if (input.value.trim() !== '') {
-      tipo.value = '';
-    }
-  });
-})();
-
-(function () {
   var root = document.querySelector('[data-notificaciones]');
 
   if (!root || !window.fetch) {
@@ -527,6 +500,8 @@ $csrfToken = csrf_token();
   var notificationAudio = null;
   var lastNotifCount = readStoredNotifCount();
   var firstCountLoad = true;
+  var silentRefreshKey = notificationStateKey ? notificationStateKey + ':silent-refresh' : '';
+  var silentRefreshWindowMs = 5 * 60 * 1000;
 
   function readStoredNotifCount() {
     try {
@@ -553,6 +528,31 @@ $csrfToken = csrf_token();
       }
     } catch (error) {
       // Sin storage disponible, el contador en memoria sigue funcionando.
+    }
+  }
+
+  function markSilentNotificationRefresh() {
+    try {
+      if (window.sessionStorage && silentRefreshKey) {
+        window.sessionStorage.setItem(silentRefreshKey, String(Date.now()));
+      }
+    } catch (error) {
+      // Si no hay storage, solo se mantiene el comportamiento normal.
+    }
+  }
+
+  function consumeSilentNotificationRefresh() {
+    try {
+      if (!window.sessionStorage || !silentRefreshKey) {
+        return false;
+      }
+
+      var value = parseInt(window.sessionStorage.getItem(silentRefreshKey) || '', 10);
+      window.sessionStorage.removeItem(silentRefreshKey);
+
+      return !isNaN(value) && (Date.now() - value) <= silentRefreshWindowMs;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -666,7 +666,8 @@ $csrfToken = csrf_token();
     toggle.classList.toggle('has-new', total > 0);
   }
 
-  function handleCount(total) {
+  function handleCount(total, options) {
+    options = options || {};
     total = parseInt(total || 0, 10);
 
     var shouldPlaySound = false;
@@ -678,6 +679,10 @@ $csrfToken = csrf_token();
     } else if (lastNotifCount !== null && total > lastNotifCount) {
       // Suena cuando llegan nuevas notificaciones.
       shouldPlaySound = true;
+    }
+
+    if (options.silent === true) {
+      shouldPlaySound = false;
     }
 
     setCount(total);
@@ -776,10 +781,12 @@ $csrfToken = csrf_token();
     }).join('');
   }
 
-  function loadCount() {
+  function loadCount(options) {
+    options = options || {};
+
     fetchJson(urls.count)
       .then(function (data) {
-        handleCount(data.contador || 0);
+        handleCount(data.contador || 0, options);
       })
       .catch(function (error) {
         if (error.message !== 'Sesion expirada') {
@@ -807,6 +814,13 @@ $csrfToken = csrf_token();
       loadList();
     }
   });
+
+  document.addEventListener('click', function (event) {
+    var silentReturnLink = event.target.closest('a[data-notif-silent-return]');
+    if (silentReturnLink) {
+      markSilentNotificationRefresh();
+    }
+  }, true);
 
   document.addEventListener('click', function (event) {
     if (!root.contains(event.target)) {
@@ -864,11 +878,11 @@ $csrfToken = csrf_token();
 
   var countInterval = null;
 
-  function startPolling() {
+  function startPolling(options) {
     if (countInterval) {
       window.clearInterval(countInterval);
     }
-    loadCount();
+    loadCount(options || {});
     countInterval = window.setInterval(loadCount, 60000);
   }
 
@@ -883,7 +897,7 @@ $csrfToken = csrf_token();
     if (document.visibilityState === 'hidden') {
       stopPolling();
     } else {
-      startPolling();
+      startPolling({ silent: consumeSilentNotificationRefresh() });
     }
   });
 
