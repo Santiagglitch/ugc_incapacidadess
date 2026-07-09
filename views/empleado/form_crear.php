@@ -435,6 +435,8 @@ $hoy   = $hoy ?? date('Y-m-d');
 </div>
 
 <script src="<?= e(app_asset('assets/js/jefe-picker.js')) ?>"></script>
+<script src="<?= e(app_asset('assets/vendor/pdfjs/pdf.min.js')) ?>"></script>
+<script src="<?= e(app_asset('assets/js/pdf-mobile-preview.js')) ?>"></script>
 <script nonce="<?= e(csp_nonce()) ?>">
 (function () {
 

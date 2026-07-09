@@ -8,9 +8,11 @@ class notaAdminService extends mainModelUXXI
 {
     public function guardar(int $idSolicitud, string $nitAdmin, string $nombreAdmin, string $nota): bool
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         return $this->ejecutar(
             "INSERT INTO NOTAS_ADMIN (ID, ID_SOLICITUD, NIT_ADMIN, NOMBRE_ADMIN, NOTA, FECHA_CREACION)
-             VALUES (SEQ_NOTAS_ADMIN.NEXTVAL, :id_solicitud, :nit_admin, :nombre_admin, :nota, SYSDATE)",
+             VALUES (SEQ_NOTAS_ADMIN.NEXTVAL, :id_solicitud, :nit_admin, :nombre_admin, :nota, $ahoraCo)",
             [
                 ':id_solicitud' => $idSolicitud,
                 ':nit_admin'    => $nitAdmin,

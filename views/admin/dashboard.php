@@ -26,12 +26,12 @@ $exportUrl = 'Export/Admin/ExportController.php?download=1'
 <section class="page-header animate-fade-down" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
   <div><h1 class="page-title">Panel de Administrador</h1><p style="color:var(--muted);font-size:14px;margin-top:4px">Vista general del sistema de solicitudes</p></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <?php $esSuperAdminModoEmpleado = (($user['cedula'] ?? '') === SUPER_ADMIN_NIT) && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'empleado'); ?>
+    <?php $esSuperAdminModoEmpleado = es_super_admin_nit($user['cedula'] ?? '') && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'empleado'); ?>
     <?php if ($esSuperAdminModoEmpleado): ?>
       <a class="btn btn-green" href="<?= e(url_view('solicitud_crear')) ?>">+ Nueva solicitud</a>
     <?php endif; ?>
     <a class="btn btn-outline" href="<?= e(url_view('admin_empleados')) ?>">Gestionar empleados</a>
-    <?php if ((($user['cedula'] ?? '') === SUPER_ADMIN_NIT) && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'super_usuario')): ?>
+    <?php if (es_super_admin_nit($user['cedula'] ?? '') && (($_SESSION['super_admin_modo'] ?? 'super_usuario') === 'super_usuario')): ?>
       <a class="btn btn-green" href="<?= e(url_view('superadmin_panel')) ?>">&#9733; Panel Super Admin</a>
     <?php endif; ?>
     <a class="btn btn-green" href="<?= e($exportUrl) ?>">&#8659; Exportar datos</a>
@@ -116,6 +116,8 @@ $dashboardKpiCards = [
    'svg'=>'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>'],
   ['tipo'=>'pendiente_jefe', 'color'=>'#f59e0b', 'bg'=>'#fffbeb', 'lbl'=>'Pendientes jefe',    'val'=>$stats[ESTADO_PENDIENTE_JEFE] ?? 0,
    'svg'=>'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'],
+  ['tipo'=>'rechazado_jefe', 'color'=>'#f97316', 'bg'=>'#fff7ed', 'lbl'=>'Rechazadas jefe',    'val'=>$stats[ESTADO_RECHAZADO_JEFE] ?? 0,
+   'svg'=>'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'],
   ['tipo'=>'aprobado_jefe',  'color'=>'#3b82f6', 'bg'=>'#eff6ff', 'lbl'=>'Pendientes RRHH',   'val'=>$stats[ESTADO_APROBADO_JEFE] ?? 0,
    'svg'=>'<polyline points="20 6 9 17 4 12"/>'],
   ['tipo'=>'aprobado_rrhh',  'color'=>'#10b981', 'bg'=>'#ecfdf5', 'lbl'=>'Aprobadas RRHH',    'val'=>$stats[ESTADO_APROBADO_RRHH] ?? 0,

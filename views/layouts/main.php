@@ -22,7 +22,7 @@ $rolesLabel = [
 $rolLabel = $rolesLabel[$user['rol'] ?? ''] ?? 'Usuario';
 
 // Variables para el modo Admin (Super Admin, Admin Adicional o TH fijo)
-$esSuperAdmin        = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+$esSuperAdmin        = es_super_admin_nit($user['cedula'] ?? '');
 $esTalentoHumanoFijo = in_array($user['cedula'] ?? '', NITS_TALENTO_HUMANO, true);
 $tieneSelectorModo   = usuario_tiene_selector_modo();
 $modoAdminKey = $esSuperAdmin ? 'super_usuario' : 'admin';
@@ -36,7 +36,7 @@ if ($modoActual === 'super_usuario' || $modoActual === 'admin') {
         $modoLabel = 'Administrador';
     }
 } else {
-    // En modo empleado usar el rol real en sesión para el label
+    // En modo empleado usar el rol real en sesiÃ³n para el label
     $rolEnSesion = $_SESSION['usuario']['rol'] ?? '';
     if ($rolEnSesion === ROL_JEFE) {
         $modoLabel = 'Jefe Inmediato';
@@ -56,7 +56,7 @@ $headerQ = limpiar_texto($_GET['q'] ?? '');
 $headerTipo = limpiar_texto($_GET['tipo_solicitud'] ?? '');
 $headerHistorial = limpiar_texto($_GET['historial'] ?? '');
 
-// Sonido de notificación
+// Sonido de notificaciÃ³n
 $notifSoundUrl = app_asset('assets/sounds/notificacion.mp3');
 $notifPlayOnLogin = !empty($_SESSION['notificacion_sonar_login']);
 unset($_SESSION['notificacion_sonar_login']);
@@ -78,17 +78,20 @@ $csrfToken = csrf_token();
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e($cssUrl) ?>">
   <style>
-    /* Estilos para el botón Cambiar Modo - Super Admin */
+    /* Estilos para el botÃ³n Cambiar Modo - Super Admin */
     .user-modo-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
       font-size: 0.65rem;
       font-weight: 700;
       padding: 0.2rem 0.6rem;
       border-radius: 9999px;
-      margin-left: 0.5rem;
+      margin-left: 0;
       text-transform: uppercase;
       letter-spacing: 0.03em;
       border: 1px solid rgba(255,255,255,0.3);
+      white-space: nowrap;
     }
     .user-modo-badge.modo-admin {
       background: #ffd700;
@@ -102,6 +105,7 @@ $csrfToken = csrf_token();
     }
     .header-cambiar-modo-form {
       display: inline-flex;
+      flex: 0 0 auto;
     }
     .btn-cambiar-modo {
       display: inline-flex;
@@ -116,10 +120,12 @@ $csrfToken = csrf_token();
       transition: all 0.2s ease;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
     .btn-cambiar-modo svg {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
     }
     /* Modo Super Usuario - Amarillo dorado que resalta sobre verde */
     .btn-cambiar-modo.btn-modo-admin {
@@ -172,6 +178,12 @@ $csrfToken = csrf_token();
     <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio" data-click-once>
       <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="header-logo" height="50">
     </a>
+    <button type="button" class="header-search-mobile-toggle" data-header-search-toggle aria-label="Buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </svg>
+    </button>
   </div>
 
   <form class="header-search" method="get" action="<?= e(app_base_url('index.php')) ?>">
@@ -233,8 +245,7 @@ $csrfToken = csrf_token();
     </div>
 
     <div class="user-chip">
-      <?= e($user['nombre'] ?? '') ?>
-      <span class="user-role"><?= e($rolLabel) ?></span>
+      <span class="user-name"><?= e($user['nombre'] ?? '') ?></span>
       <?php if ($tieneSelectorModo): ?>
         <span class="user-modo-badge <?= ($modoActual === 'super_usuario' || $modoActual === 'admin') ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
       <?php endif; ?>
@@ -465,39 +476,6 @@ $csrfToken = csrf_token();
 })();
 
 (function () {
-  var form = document.querySelector('.header-search');
-
-  if (!form) {
-    return;
-  }
-
-  var input = form.querySelector('input[name="q"]');
-  var tipo = form.querySelector('select[name="tipo_solicitud"]');
-
-  if (!input || !tipo) {
-    return;
-  }
-
-  input.addEventListener('input', function () {
-    if (input.value.trim() !== '') {
-      tipo.value = '';
-    }
-  });
-
-  tipo.addEventListener('change', function () {
-    if (tipo.value !== '') {
-      input.value = '';
-    }
-  });
-
-  form.addEventListener('submit', function () {
-    if (input.value.trim() !== '') {
-      tipo.value = '';
-    }
-  });
-})();
-
-(function () {
   var root = document.querySelector('[data-notificaciones]');
 
   if (!root || !window.fetch) {
@@ -510,7 +488,8 @@ $csrfToken = csrf_token();
     read: '<?= e($notifReadUrl) ?>',
     readAll: '<?= e($notifReadAllUrl) ?>',
     detail: '<?= e($solicitudDetalleUrl) ?>',
-    sound: '<?= e($notifSoundUrl) ?>'
+    sound: '<?= e($notifSoundUrl) ?>',
+    login: '<?= e(url_view('login')) ?>'
   };
 
   var csrf = '<?= e($csrfToken) ?>';
@@ -526,6 +505,8 @@ $csrfToken = csrf_token();
   var notificationAudio = null;
   var lastNotifCount = readStoredNotifCount();
   var firstCountLoad = true;
+  var silentRefreshKey = notificationStateKey ? notificationStateKey + ':silent-refresh' : '';
+  var silentRefreshWindowMs = 5 * 60 * 1000;
 
   function readStoredNotifCount() {
     try {
@@ -552,6 +533,31 @@ $csrfToken = csrf_token();
       }
     } catch (error) {
       // Sin storage disponible, el contador en memoria sigue funcionando.
+    }
+  }
+
+  function markSilentNotificationRefresh() {
+    try {
+      if (window.sessionStorage && silentRefreshKey) {
+        window.sessionStorage.setItem(silentRefreshKey, String(Date.now()));
+      }
+    } catch (error) {
+      // Si no hay storage, solo se mantiene el comportamiento normal.
+    }
+  }
+
+  function consumeSilentNotificationRefresh() {
+    try {
+      if (!window.sessionStorage || !silentRefreshKey) {
+        return false;
+      }
+
+      var value = parseInt(window.sessionStorage.getItem(silentRefreshKey) || '', 10);
+      window.sessionStorage.removeItem(silentRefreshKey);
+
+      return !isNaN(value) && (Date.now() - value) <= silentRefreshWindowMs;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -612,6 +618,31 @@ $csrfToken = csrf_token();
   document.addEventListener('click', unlockNotificationSound, { once: true });
   document.addEventListener('keydown', unlockNotificationSound, { once: true });
 
+  function fetchJson(url, options) {
+    options = options || {};
+    options.credentials = 'same-origin';
+
+    if (!options.headers) {
+      options.headers = {};
+    }
+
+    options.headers['X-Requested-With'] = 'XMLHttpRequest';
+
+    return fetch(url, options).then(function (res) {
+      return res.json().then(function (payload) {
+        if (res.status === 401 || (payload && payload.redirect)) {
+          if (payload && payload.redirect) {
+            window.location.href = payload.redirect;
+          } else {
+            window.location.href = urls.login || window.location.href;
+          }
+          throw new Error('Sesion expirada');
+        }
+        return payload;
+      });
+    });
+  }
+
   function post(url, data) {
     var body = new FormData();
 
@@ -621,15 +652,12 @@ $csrfToken = csrf_token();
 
     body.append('_csrf_token', csrf);
 
-    return fetch(url, {
+    return fetchJson(url, {
       method: 'POST',
-      credentials: 'same-origin',
       headers: {
         'X-CSRF-Token': csrf
       },
       body: body
-    }).then(function (res) {
-      return res.json();
     });
   }
 
@@ -643,7 +671,8 @@ $csrfToken = csrf_token();
     toggle.classList.toggle('has-new', total > 0);
   }
 
-  function handleCount(total) {
+  function handleCount(total, options) {
+    options = options || {};
     total = parseInt(total || 0, 10);
 
     var shouldPlaySound = false;
@@ -655,6 +684,10 @@ $csrfToken = csrf_token();
     } else if (lastNotifCount !== null && total > lastNotifCount) {
       // Suena cuando llegan nuevas notificaciones.
       shouldPlaySound = true;
+    }
+
+    if (options.silent === true) {
+      shouldPlaySound = false;
     }
 
     setCount(total);
@@ -688,22 +721,20 @@ $csrfToken = csrf_token();
     if (fechaParts.length !== 3) return valor;
     var tiempo = partes[1].split(':');
 
-    var utcMs = Date.UTC(
-      parseInt(fechaParts[0], 10),
-      parseInt(fechaParts[1], 10) - 1,
-      parseInt(fechaParts[2], 10),
-      parseInt(tiempo[0], 10),
-      parseInt(tiempo[1] || '0', 10),
-      parseInt(tiempo[2] || '0', 10)
-    );
-    var coMs = utcMs - (5 * 60 * 60 * 1000);
-    var d = new Date(coMs);
+    var yy = parseInt(fechaParts[0], 10);
+    var mm = parseInt(fechaParts[1], 10);
+    var dd = parseInt(fechaParts[2], 10);
+    var h = parseInt(tiempo[0] || '0', 10);
+    var min = parseInt(tiempo[1] || '0', 10);
 
-    var dd  = d.getUTCDate();    dd  = dd  < 10 ? '0' + dd  : String(dd);
-    var mm  = d.getUTCMonth() + 1; mm = mm  < 10 ? '0' + mm  : String(mm);
-    var yy  = d.getUTCFullYear();
-    var h   = d.getUTCHours();
-    var min = d.getUTCMinutes(); min = min < 10 ? '0' + min : String(min);
+    if (isNaN(yy) || isNaN(mm) || isNaN(dd) || isNaN(h) || isNaN(min)) {
+      return valor;
+    }
+
+    dd = dd < 10 ? '0' + dd : String(dd);
+    mm = mm < 10 ? '0' + mm : String(mm);
+    yy = String(yy);
+    min = min < 10 ? '0' + min : String(min);
     var ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
     if (h === 0) h = 12;
@@ -755,33 +786,29 @@ $csrfToken = csrf_token();
     }).join('');
   }
 
-  function loadCount() {
-    fetch(urls.count, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+  function loadCount(options) {
+    options = options || {};
+
+    fetchJson(urls.count)
       .then(function (data) {
-        handleCount(data.contador || 0);
+        handleCount(data.contador || 0, options);
       })
-      .catch(function () {
-        setCount(0);
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          setCount(0);
+        }
       });
   }
 
   function loadList() {
-    fetch(urls.list, {
-      credentials: 'same-origin'
-    })
-      .then(function (res) {
-        return res.json();
-      })
+    fetchJson(urls.list)
       .then(function (data) {
         drawList(data.notificaciones || []);
       })
-      .catch(function () {
-        list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+      .catch(function (error) {
+        if (error.message !== 'Sesion expirada') {
+          list.innerHTML = '<div class="notificacion-empty"><p>No se pudieron cargar las notificaciones.</p></div>';
+        }
       });
   }
 
@@ -794,8 +821,28 @@ $csrfToken = csrf_token();
   });
 
   document.addEventListener('click', function (event) {
+    var silentReturnLink = event.target.closest('a[data-notif-silent-return]');
+    if (silentReturnLink) {
+      markSilentNotificationRefresh();
+    }
+  }, true);
+
+  document.addEventListener('click', function (event) {
     if (!root.contains(event.target)) {
       dropdown.classList.remove('active');
+    }
+  });
+
+  // Cerrar notificaciones al hacer scroll
+  var scrollTimeout = null;
+  window.addEventListener('scroll', function () {
+    if (dropdown.classList.contains('active')) {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(function () {
+        dropdown.classList.remove('active');
+      }, 100);
     }
   });
 
@@ -847,9 +894,51 @@ $csrfToken = csrf_token();
     });
   });
 
-  loadCount();
+  var countInterval = null;
 
-  window.setInterval(loadCount, 60000);
+  function startPolling(options) {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+    }
+    loadCount(options || {});
+    countInterval = window.setInterval(loadCount, 60000);
+  }
+
+  function stopPolling() {
+    if (countInterval) {
+      window.clearInterval(countInterval);
+      countInterval = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      stopPolling();
+    } else {
+      startPolling({ silent: consumeSilentNotificationRefresh() });
+    }
+  });
+
+  startPolling();
+})();
+
+// Toggle de bÃºsqueda mÃ³vil
+(function () {
+  var searchToggle = document.querySelector('[data-header-search-toggle]');
+  var searchForm = document.querySelector('.header-search');
+
+  if (searchToggle && searchForm) {
+    searchToggle.addEventListener('click', function () {
+      searchForm.classList.toggle('is-mobile-visible');
+    });
+
+    // Cerrar bÃºsqueda al hacer clic fuera
+    document.addEventListener('click', function (event) {
+      if (!searchForm.contains(event.target) && !searchToggle.contains(event.target)) {
+        searchForm.classList.remove('is-mobile-visible');
+      }
+    });
+  }
 })();
 </script>
 

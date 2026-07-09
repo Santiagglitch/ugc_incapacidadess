@@ -35,7 +35,7 @@ $statCardClass = static fn(string $rol = ''): string => 'stat-card stat-card-lin
 
 function _rolBadge(array $emp, array $adminsAdicionales): array {
   $nit = (string)($emp['NIT'] ?? '');
-  $esAdmin = $nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true);
+  $esAdmin = es_super_admin_nit($nit) || in_array($nit, $adminsAdicionales, true);
   if ($esAdmin) return ['Administrador', 'admin'];
   if (es_jefe_revisor_nit($nit)) return ['Jefe', 'jefe'];
   return ['Empleado', 'empleado'];

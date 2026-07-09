@@ -30,9 +30,7 @@ class dashboardController
             if ($fechaDesde !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDesde)) $fechaDesde = '';
             if ($fechaHasta !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaHasta)) $fechaHasta = '';
 
-            $filtrosBase = $q === ''
-                ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
-                : $this->filtrosBase($q, $tipoFiltro);
+            $filtrosBase = $this->filtrosBase($q, $tipoFiltro, $empleadoModel, true);
             if ($fechaDesde !== '') $filtrosBase['fecha_desde'] = $fechaDesde;
             if ($fechaHasta !== '') $filtrosBase['fecha_hasta'] = $fechaHasta;
 
@@ -44,6 +42,7 @@ class dashboardController
             $historialOpciones = [
                 'total'          => ['titulo' => 'Historial completo',                       'filtros' => $filtrosBase,                                           'orden' => 'FECHA_CREACION DESC'],
                 'pendiente_jefe' => ['titulo' => 'Solicitudes pendientes de jefe',           'filtros' => $filtrosBase + ['estado' => ESTADO_PENDIENTE_JEFE],     'orden' => 'FECHA_CREACION DESC'],
+                'rechazado_jefe' => ['titulo' => 'Solicitudes rechazadas por jefe',           'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_JEFE],     'orden' => 'FECHA_CREACION DESC'],
                 'aprobado_jefe'  => ['titulo' => 'Solicitudes pendientes de RRHH',           'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_JEFE],      'orden' => 'FECHA_CREACION DESC'],
                 'aprobado_rrhh'  => ['titulo' => 'Solicitudes aprobadas por RRHH',           'filtros' => $filtrosBase + ['estado' => ESTADO_APROBADO_RRHH],      'orden' => 'FECHA_CREACION DESC'],
                 'rechazado_rrhh' => ['titulo' => 'Solicitudes rechazadas por RRHH',          'filtros' => $filtrosBase + ['estado' => ESTADO_RECHAZADO_RRHH],     'orden' => 'FECHA_CREACION DESC'],
@@ -85,9 +84,7 @@ class dashboardController
     private function dashboardRrhh(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
     {
         $cedula = (string)($user['cedula'] ?? '');
-        $filtrosBase = $q === ''
-            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
-            : $this->filtrosBase($q, $tipoFiltro);
+        $filtrosBase = $this->filtrosBase($q, $tipoFiltro, $empleadoModel, true);
 
         $counts = $model->contarPorEstado($filtrosBase);
         $historialTipo = limpiar_texto($_GET['historial'] ?? 'historico');
@@ -154,9 +151,7 @@ class dashboardController
     private function dashboardJefe(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
     {
         $cedula = (string)($user['cedula'] ?? '');
-        $filtrosBase = $q === ''
-            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
-            : $this->filtrosBase($q, $tipoFiltro);
+        $filtrosBase = $this->filtrosBase($q, $tipoFiltro, $empleadoModel, true);
 
         $gestionadasEstados = [ESTADO_APROBADO_JEFE, ESTADO_RECHAZADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH, ESTADO_CANCELADO_AGENDA];
         $aprobadasEstados   = [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH, ESTADO_RECHAZADO_RRHH];
@@ -239,9 +234,7 @@ class dashboardController
     private function dashboardEmpleado(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void
     {
         $cedula = (string)($user['cedula'] ?? '');
-        $filtrosBase = $q === ''
-            ? ($tipoFiltro !== '' ? ['tipo' => $tipoFiltro] : [])
-            : $this->filtrosBase($q, $tipoFiltro);
+        $filtrosBase = $this->filtrosBase($q, $tipoFiltro, $empleadoModel, false);
 
         $historialTipo = limpiar_texto($_GET['historial'] ?? 'total');
         $historialOpciones = [
@@ -355,7 +348,7 @@ class dashboardController
         return $total;
     }
 
-    private function filtrosBase(string $q, string $tipoFiltro): array
+    private function filtrosBase(string $q, string $tipoFiltro, empleadoModel $empleadoModel, bool $permitirBusquedaEmpleado): array
     {
         $filtros = [];
 
@@ -365,6 +358,15 @@ class dashboardController
 
         if ($q !== '') {
             $filtros['q'] = $q;
+
+            if ($permitirBusquedaEmpleado) {
+                $filtros['buscar_empleado'] = true;
+                $nitsEmpleado = $empleadoModel->buscarNitsPorNombreONit($q);
+
+                if (!empty($nitsEmpleado)) {
+                    $filtros['nits_empleado_busqueda'] = $nitsEmpleado;
+                }
+            }
         }
 
         return $filtros;

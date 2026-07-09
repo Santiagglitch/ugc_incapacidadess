@@ -13,12 +13,13 @@ class adminAuditoriaModel extends mainModelUXXI
         $idSolicitud = isset($meta['id_solicitud']) ? (int)$meta['id_solicitud'] : null;
         $metaJson    = !empty($meta) ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
         $nombre      = $nombreActor !== '' ? $nombreActor : $this->resolverNombre($nitActor);
+        $ahoraCo     = self::SQL_NOW_CO;
 
         return $this->ejecutar(
             "INSERT INTO ADMIN_AUDITORIA
                 (ID, NIT_ACTOR, NOMBRE_ACTOR, ACCION, DESCRIPCION, IP, NIT_OBJETIVO, ID_SOLICITUD, META_JSON, FECHA)
              VALUES
-                (SEQ_ADMIN_AUDITORIA.NEXTVAL, :nit_actor, :nombre_actor, :accion, :descripcion, :ip, :nit_objetivo, :id_solicitud, :meta_json, SYSDATE)",
+                (SEQ_ADMIN_AUDITORIA.NEXTVAL, :nit_actor, :nombre_actor, :accion, :descripcion, :ip, :nit_objetivo, :id_solicitud, :meta_json, $ahoraCo)",
             [
                 ':nit_actor'    => $nitActor,
                 ':nombre_actor' => $nombre,
@@ -160,7 +161,7 @@ class adminAuditoriaModel extends mainModelUXXI
             }
         }
 
-        if (defined('SUPER_ADMIN_NIT') && $nit === SUPER_ADMIN_NIT) {
+        if (function_exists('es_super_admin_nit') && es_super_admin_nit($nit)) {
             return 'Super Usuario';
         }
 
