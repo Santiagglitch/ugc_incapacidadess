@@ -26,7 +26,7 @@ $iniciales = implode('', array_map(
 
 <style>
 .det-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;margin-bottom:20px;display:flex;align-items:flex-start;gap:24px;box-shadow:var(--shadow)}
-.det-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0}
+.det-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0;margin:0 auto}
 .det-hero-body{flex:1;min-width:0}
 .det-hero-name{font-size:22px;font-weight:700;margin-bottom:4px}
 .det-hero-sub{font-size:13px;color:var(--muted);margin-bottom:12px;font-family:monospace}
@@ -52,7 +52,7 @@ $iniciales = implode('', array_map(
 .admin-quota-label{font-size:12px;font-weight:600;white-space:nowrap}
 .audit-mini{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 .audit-mini th{text-align:left;padding:6px 10px;font-size:11px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)}
-.audit-mini td{padding:7px 10px;border-bottom:1px solid var(--border2,var(--border));vertical-align:top}
+.audit-mini td{padding:7px 2px;border-bottom:1px solid var(--border2,var(--border));vertical-align:top}
 .audit-mini tr:last-child td{border-bottom:none}
 .audit-accion{display:inline-block;background:var(--green3);color:var(--green);border:1px solid var(--green4);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700}
 .audit-accion.red{background:#fff0f0;color:var(--red);border-color:#ffd0d0}

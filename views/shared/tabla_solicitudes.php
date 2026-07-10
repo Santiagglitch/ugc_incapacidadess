@@ -56,6 +56,22 @@ $returnTo = $returnTo ?? (app_base_url('index.php') . '?' . http_build_query($_G
     font-weight: 800;
   }
 
+  /* Asegurar que en móvil el panel también esté oculto por defecto */
+  @media(max-width: 768px){
+    .cancelacion-panel-row {
+      display: none !important;
+    }
+
+    .cancelacion-panel-row.is-active {
+      display: block !important;
+    }
+
+    .cancelacion-panel-cell {
+      padding: 0 16px 18px !important;
+      background: #ffffff;
+    }
+  }
+
   .cancelacion-panel p {
     margin: 0 0 16px;
     color: #3d2c1b;

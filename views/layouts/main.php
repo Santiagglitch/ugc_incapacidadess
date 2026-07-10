@@ -36,7 +36,7 @@ if ($modoActual === 'super_usuario' || $modoActual === 'admin') {
         $modoLabel = 'Administrador';
     }
 } else {
-    // En modo empleado usar el rol real en sesión para el label
+    // En modo empleado usar el rol real en sesiÃ³n para el label
     $rolEnSesion = $_SESSION['usuario']['rol'] ?? '';
     if ($rolEnSesion === ROL_JEFE) {
         $modoLabel = 'Jefe Inmediato';
@@ -56,7 +56,7 @@ $headerQ = limpiar_texto($_GET['q'] ?? '');
 $headerTipo = limpiar_texto($_GET['tipo_solicitud'] ?? '');
 $headerHistorial = limpiar_texto($_GET['historial'] ?? '');
 
-// Sonido de notificación
+// Sonido de notificaciÃ³n
 $notifSoundUrl = app_asset('assets/sounds/notificacion.mp3');
 $notifPlayOnLogin = !empty($_SESSION['notificacion_sonar_login']);
 unset($_SESSION['notificacion_sonar_login']);
@@ -78,7 +78,7 @@ $csrfToken = csrf_token();
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= e($cssUrl) ?>">
   <style>
-    /* Estilos para el botón Cambiar Modo - Super Admin */
+    /* Estilos para el botÃ³n Cambiar Modo - Super Admin */
     .user-modo-badge {
       display: inline-flex;
       align-items: center;
@@ -124,8 +124,8 @@ $csrfToken = csrf_token();
       white-space: nowrap;
     }
     .btn-cambiar-modo svg {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
     }
     /* Modo Super Usuario - Amarillo dorado que resalta sobre verde */
     .btn-cambiar-modo.btn-modo-admin {
@@ -178,6 +178,12 @@ $csrfToken = csrf_token();
     <a href="<?= e(url_view('dashboard')) ?>" class="logo-link" title="Inicio" data-click-once>
       <img src="<?= e($logoUrl) ?>" alt="Universidad La Gran Colombia" class="header-logo" height="50">
     </a>
+    <button type="button" class="header-search-mobile-toggle" data-header-search-toggle aria-label="Buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </svg>
+    </button>
   </div>
 
   <form class="header-search" method="get" action="<?= e(app_base_url('index.php')) ?>">
@@ -825,6 +831,19 @@ $csrfToken = csrf_token();
   document.addEventListener('click', function (event) {
     if (!root.contains(event.target)) {
       dropdown.classList.remove('active');
+    }
+  });
+
+  // Cerrar notificaciones al hacer scroll
+  var scrollTimeout = null;
+  window.addEventListener('scroll', function () {
+    if (dropdown.classList.contains('active')) {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(function () {
+        dropdown.classList.remove('active');
+      }, 100);
     }
   });
 
