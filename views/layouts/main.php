@@ -245,7 +245,7 @@ $csrfToken = csrf_token();
     </div>
 
     <div class="user-chip">
-      <span class="user-name"><?= e($user['nombre'] ?? '') ?></span>
+      <?= e($user['nombre'] ?? '') ?>
       <span class="user-role"><?= e($rolLabel) ?></span>
       <?php if ($tieneSelectorModo): ?>
         <span class="user-modo-badge <?= ($modoActual === 'super_usuario' || $modoActual === 'admin') ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
@@ -895,32 +895,9 @@ $csrfToken = csrf_token();
     });
   });
 
-  var countInterval = null;
+  loadCount();
 
-  function startPolling(options) {
-    if (countInterval) {
-      window.clearInterval(countInterval);
-    }
-    loadCount(options || {});
-    countInterval = window.setInterval(loadCount, 60000);
-  }
-
-  function stopPolling() {
-    if (countInterval) {
-      window.clearInterval(countInterval);
-      countInterval = null;
-    }
-  }
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') {
-      stopPolling();
-    } else {
-      startPolling({ silent: consumeSilentNotificationRefresh() });
-    }
-  });
-
-  startPolling();
+  window.setInterval(loadCount, 60000);
 })();
 </script>
 
