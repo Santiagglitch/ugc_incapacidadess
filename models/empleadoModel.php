@@ -17,7 +17,7 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
                AND NIT=:nit
              ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC
              FETCH FIRST 1 ROWS ONLY",
@@ -47,7 +47,7 @@ class empleadoModel extends mainModel
                     FROM EMPLEADO
                     WHERE EMPRESA IN ('BA2', 'BDO')
                       AND ESTADO='A'
-                      AND DEPARTAMENTO IN ('11', '25')
+                      AND DEPARTAMENTO IN ('11', '25', '17')
                       AND NIT IN ($inClause)
                  )
                  WHERE RN=1",
@@ -98,7 +98,7 @@ class empleadoModel extends mainModel
                      AND cc.ESTADO = 'A'
                     WHERE e.EMPRESA IN ('BA2', 'BDO')
                       AND e.ESTADO='A'
-                      AND e.DEPARTAMENTO IN ('11', '25')
+                      AND e.DEPARTAMENTO IN ('11', '25', '17')
                       AND e.NIT IN ($inClause)
                  )
                  WHERE RN=1",
@@ -121,6 +121,50 @@ class empleadoModel extends mainModel
         return $empleados;
     }
 
+    public function buscarNitsPorNombreONit(string $busqueda, int $limite = 200): array
+    {
+        $busqueda = trim(preg_replace('/\s+/', ' ', $busqueda) ?? '');
+
+        if ($busqueda === '') {
+            return [];
+        }
+
+        $limite = max(1, min(500, $limite));
+        $like = '%' . $this->escapeLike($this->toUpper($busqueda)) . '%';
+        $documento = preg_replace('/\D+/', '', $busqueda) ?? '';
+        $condiciones = [
+            "UPPER(TRIM(NOMBRE || ' ' || PRIMER_APELLIDO || ' ' || NVL(SEGUNDO_APELLIDO, ''))) LIKE :busqueda_like ESCAPE '\\'",
+        ];
+        $binds = [':busqueda_like' => $like];
+
+        if ($documento !== '') {
+            $condiciones[] = "NIT LIKE :busqueda_documento ESCAPE '\\'";
+            $binds[':busqueda_documento'] = '%' . $this->escapeLike($documento) . '%';
+        }
+
+        $rows = $this->consultarTodo(
+            "SELECT NIT
+             FROM (
+                SELECT NIT,
+                       ROW_NUMBER() OVER (PARTITION BY NIT ORDER BY FECHA_INGRESO DESC, EMPLEADO DESC) AS RN
+                FROM EMPLEADO
+                WHERE EMPRESA IN ('BA2', 'BDO')
+                  AND ESTADO='A'
+                  AND DEPARTAMENTO IN ('11', '25', '17')
+                  AND (" . implode(' OR ', $condiciones) . ")
+             )
+             WHERE RN=1
+             ORDER BY NIT
+             FETCH FIRST $limite ROWS ONLY",
+            $binds
+        );
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn(array $row): string => trim((string)($row['NIT'] ?? '')),
+            $rows
+        ), static fn(string $nit): bool => $nit !== '')));
+    }
+
     public function getTodos(): array
     {
         return $this->consultarTodo(
@@ -130,14 +174,14 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
              ORDER BY NOMBRE_COMPLETO"
         );
     }
 
     public function getRol(string $nit, ?array $empleado = null): string
     {
-        if ($nit === SUPER_ADMIN_NIT) {
+        if (es_super_admin_nit($nit)) {
             return ROL_ADMIN;
         }
 
@@ -172,7 +216,7 @@ class empleadoModel extends mainModel
                   FROM EMPLEADO e
                  WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
-                   AND e.DEPARTAMENTO IN ('11', '25')
+                   AND e.DEPARTAMENTO IN ('11', '25', '17')
                    AND e.NIT = :nit
             ),
             base AS (
@@ -187,7 +231,7 @@ class empleadoModel extends mainModel
                   FROM EMPLEADO e
                  WHERE e.EMPRESA IN ('BA2', 'BDO')
                    AND e.ESTADO = 'A'
-                   AND e.DEPARTAMENTO IN ('11', '25')
+                   AND e.DEPARTAMENTO IN ('11', '25', '17')
             ),
             cc_map AS (
                 SELECT DISTINCT
@@ -291,7 +335,7 @@ class empleadoModel extends mainModel
                 FROM EMPLEADO
                 WHERE EMPRESA IN ('BA2', 'BDO')
                   AND ESTADO='A'
-                  AND DEPARTAMENTO IN ('11', '25')
+                  AND DEPARTAMENTO IN ('11', '25', '17')
                   AND NIT IN ($inClause)
              )
              WHERE RN=1
@@ -320,10 +364,22 @@ class empleadoModel extends mainModel
              FROM EMPLEADO
              WHERE EMPRESA IN ('BA2', 'BDO')
                AND ESTADO='A'
-               AND DEPARTAMENTO IN ('11', '25')
+               AND DEPARTAMENTO IN ('11', '25', '17')
                AND CENTRO_COSTO IN ($inClause)
              ORDER BY NOMBRE_COMPLETO",
             $binds
         );
+    }
+
+    private function toUpper(string $valor): string
+    {
+        return function_exists('mb_strtoupper')
+            ? mb_strtoupper($valor, 'UTF-8')
+            : strtoupper($valor);
+    }
+
+    private function escapeLike(string $valor): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $valor);
     }
 }

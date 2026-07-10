@@ -12,6 +12,8 @@ require_once __DIR__ . '/../services/sesionActivaService.php';
 
 class adminController
 {
+    private array $nombreEmpleadoCache = [];
+
     public function empleados(): void
     {
         requiere_rol([ROL_ADMIN]);
@@ -68,7 +70,7 @@ class adminController
         $totalPaginas = max(1, (int)ceil($total / $porPagina));
         $pagina      = min($pagina, $totalPaginas);
         $empleados   = array_slice($todos, ($pagina - 1) * $porPagina, $porPagina);
-        $esSuperAdmin = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
+        $esSuperAdmin = es_super_admin_nit($user['cedula'] ?? '');
 
         $nitsPage      = array_column($empleados, 'NIT');
         $conteoSolicitudes = $solicitudModel->contarPorNits($nitsPage);
@@ -146,27 +148,22 @@ class adminController
             redirect_to(url_view('admin_empleados'));
         }
 
-        $jefeInmediato     = $empleadoModel->getJefeInmediato($nit);
         $esAprendiz        = $empleadoModel->esAprendiz((string)($empleado['CENTRO_COSTO'] ?? ''));
         $adminsAdicionales = $adminRoles->getAdminsAdicionales();
         $esAdminAdicional  = in_array($nit, $adminsAdicionales, true);
-        $esSuperAdmin      = ($user['cedula'] ?? '') === SUPER_ADMIN_NIT;
-        $puedeGestionarAdmin = $esSuperAdmin && $nit !== ($user['cedula'] ?? '');
+        $esSuperAdmin      = es_super_admin_nit($user['cedula'] ?? '');
+        $puedeGestionarAdmin = $esSuperAdmin && !es_super_admin_nit($nit);
 
         $fechaIngreso  = (string)($empleado['FECHA_INGRESO'] ?? '');
         $antiguedad    = $this->calcularAntiguedad($fechaIngreso);
 
-        $solicitudes = $solicitudModel->getByEmpleado($nit);
-        $stats = [
-            'total'      => count($solicitudes),
-            'pendientes' => count(array_filter($solicitudes, fn($s) => ($s['ESTADO'] ?? '') === ESTADO_PENDIENTE_JEFE)),
-            'aprobadas'  => count(array_filter($solicitudes, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_APROBADO_JEFE, ESTADO_APROBADO_RRHH], true))),
-            'rechazadas' => count(array_filter($solicitudes, fn($s) => in_array(($s['ESTADO'] ?? ''), [ESTADO_RECHAZADO_JEFE, ESTADO_RECHAZADO_RRHH], true))),
-        ];
-
+        $paginaSolicitudes = max(1, (int)($_GET['pag_solicitudes'] ?? 1));
+        $solicitudesPage = $solicitudModel->getByEmpleadoPaginado($nit, $paginaSolicitudes, APP_ROWS_PER_PAGE);
+        $solicitudes = $this->enriquecerSolicitudes($solicitudesPage['rows'] ?? [], $empleadoModel);
+        $solicitudesPaginationData = $solicitudesPage['pagination'] ?? null;
         $rolLabel    = $this->rolEmpleado($empleado, $adminsAdicionales);
         $limiteAdmins = $adminRoles->getLimiteMaximo();
-        $usadosAdmins = count($adminsAdicionales) + 1;
+        $usadosAdmins = count($adminsAdicionales);
 
         $auditLog = [];
         if ($esSuperAdmin) {
@@ -174,9 +171,9 @@ class adminController
         }
 
         render_view('admin/empleados/detalle', compact(
-            'user', 'empleado', 'solicitudes', 'stats',
+            'user', 'empleado', 'solicitudes', 'solicitudesPaginationData',
             'esAdminAdicional', 'puedeGestionarAdmin',
-            'jefeInmediato', 'esAprendiz', 'antiguedad', 'rolLabel',
+            'esAprendiz', 'antiguedad', 'rolLabel',
             'limiteAdmins', 'usadosAdmins', 'auditLog', 'esSuperAdmin'
         ));
     }
@@ -188,6 +185,12 @@ class adminController
         $this->validarPost();
         $this->verificarRateLimit('hacer_admin_' . $nit);
         $user = usuario_actual();
+        $nit = preg_replace('/\D/', '', $nit) ?? '';
+
+        if (es_super_admin_nit($nit)) {
+            flash_set('error', 'No puedes modificar el Super Usuario.');
+            redirect_to(url_view('admin_empleado') . '&nit=' . urlencode($nit));
+        }
 
         $adminRoles = new adminRolesModel();
 
@@ -224,6 +227,13 @@ class adminController
         $this->validarPost();
         $this->verificarRateLimit('quitar_admin_' . $nit);
         $user = usuario_actual();
+        $nit = preg_replace('/\D/', '', $nit) ?? '';
+
+        if (es_super_admin_nit($nit)) {
+            flash_set('error', 'No puedes modificar el Super Usuario.');
+            redirect_to(url_view('admin_empleado') . '&nit=' . urlencode($nit));
+        }
+
         $ok = (new adminRolesModel())->quitarAdmin($nit);
         if ($ok) {
             $empleado = (new empleadoModel())->getByNit($nit);
@@ -349,7 +359,7 @@ class adminController
     {
         requiere_rol([ROL_ADMIN]);
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!es_super_admin_nit($user['cedula'] ?? '')) {
             flash_set('error', 'Acceso restringido al Super Usuario.');
             redirect_to(url_view('dashboard'));
         }
@@ -372,7 +382,7 @@ class adminController
         $countsSolicitudes = $solicitudModel->contarPorEstado([]);
         $totalSolicitudes  = array_sum(array_map('intval', $countsSolicitudes));
         $totalEmpleados    = count($empleadoModel->getTodos());
-        $totalAdmins       = count($adminsAdicionales) + 1;
+        $totalAdmins       = count($adminsAdicionales) + count(super_admin_nits());
         $tendenciaMeses    = $solicitudModel->contarPorMes(6);
 
         $estadoSistema = $this->obtenerEstadoSistema();
@@ -398,7 +408,7 @@ class adminController
     {
         requiere_rol([ROL_ADMIN]);
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!es_super_admin_nit($user['cedula'] ?? '')) {
             http_response_code(403);
             header('Content-Type: application/json');
             echo json_encode([]);
@@ -426,7 +436,7 @@ class adminController
                 continue;
             }
 
-            $esAdminYa = $nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true);
+            $esAdminYa = es_super_admin_nit($nit) || in_array($nit, $adminsAdicionales, true);
 
             $resultados[] = [
                 'nit'       => $nit,
@@ -448,7 +458,7 @@ class adminController
     {
         requiere_rol([ROL_ADMIN]);
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!es_super_admin_nit($user['cedula'] ?? '')) {
             flash_set('error', 'Acceso restringido al Super Usuario.');
             redirect_to(url_view('dashboard'));
         }
@@ -481,7 +491,7 @@ class adminController
             redirect_to(url_view('superadmin_panel'));
         }
 
-        if ($nit === SUPER_ADMIN_NIT) {
+        if (es_super_admin_nit($nit)) {
             flash_set('error', 'No puedes modificar el Super Usuario.');
             redirect_to(url_view('superadmin_panel'));
         }
@@ -522,7 +532,7 @@ class adminController
     {
         requiere_rol([ROL_ADMIN]);
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!es_super_admin_nit($user['cedula'] ?? '')) {
             http_response_code(403);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Sin permiso.']);
@@ -570,7 +580,7 @@ class adminController
     private function soloSuperAdmin(): void
     {
         $user = usuario_actual();
-        if (($user['cedula'] ?? '') !== SUPER_ADMIN_NIT) {
+        if (!es_super_admin_nit($user['cedula'] ?? '')) {
             flash_set('error', 'Solo el Super Usuario puede gestionar administradores.');
             redirect_to(url_view('admin_empleados'));
         }
@@ -578,10 +588,7 @@ class adminController
 
     private function validarPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            flash_set('error', 'Token de seguridad invalido. Recarga la pagina.');
-            redirect_to(url_view('dashboard'));
-        }
+        csrf_requerido();
     }
 
     private function verificarRateLimit(string $clave): void
@@ -611,7 +618,7 @@ class adminController
     {
         $nit = (string) ($emp['NIT'] ?? '');
 
-        if ($nit === SUPER_ADMIN_NIT || in_array($nit, $adminsAdicionales, true)) {
+        if (es_super_admin_nit($nit) || in_array($nit, $adminsAdicionales, true)) {
             return 'admin';
         }
         if (es_jefe_revisor_nit($nit)) {
@@ -628,6 +635,47 @@ class adminController
             $stats[$rol]++;
         }
         return $stats;
+    }
+
+    private function enriquecerSolicitudes(array $solicitudes, empleadoModel $empleadoModel): array
+    {
+        $nitsPendientes = [];
+
+        foreach ($solicitudes as $solicitud) {
+            foreach (['NIT_EMPLEADO', 'NIT_JEFE'] as $nitCampo) {
+                $nit = (string)($solicitud[$nitCampo] ?? '');
+                if ($nit === '' || array_key_exists($nit, $this->nombreEmpleadoCache)) {
+                    continue;
+                }
+
+                if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$nit])) {
+                    $this->nombreEmpleadoCache[$nit] = (string)(USUARIOS_PRUEBA[$nit]['nombre'] ?? $nit);
+                    continue;
+                }
+
+                $nitsPendientes[$nit] = $nit;
+            }
+        }
+
+        if (!empty($nitsPendientes)) {
+            foreach ($empleadoModel->getNombresPorNit(array_values($nitsPendientes)) as $nit => $nombre) {
+                $this->nombreEmpleadoCache[(string)$nit] = (string)$nombre;
+            }
+
+            foreach ($nitsPendientes as $nit) {
+                $this->nombreEmpleadoCache[$nit] ??= '';
+            }
+        }
+
+        foreach ($solicitudes as &$solicitud) {
+            foreach (['NIT_EMPLEADO' => 'NOMBRE_EMPLEADO', 'NIT_JEFE' => 'NOMBRE_JEFE'] as $nitCampo => $nombreCampo) {
+                $nit = (string)($solicitud[$nitCampo] ?? '');
+                $solicitud[$nombreCampo] = $nit !== '' ? ($this->nombreEmpleadoCache[$nit] ?? '') : '';
+            }
+        }
+        unset($solicitud);
+
+        return $solicitudes;
     }
 
     private function calcularAntiguedad(string $fechaIngreso): string

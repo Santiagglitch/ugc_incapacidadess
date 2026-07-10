@@ -12,12 +12,13 @@ class loginBloqueoService extends mainModelUXXI
     public function verificar(string $cedula): ?string
     {
         $clave = md5($cedula);
+        $ahoraCo = self::SQL_NOW_CO;
 
         $row = $this->consultarUno(
             "SELECT INTENTOS,
-                    ROUND((EXPIRA - SYSDATE) * 86400) AS SEGUNDOS_RESTANTES
+                    ROUND((EXPIRA - $ahoraCo) * 86400) AS SEGUNDOS_RESTANTES
              FROM LOGIN_BLOQUEOS
-             WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
+             WHERE CLAVE = :clave AND EXPIRA >= $ahoraCo",
             [':clave' => $clave]
         );
 
@@ -39,11 +40,12 @@ class loginBloqueoService extends mainModelUXXI
     {
         $clave = md5($cedula);
         $ip    = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $ahoraCo = self::SQL_NOW_CO;
 
         $this->limpiarExpirados();
 
         $row = $this->consultarUno(
-            "SELECT INTENTOS FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave AND EXPIRA >= SYSDATE",
+            "SELECT INTENTOS FROM LOGIN_BLOQUEOS WHERE CLAVE = :clave AND EXPIRA >= $ahoraCo",
             [':clave' => $clave]
         );
 
@@ -66,7 +68,7 @@ class loginBloqueoService extends mainModelUXXI
             $this->ejecutar(
                 "INSERT INTO LOGIN_BLOQUEOS (CLAVE, INTENTOS, PRIMER_INT, ULTIMA_ACT, IP_ULTIMA, EXPIRA)
                  VALUES (:clave, :intentos, :primer_int, :ultima_act, :ip,
-                         SYSDATE + (:ventana / 86400))",
+                         $ahoraCo + (:ventana / 86400))",
                 [
                     ':clave'      => $clave,
                     ':intentos'   => $nuevosIntentos,
@@ -91,6 +93,8 @@ class loginBloqueoService extends mainModelUXXI
 
     private function limpiarExpirados(): void
     {
-        $this->ejecutar("DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < SYSDATE");
+        $ahoraCo = self::SQL_NOW_CO;
+
+        $this->ejecutar("DELETE FROM LOGIN_BLOQUEOS WHERE EXPIRA < $ahoraCo");
     }
 }
