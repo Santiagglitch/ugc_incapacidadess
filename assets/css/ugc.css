@@ -45,7 +45,6 @@ input[type="reset"],
 .stat-card-link,
 .dashboard-kpi-card{
   -webkit-user-drag:none;
-  user-drag:none;
 }
 
 body{background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;font-family:'Inter',Arial,sans-serif;line-height:1.5}
