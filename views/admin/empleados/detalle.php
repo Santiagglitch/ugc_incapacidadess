@@ -7,14 +7,13 @@ $fechaIng   = (string)($empleado['FECHA_INGRESO']  ?? '');
 $antiguedad = $antiguedad ?? '';
 $esAprendiz = $esAprendiz ?? false;
 $rolLabel   = $rolLabel   ?? 'empleado';
-$jefeInmediato = $jefeInmediato ?? null;
 $limiteAdmins    = $limiteAdmins    ?? 10;
 $usadosAdmins    = $usadosAdmins    ?? 0;
 $auditLog        = $auditLog        ?? [];
 $esSuperAdmin    = $esSuperAdmin    ?? false;
 $esAdminAdicional = $esAdminAdicional ?? false;
 $puedeGestionarAdmin = $puedeGestionarAdmin ?? false;
-$stats           = $stats ?? ['total' => 0, 'pendientes' => 0, 'aprobadas' => 0, 'rechazadas' => 0];
+$solicitudesPaginationData = $solicitudesPaginationData ?? null;
 
 $rolTextos = ['admin' => 'Administrador', 'rrhh' => 'Talento Humano', 'jefe' => 'Jefe', 'empleado' => 'Empleado'];
 $rolText   = $rolTextos[$rolLabel] ?? $rolLabel;
@@ -46,11 +45,6 @@ $iniciales = implode('', array_map(
 .det-info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px}
 .det-info-card .lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .det-info-card .val{font-size:14px;font-weight:600}
-.det-jefe-card{background:var(--green3);border:1px solid var(--green4);border-radius:var(--r2);padding:14px 18px;display:flex;align-items:center;gap:14px}
-.det-jefe-avatar{width:38px;height:38px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-.det-jefe-name{font-weight:600;font-size:13px}
-.det-jefe-meta{font-size:11px;color:var(--muted)}
-.tab-badge{background:var(--red);color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;margin-left:4px}
 .admin-quota{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)}
 .admin-quota-bar{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
 .admin-quota-fill{height:100%;background:var(--green);border-radius:99px;transition:width .4s}
@@ -101,23 +95,12 @@ $iniciales = implode('', array_map(
   </div>
 </div>
 
-<div class="stats-row" style="margin-bottom:20px">
-  <div class="stat-card"><div class="num"><?= e($stats['total']     ?? 0) ?></div><div class="lbl">Solicitudes</div></div>
-  <div class="stat-card"><div class="num"><?= e($stats['pendientes'] ?? 0) ?></div><div class="lbl">Pendientes</div></div>
-  <div class="stat-card"><div class="num"><?= e($stats['aprobadas']  ?? 0) ?></div><div class="lbl">Aprobadas</div></div>
-  <div class="stat-card"><div class="num"><?= e($stats['rechazadas'] ?? 0) ?></div><div class="lbl">Rechazadas</div></div>
-</div>
-
 <div class="det-tabs">
-  <button class="det-tab active" onclick="detTab(this,'tab-perfil')">Perfil</button>
-  <button class="det-tab" onclick="detTab(this,'tab-solicitudes')">
-    Solicitudes
-    <?php if (($stats['pendientes'] ?? 0) > 0): ?>
-      <span class="tab-badge"><?= e($stats['pendientes']) ?></span>
-    <?php endif; ?>
-  </button>
+  <button type="button" class="det-tab active" data-det-target="tab-perfil" data-det-hash="perfil">Perfil</button>
+  <button type="button" class="det-tab" data-det-target="tab-solicitudes" data-det-hash="solicitudes">Solicitudes</button>
+
   <?php if (!empty($puedeGestionarAdmin)): ?>
-    <button class="det-tab" onclick="detTab(this,'tab-admin')">Admin</button>
+    <button type="button" class="det-tab" data-det-target="tab-admin" data-det-hash="admin">Admin</button>
   <?php endif; ?>
 </div>
 
@@ -159,37 +142,17 @@ $iniciales = implode('', array_map(
     <?php endif; ?>
   </div>
 
-  <?php if ($jefeInmediato && !empty($jefeInmediato['NIT_JEFE'])): ?>
-    <div style="margin-bottom:8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Jefe Inmediato</div>
-    <?php
-      $jNombre = (string)($jefeInmediato['NOMBRE_JEFE'] ?? '');
-      $jIni = implode('', array_map(fn($w) => mb_strtoupper(mb_substr($w,0,1,'UTF-8'),'UTF-8'), array_slice(array_filter(explode(' ',$jNombre)),0,2)));
-      $jFuente = (string)($jefeInmediato['FUENTE_JEFE'] ?? '');
-      $jFuenteLabel = match($jFuente) {
-        'MISMO_CENTRO_COSTO' => 'Mismo Centro de Costo',
-        'CABECERA_SEGMENTO'  => 'Cabecera de Segmento',
-        default              => $jFuente,
-      };
-    ?>
-    <div class="det-jefe-card">
-      <div class="det-jefe-avatar"><?= e($jIni ?: '?') ?></div>
-      <div>
-        <div class="det-jefe-name"><?= e($jNombre) ?></div>
-        <div class="det-jefe-meta">
-          NIT <?= e($jefeInmediato['NIT_JEFE'] ?? '') ?>
-          &nbsp;·&nbsp; Nivel <?= e($jefeInmediato['NIVEL_JEFE'] ?? '') ?>
-          &nbsp;·&nbsp; <?= e($jFuenteLabel) ?>
-        </div>
-      </div>
-    </div>
-  <?php else: ?>
-    <p style="font-size:13px;color:var(--muted);padding:12px 0">No se encontró jefe inmediato registrado.</p>
-  <?php endif; ?>
 </div>
 
 <div id="tab-solicitudes" class="det-panel">
-  <div class="section-header"><h2>Historial de solicitudes</h2></div>
-  <?php require dirname(__DIR__, 2) . '/shared/tabla_solicitudes.php'; ?>
+  <div class="section-header"><h2>Historial de solicitudes de <?= e($nombre) ?></h2></div>
+  <?php
+    $paginationData = $solicitudesPaginationData;
+    $paginationParam = 'pag_solicitudes';
+    $paginationLabel = 'solicitudes';
+    $returnTo = url_view('admin_empleado') . '&nit=' . urlencode($nit) . '#solicitudes';
+    require dirname(__DIR__, 2) . '/shared/tabla_solicitudes.php';
+  ?>
 </div>
 
 <?php if (!empty($puedeGestionarAdmin)): ?>
@@ -257,22 +220,42 @@ $iniciales = implode('', array_map(
 <?php endif; ?>
 
 <script nonce="<?= e(csp_nonce()) ?>">
-function detTab(btn, panelId) {
+function detTab(trigger, panelId) {
   document.querySelectorAll('.det-tab').forEach(function(t) { t.classList.remove('active'); });
   document.querySelectorAll('.det-panel').forEach(function(p) { p.classList.remove('active'); });
-  btn.classList.add('active');
+
+  var tabButton = trigger && trigger.classList && trigger.classList.contains('det-tab')
+    ? trigger
+    : document.querySelector('.det-tab[data-det-target="' + panelId + '"]');
+
+  if (tabButton) tabButton.classList.add('active');
+
   var panel = document.getElementById(panelId);
   if (panel) panel.classList.add('active');
 }
 
 (function () {
+  document.querySelectorAll('[data-det-target]').forEach(function (control) {
+    control.addEventListener('click', function (event) {
+      var panelId = control.getAttribute('data-det-target');
+      if (!panelId) return;
+
+      event.preventDefault();
+      detTab(control, panelId);
+
+      var hash = control.getAttribute('data-det-hash');
+      if (hash) {
+        history.replaceState(null, '', '#' + hash);
+      }
+    });
+  });
+
   var hash = location.hash;
-  if (hash === '#solicitudes') {
-    var btn = document.querySelector('.det-tab[onclick*="tab-solicitudes"]');
-    if (btn) detTab(btn, 'tab-solicitudes');
+  var search = location.search || '';
+  if (hash === '#solicitudes' || /[?&]pag_solicitudes=/.test(search)) {
+    detTab(document.querySelector('.det-tab[data-det-target="tab-solicitudes"]'), 'tab-solicitudes');
   } else if (hash === '#admin') {
-    var btn2 = document.querySelector('.det-tab[onclick*="tab-admin"]');
-    if (btn2) detTab(btn2, 'tab-admin');
+    detTab(document.querySelector('.det-tab[data-det-target="tab-admin"]'), 'tab-admin');
   }
 })();
 </script>
