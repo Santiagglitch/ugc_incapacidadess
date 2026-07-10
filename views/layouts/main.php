@@ -245,7 +245,8 @@ $csrfToken = csrf_token();
     </div>
 
     <div class="user-chip">
-      <span class="user-name"><?= e($user['nombre'] ?? '') ?></span>
+      <?= e($user['nombre'] ?? '') ?>
+      <span class="user-role"><?= e($rolLabel) ?></span>
       <?php if ($tieneSelectorModo): ?>
         <span class="user-modo-badge <?= ($modoActual === 'super_usuario' || $modoActual === 'admin') ? 'modo-admin' : 'modo-empleado' ?>"><?= e($modoLabel) ?></span>
       <?php endif; ?>
@@ -894,51 +895,9 @@ $csrfToken = csrf_token();
     });
   });
 
-  var countInterval = null;
+  loadCount();
 
-  function startPolling(options) {
-    if (countInterval) {
-      window.clearInterval(countInterval);
-    }
-    loadCount(options || {});
-    countInterval = window.setInterval(loadCount, 60000);
-  }
-
-  function stopPolling() {
-    if (countInterval) {
-      window.clearInterval(countInterval);
-      countInterval = null;
-    }
-  }
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') {
-      stopPolling();
-    } else {
-      startPolling({ silent: consumeSilentNotificationRefresh() });
-    }
-  });
-
-  startPolling();
-})();
-
-// Toggle de bÃºsqueda mÃ³vil
-(function () {
-  var searchToggle = document.querySelector('[data-header-search-toggle]');
-  var searchForm = document.querySelector('.header-search');
-
-  if (searchToggle && searchForm) {
-    searchToggle.addEventListener('click', function () {
-      searchForm.classList.toggle('is-mobile-visible');
-    });
-
-    // Cerrar bÃºsqueda al hacer clic fuera
-    document.addEventListener('click', function (event) {
-      if (!searchForm.contains(event.target) && !searchToggle.contains(event.target)) {
-        searchForm.classList.remove('is-mobile-visible');
-      }
-    });
-  }
+  window.setInterval(loadCount, 60000);
 })();
 </script>
 
