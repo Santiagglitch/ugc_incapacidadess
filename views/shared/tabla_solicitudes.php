@@ -22,7 +22,7 @@ if (is_array($paginationData)) {
 }
 
 $paginationData = null;
-$returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
+$returnTo = $returnTo ?? (app_base_url('index.php') . '?' . http_build_query($_GET));
 ?>
 
 <style>
@@ -54,6 +54,22 @@ $returnTo = app_base_url('index.php') . '?' . http_build_query($_GET);
     color: #7a2e00;
     font-size: 18px;
     font-weight: 800;
+  }
+
+  /* Asegurar que en móvil el panel también esté oculto por defecto */
+  @media(max-width: 768px){
+    .cancelacion-panel-row {
+      display: none !important;
+    }
+
+    .cancelacion-panel-row.is-active {
+      display: block !important;
+    }
+
+    .cancelacion-panel-cell {
+      padding: 0 16px 18px !important;
+      background: #ffffff;
+    }
   }
 
   .cancelacion-panel p {

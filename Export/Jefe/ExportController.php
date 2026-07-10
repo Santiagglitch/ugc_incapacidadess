@@ -11,7 +11,6 @@ use Shuchkin\SimpleXLSXGen;
 final class ExportController
 {
     private array $cabeceras = [
-        'ID',
         'NIT EMPLEADO',
         'NOMBRE COMPLETO',
         'FACULTAD / CENTRO DE COSTO',
@@ -30,7 +29,6 @@ final class ExportController
     ];
 
     private array $campos = [
-        'ID',
         'NIT_EMPLEADO',
         'NOMBRE_EMPLEADO',
         'NOMBRE_CENTRO_COSTO',
@@ -66,7 +64,6 @@ final class ExportController
 
         $pendientesAprobacion = $model->getPendientesJefe($nitJefe);
         $misSolicitudes = $model->getByEmpleado($nitJefe);
-
         $historialGestionadoBase = $model->getGestionadasByJefe($nitJefe);
 
         $canceladasPorUsuario = $this->obtenerCanceladasPorUsuario(
@@ -75,10 +72,6 @@ final class ExportController
             $historialGestionadoBase
         );
 
-        /*
-            Unimos el historial con canceladas para que "Historial Gestionado"
-            también coincida con la tarjeta del panel.
-        */
         $historialGestionado = $this->unirFilasUnicas(
             $historialGestionadoBase,
             $canceladasPorUsuario
@@ -94,9 +87,6 @@ final class ExportController
             $this->constante('ESTADO_RECHAZADO_JEFE', 'RECHAZADO_JEFE'),
         ]);
 
-        /*
-            MISMO ORDEN Y MISMOS NOMBRES DE LAS TARJETAS DEL PANEL
-        */
         $data = [
             'Historial Gestionado' => $historialGestionado,
             'Pendientes de Aprobacion' => $pendientesAprobacion,
@@ -113,10 +103,6 @@ final class ExportController
 
     private function obtenerCanceladasPorUsuario(object $model, string $nitJefe, array $historialGestionado): array
     {
-        /*
-            Estado real que estás usando en el sistema:
-            ESTADO_CANCELADO_AGENDA = CANCELADO_AGENDA
-        */
         $estadosCancelados = [
             $this->constante('ESTADO_CANCELADO_AGENDA', 'CANCELADO_AGENDA'),
             'CANCELADO_AGENDA',
@@ -124,10 +110,6 @@ final class ExportController
             'CANCELADA',
         ];
 
-        /*
-            1. Primero intenta sacarlas del historial gestionado.
-            Si tu getGestionadasByJefe ya trae CANCELADO_AGENDA, aquí funciona.
-        */
         $canceladas = $this->filtrarPorEstados($historialGestionado, $estadosCancelados);
         $canceladas = $this->filtrarSoloEquipoDelJefe($canceladas, $nitJefe);
 
@@ -135,10 +117,6 @@ final class ExportController
             return $canceladas;
         }
 
-        /*
-            2. Si no salieron en el historial, intenta con getByJefe.
-            Esto sirve si tu modelo tiene ese método.
-        */
         if (method_exists($model, 'getByJefe')) {
             $rows = $model->getByJefe($nitJefe);
 
@@ -152,10 +130,6 @@ final class ExportController
             }
         }
 
-        /*
-            3. Último respaldo: usa getAll filtrando por estado.
-            Luego vuelve a filtrar por NIT_JEFE para evitar traer datos que no sean del jefe.
-        */
         $resultado = [];
 
         if (method_exists($model, 'getAll')) {
@@ -238,11 +212,30 @@ final class ExportController
     {
         $xlsx = new SimpleXLSXGen();
 
+        if (method_exists($xlsx, 'setDefaultFont')) {
+            $xlsx->setDefaultFont('Calibri');
+        }
+
+        if (method_exists($xlsx, 'setDefaultFontSize')) {
+            $xlsx->setDefaultFontSize(11);
+        }
+
         foreach ($data as $tituloHoja => $rows) {
+            if (!is_array($rows)) {
+                $rows = [];
+            }
+
             $xlsx->addSheet(
                 $this->prepararFilas($rows),
                 $this->limpiarTituloHoja($tituloHoja)
             );
+
+            /*
+                Importante:
+                Los anchos se aplican después de crear la hoja.
+                Si se aplican antes, SimpleXLSXGen puede lanzar error con rows.
+            */
+            $this->aplicarAnchosColumnas($xlsx);
         }
 
         while (ob_get_level() > 0) {
@@ -255,9 +248,15 @@ final class ExportController
 
     private function prepararFilas(array $rows): array
     {
-        $filas = [$this->cabeceras];
+        $filas = [];
+
+        $filas[] = $this->prepararCabecerasConDiseno();
 
         foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
             $fila = [];
 
             foreach ($this->campos as $campo) {
@@ -271,13 +270,178 @@ final class ExportController
                     $valor = \TIPOS_SOLICITUD[$valor];
                 }
 
-                $fila[] = SafeXlsx::valor($valor);
+                if (in_array($campo, ['FECHA_INICIO', 'FECHA_FIN'], true)) {
+                    $valor = $this->formatearFechaSolo($valor);
+                }
+
+                if (in_array($campo, ['FECHA_CREACION', 'FECHA_GESTION_JEFE'], true)) {
+                    $valor = $this->formatearFechaHoraAmPm($valor);
+                }
+
+                $fila[] = $this->celdaConDiseno($valor, $campo);
             }
 
             $filas[] = $fila;
         }
 
         return $filas;
+    }
+
+    private function prepararCabecerasConDiseno(): array
+    {
+        $cabeceras = [];
+
+        foreach ($this->cabeceras as $cabecera) {
+            $valor = $this->limpiarValorParaExcel($cabecera);
+
+            $cabeceras[] =
+                '<style bgcolor="#063125" color="#FFFFFF" border="thin">' .
+                '<b><center><middle><raw>' . $valor . '</raw></middle></center></b>' .
+                '</style>';
+        }
+
+        return $cabeceras;
+    }
+
+    private function celdaConDiseno($valor, string $campo): string
+    {
+        $valor = $this->limpiarValorParaExcel($valor);
+
+        if (in_array($campo, ['OBSERVACIONES', 'OBSERVACION_JEFE', 'OBSERVACION_RRHH'], true)) {
+            return
+                '<style border="thin">' .
+                '<wraptext><top><left><raw>' . $valor . '</raw></left></top></wraptext>' .
+                '</style>';
+        }
+
+        if (in_array($campo, ['NOMBRE_EMPLEADO', 'NOMBRE_CENTRO_COSTO'], true)) {
+            return
+                '<style border="thin">' .
+                '<wraptext><middle><left><raw>' . $valor . '</raw></left></middle></wraptext>' .
+                '</style>';
+        }
+
+        return
+            '<style border="thin">' .
+            '<center><middle><raw>' . $valor . '</raw></middle></center>' .
+            '</style>';
+    }
+
+    private function aplicarAnchosColumnas(SimpleXLSXGen $xlsx): void
+    {
+        if (!method_exists($xlsx, 'setColWidth')) {
+            return;
+        }
+
+        $xlsx
+            ->setColWidth(1, 18)
+            ->setColWidth(2, 35)
+            ->setColWidth(3, 35)
+            ->setColWidth(4, 18)
+            ->setColWidth(5, 25)
+            ->setColWidth(6, 16)
+            ->setColWidth(7, 16)
+            ->setColWidth(8, 10)
+            ->setColWidth(9, 10)
+            ->setColWidth(10, 24)
+            ->setColWidth(11, 90)
+            ->setColWidth(12, 45)
+            ->setColWidth(13, 45)
+            ->setColWidth(14, 24)
+            ->setColWidth(15, 24);
+    }
+
+    private function limpiarValorParaExcel($valor): string
+    {
+        if ($valor === null) {
+            return '';
+        }
+
+        if ($valor instanceof \DateTimeInterface) {
+            $valor = $valor->format('Y-m-d H:i:s');
+        }
+
+        $valor = trim((string)$valor);
+        $valor = str_replace(["\r\n", "\r"], "\n", $valor);
+
+        /*
+            Evita que textos que empiezan con =, +, - o @ se interpreten como fórmulas.
+        */
+        if ($valor !== '' && in_array($valor[0], ['=', '+', '-', '@'], true)) {
+            $valor = "'" . $valor;
+        }
+
+        return htmlspecialchars($valor, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function formatearFechaSolo($valor): string
+    {
+        $fecha = $this->parsearFecha($valor);
+
+        if (!$fecha) {
+            return is_scalar($valor) ? trim((string)$valor) : '';
+        }
+
+        return $fecha->format('d/m/Y');
+    }
+
+    private function formatearFechaHoraAmPm($valor): string
+    {
+        $fecha = $this->parsearFecha($valor);
+
+        if (!$fecha) {
+            return is_scalar($valor) ? trim((string)$valor) : '';
+        }
+
+        return $fecha->format('d/m/Y h:i A');
+    }
+
+    private function parsearFecha($valor): ?\DateTimeImmutable
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        if ($valor instanceof \DateTimeImmutable) {
+            return $valor;
+        }
+
+        if ($valor instanceof \DateTimeInterface) {
+            return new \DateTimeImmutable($valor->format('Y-m-d H:i:s'));
+        }
+
+        $valor = trim((string)$valor);
+
+        if ($valor === '') {
+            return null;
+        }
+
+        $formatos = [
+            'd/m/Y H:i:s',
+            'd/m/Y H:i',
+            'd/m/Y G:i',
+            'd/m/Y h:i A',
+            'd/m/Y h:i:s A',
+            'Y-m-d H:i:s',
+            'Y-m-d H:i',
+            'Y-m-d\TH:i:s',
+            'Y-m-d',
+            'd/m/Y',
+        ];
+
+        foreach ($formatos as $formato) {
+            $fecha = \DateTimeImmutable::createFromFormat($formato, $valor);
+
+            if ($fecha instanceof \DateTimeImmutable) {
+                return $fecha;
+            }
+        }
+
+        try {
+            return new \DateTimeImmutable($valor);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     private function constante(string $nombre, string $valorDefecto): string

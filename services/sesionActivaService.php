@@ -28,6 +28,7 @@ class sesionActivaService extends mainModelUXXI
         $centroCosto = (string)($usuario['centro_costo'] ?? '');
         $ip          = $this->ip();
         $userAgent   = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
+        $ahoraCo     = self::SQL_NOW_CO;
 
         $existe = $this->consultarUno(
             "SELECT SESSION_ID FROM SESIONES_ACTIVAS WHERE SESSION_ID = :sid",
@@ -38,7 +39,7 @@ class sesionActivaService extends mainModelUXXI
             $this->ejecutar(
                 "UPDATE SESIONES_ACTIVAS
                  SET NIT=:nit, NOMBRE=:nombre, ROL=:rol, CENTRO_COSTO=:cc,
-                     IP=:ip, USER_AGENT=:ua, ULTIMA_ACT=SYSDATE
+                     IP=:ip, USER_AGENT=:ua, ULTIMA_ACT=$ahoraCo
                  WHERE SESSION_ID=:sid",
                 [':nit' => $nit, ':nombre' => $nombre, ':rol' => $rol,
                  ':cc' => $centroCosto, ':ip' => $ip, ':ua' => $userAgent, ':sid' => $sid]
@@ -48,7 +49,7 @@ class sesionActivaService extends mainModelUXXI
                 "INSERT INTO SESIONES_ACTIVAS
                     (SESSION_ID, NIT, NOMBRE, ROL, CENTRO_COSTO, IP, USER_AGENT, ULTIMA_ACT, FECHA_INICIO)
                  VALUES
-                    (:sid, :nit, :nombre, :rol, :cc, :ip, :ua, SYSDATE, SYSDATE)",
+                    (:sid, :nit, :nombre, :rol, :cc, :ip, :ua, $ahoraCo, $ahoraCo)",
                 [':sid' => $sid, ':nit' => $nit, ':nombre' => $nombre, ':rol' => $rol,
                  ':cc' => $centroCosto, ':ip' => $ip, ':ua' => $userAgent]
             );
@@ -58,11 +59,12 @@ class sesionActivaService extends mainModelUXXI
     public function getSesionesActivas(): array
     {
         $this->purgar();
+        $ahoraCo = self::SQL_NOW_CO;
 
         $rows = $this->consultarTodo(
             "SELECT SESSION_ID, NIT, NOMBRE, ROL, CENTRO_COSTO, IP, USER_AGENT,
                     TO_CHAR(ULTIMA_ACT,'YYYY-MM-DD HH24:MI:SS') AS ULTIMA_ACT_STR,
-                    (SYSDATE - ULTIMA_ACT) * 86400 AS SEGUNDOS_INACTIVO
+                    ($ahoraCo - ULTIMA_ACT) * 86400 AS SEGUNDOS_INACTIVO
              FROM SESIONES_ACTIVAS
              ORDER BY ULTIMA_ACT DESC"
         );
@@ -99,9 +101,11 @@ class sesionActivaService extends mainModelUXXI
 
     private function purgar(): void
     {
+        $ahoraCo = self::SQL_NOW_CO;
+
         $this->ejecutar(
             "DELETE FROM SESIONES_ACTIVAS
-             WHERE ULTIMA_ACT < SYSDATE - (:ttl / 86400)",
+             WHERE ULTIMA_ACT < $ahoraCo - (:ttl / 86400)",
             [':ttl' => $this->ttl]
         );
     }

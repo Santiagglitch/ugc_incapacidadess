@@ -5,6 +5,11 @@ $idSolicitud = (string)($solicitud['ID'] ?? '');
 $cedulaUsuario = normalizar_documento($user['cedula'] ?? '');
 $nitEmpleadoSolicitud = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
 $nitJefeSolicitud = normalizar_documento($solicitud['NIT_JEFE'] ?? '');
+$nombreEmpleadoSolicitud = trim((string)($solicitud['NOMBRE_EMPLEADO'] ?? ''));
+$nombreJefeSolicitud = trim((string)($solicitud['NOMBRE_JEFE'] ?? ''));
+$empleadoDetalle = $nombreEmpleadoSolicitud !== '' ? $nombreEmpleadoSolicitud : (string)($solicitud['NIT_EMPLEADO'] ?? '');
+$jefeDetalle = $nombreJefeSolicitud !== '' ? $nombreJefeSolicitud : (string)($solicitud['NIT_JEFE'] ?? '');
+$fechaCreacionDetalle = (string)($solicitud['FECHA_CREACION'] ?? '');
 $estadoSolicitud = (string)($solicitud['ESTADO'] ?? '');
 $esDuenoSolicitud = $nitEmpleadoSolicitud === $cedulaUsuario;
 $estaPendienteJefe = $estadoSolicitud === ESTADO_PENDIENTE_JEFE;
@@ -27,7 +32,7 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
 ?>
 <section class="page-header">
   <div>
-    <h1 class="page-title">Solicitud #<?= e($solicitud['ID'] ?? '') ?></h1>
+    <h1 class="page-title">Solicitud</h1>
     <p style="color:var(--muted)"><?= e(TIPOS_SOLICITUD[$solicitud['TIPO_SOLICITUD'] ?? ''] ?? ($solicitud['TIPO_SOLICITUD'] ?? '')) ?></p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -58,11 +63,11 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
   <div class="detail-grid">
     <div class="detail-item">
       <span class="detail-label">Empleado</span>
-      <span class="detail-value"><?= e($solicitud['NIT_EMPLEADO'] ?? '') ?></span>
+      <span class="detail-value"><?= e($empleadoDetalle) ?></span>
     </div>
     <div class="detail-item">
       <span class="detail-label">Jefe Inmediato</span>
-      <span class="detail-value"><?= e($solicitud['NIT_JEFE'] ?? '') ?></span>
+      <span class="detail-value"><?= e($jefeDetalle) ?></span>
     </div>
   </div>
 </div>
@@ -109,6 +114,13 @@ $returnToDetalle = url_retorno_segura($_GET['return_to'] ?? null, url_view('dash
       <?php $estadoValue = $solicitud['ESTADO'] ?? ''; require __DIR__ . '/badge_estado.php'; ?>
     </div>
   </div>
+
+  <?php if ($fechaCreacionDetalle !== ''): ?>
+  <div class="detail-meta-row">
+    <span class="detail-meta-label">Fecha de creación:</span>
+    <span class="detail-meta-value"><?= e(fecha_hora_co($fechaCreacionDetalle)) ?></span>
+  </div>
+  <?php endif; ?>
 
   <?php if (!empty($solicitud['FECHA_GESTION_JEFE'])): ?>
   <div class="detail-meta-row">
@@ -288,7 +300,7 @@ document.getElementById('formGestionRrhh').addEventListener('submit', function(e
         <span class="archivo-hint">Documento PDF de respaldo</span>
       </div>
     </div>
-    <a class="btn btn-green btn-ver-archivo" target="_blank" href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode((string)($solicitud['ID'] ?? ''))) ?>">
+    <a class="btn btn-green btn-ver-archivo" target="_blank" rel="noopener" data-notif-silent-return href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode((string)($solicitud['ID'] ?? ''))) ?>">
       Ver documento
     </a>
   </div>

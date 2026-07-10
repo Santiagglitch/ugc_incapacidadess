@@ -53,7 +53,11 @@ class notificacionController
         $headers = function_exists('getallheaders') ? getallheaders() : [];
         $token = $headers['X-CSRF-Token'] ?? $headers['X-Csrf-Token'] ?? ($_POST['_csrf_token'] ?? null);
         if (!validar_csrf($token)) {
-            $this->json(['success' => false, 'error' => 'Token invalido'], 422);
+            $this->json([
+                'success' => false,
+                'redirect' => app_base_url('index.php?view=login'),
+                'message' => 'Tu sesion expiro. Ingresa nuevamente.',
+            ], 401);
         }
     }
 

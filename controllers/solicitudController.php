@@ -270,6 +270,8 @@ class solicitudController
             exit('Sin permiso para ver esta solicitud.');
         }
 
+        $solicitud = $this->enriquecerSolicitudDetalle($solicitud);
+
         $notasAdmin = [];
         if (($user['rol'] ?? '') === ROL_ADMIN) {
             $notasAdmin = (new notaAdminService())->getByIdSolicitud($id);
@@ -887,6 +889,44 @@ public function cancelarAgenda(?int $id = null): void
             || in_array($user['rol'] ?? '', [ROL_ADMIN, ROL_RRHH], true);
     }
 
+    private function enriquecerSolicitudDetalle(array $solicitud): array
+    {
+        $nits = [];
+
+        foreach (['NIT_EMPLEADO', 'NIT_JEFE'] as $campo) {
+            $nit = (string)($solicitud[$campo] ?? '');
+            if ($nit !== '') {
+                $nits[$nit] = $nit;
+            }
+        }
+
+        if (empty($nits)) {
+            $solicitud['NOMBRE_EMPLEADO'] = '';
+            $solicitud['NOMBRE_JEFE'] = '';
+            return $solicitud;
+        }
+
+        $nombres = [];
+
+        foreach ($nits as $nit) {
+            if (APP_ENV === 'development' && isset(USUARIOS_PRUEBA[$nit])) {
+                $nombres[$nit] = (string)(USUARIOS_PRUEBA[$nit]['nombre'] ?? $nit);
+                unset($nits[$nit]);
+            }
+        }
+
+        if (!empty($nits)) {
+            $nombres += (new empleadoModel())->getNombresPorNit(array_values($nits));
+        }
+
+        foreach (['NIT_EMPLEADO' => 'NOMBRE_EMPLEADO', 'NIT_JEFE' => 'NOMBRE_JEFE'] as $nitCampo => $nombreCampo) {
+            $nit = (string)($solicitud[$nitCampo] ?? '');
+            $solicitud[$nombreCampo] = trim((string)($nombres[$nit] ?? ''));
+        }
+
+        return $solicitud;
+    }
+
     private function puedeEditar(array $solicitud, array $user): bool
     {
         $nitEmpleado = normalizar_documento($solicitud['NIT_EMPLEADO'] ?? '');
@@ -997,7 +1037,7 @@ public function cancelarAgenda(?int $id = null): void
             return false;
         }
 
-        if ($nit === SUPER_ADMIN_NIT || $adminRolesModel->esAdminAdicional($nit)) {
+        if (es_super_admin_nit($nit) || $adminRolesModel->esAdminAdicional($nit)) {
             return true;
         }
 
@@ -1041,10 +1081,7 @@ public function cancelarAgenda(?int $id = null): void
 
     private function validarPost(): void
     {
-        if (!validar_csrf($_POST['_csrf_token'] ?? null)) {
-            http_response_code(422);
-            exit('Token de seguridad invalido.');
-        }
+        csrf_requerido();
     }
 
     private function validarObservacionGestion(string $accion, string $observacion, string $mensajeRechazo): void
