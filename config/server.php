@@ -11,23 +11,23 @@ declare(strict_types=1);
 
 define('APP_NAME', 'Sistema de Solicitudes - UGC');
 define('APP_VERSION', '2.0.0-simple');
-define('APP_ENV', 'production'); // development | production
-define('BASE_URL', 'https://serviciosit.ugc.edu.co/sede/bogota/ugc_incapacidadess');
+define('APP_ENV', 'development'); // development | production
+define('BASE_URL', '/ugc_incapacidadess');
 define('APP_TIMEZONE', 'America/Bogota');
 define('SESSION_SAVE_PATH', ''); // Vacio usa el directorio temporal configurado por PHP
-define('SESSION_IDLE_TIMEOUT', 900); // 15 minutos de inactividad
+define('SESSION_IDLE_TIMEOUT', 1800); // 30 minutos de inactividad
 define('APP_ROWS_PER_PAGE', 6);
 
 /*
  * Almacenamiento central de comprobantes PDF.
- * El servidor configurado guarda los archivos fisicos. Las demas
+ * El servidor 172.20.100.152 guarda los archivos fisicos. Las demas
  * instalaciones se comunican con este mediante los endpoints internos.
  */
 define('SOLICITUDES_STORAGE_PATH', dirname(__DIR__) . '/storage/solicitudes');
-define('PDF_STORAGE_CENTRAL_IP', '172.20.100.92');
+define('PDF_STORAGE_CENTRAL_IP', '127.0.0.1');
 define(
     'PDF_STORAGE_CENTRAL_URL',
-    'https://serviciosit.ugc.edu.co/sede/bogota/ugc_incapacidadess/index.php'
+    'http://localhost/ugc_incapacidadess/index.php'
 );
 define('PDF_STORAGE_TOKEN', '6adff26110ce6b6d2e39fe5e0329899ff43ec7a259e88056c2b27049987a8897');
 define('PDF_STORAGE_CONNECT_TIMEOUT', 5);
@@ -46,14 +46,14 @@ define('ORACLE_CHARSET', 'AL32UTF8');
 define('ORACLE_PERSISTENT', true);
 define('ORACLE_STATEMENT_CACHE_SIZE', 40);
 
-/*
+
 define('LDAP_HOST', '172.20.100.209');
 define('LDAP_PORT', 389);
 define('LDAP_USER', 'cn=Manager,dc=ugc.edu,dc=co');
 define('LDAP_PASSWORD', 'Sl4pdU6Cn3W');
 define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
 define('LDAP_DIRECT_CN_LOGIN', true); // Usa cn=cedula para evitar la busqueda LDAP lenta
- */
+
 
 /*
  * Oracle UXXI / Permisos.
@@ -69,9 +69,10 @@ define('UXXI_CHARSET', 'AL32UTF8');
 
 
 
-
+/*
 define('LDAP_HOST', '10.238.30.115');
 define('LDAP_PORT', 389);
 define('LDAP_USER', 'cn=ConsultaSi,ou=users,dc=ugc.edu,dc=co');
 define('LDAP_PASSWORD', '1s0lwt4Secy1723');
 define('LDAP_TREE', 'ou=users,dc=ugc.edu,dc=co');
+ */

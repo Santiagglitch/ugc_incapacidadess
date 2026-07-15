@@ -206,7 +206,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
               </svg>
               <span class="pdf-current-label">Documento actual cargado</span>
             </div>
-            <a href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode($id)) ?>" target="_blank" class="pdf-view-btn">
+            <a href="<?= e(url_view('solicitud_archivo') . '&id=' . urlencode($id)) ?>" target="_blank" class="pdf-view-btn" data-notif-silent-return>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                 <circle cx="12" cy="12" r="3"/>
