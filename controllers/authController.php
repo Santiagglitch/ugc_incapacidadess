@@ -44,6 +44,11 @@ class authController
 
     public function loginForm(): void
     {
+        if (VACACIONES_ACTIVAS) {
+            render_view('auth/vacaciones', [], 'auth');
+            return;
+        }
+
         if (usuario_autenticado()) {
             redirect_to(url_view('dashboard'));
         }
@@ -94,6 +99,11 @@ class authController
 
     public function loginPost(): void
     {
+        if (VACACIONES_ACTIVAS) {
+            render_view('auth/vacaciones', [], 'auth');
+            return;
+        }
+
         csrf_requerido();
 
         $cedula = limpiar_texto($_POST['cedula'] ?? '');

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/server.php';
 
+// true: muestra el aviso de vacaciones y bloquea el login. false: restaura el acceso.
+define('VACACIONES_ACTIVAS', true);
+
 date_default_timezone_set(APP_TIMEZONE);
 
 if (APP_ENV === 'development') {
