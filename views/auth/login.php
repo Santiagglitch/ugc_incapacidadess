@@ -3,8 +3,8 @@ $logoUrl = app_asset('assets/img/Logo ULGC.png');
 $capibaraUrl = app_asset('assets/img/capibara-login.png');
 ?>
 
-<div class="login-container">
-  <div class="login-card animate-fade-up">
+<div class="login-container login-container--about">
+  <div class="login-card animate-fade-up" data-about-home>
     <div class="login-brand">
       <div class="brand-icon">
         <div class="logo-capibara-wrap">
@@ -87,6 +87,7 @@ $capibaraUrl = app_asset('assets/img/capibara-login.png');
       </button>
     </form>
   </div>
+  <?php require __DIR__ . '/acerca_de.php'; ?>
 </div>
 
 <script nonce="<?= csp_nonce() ?>">
