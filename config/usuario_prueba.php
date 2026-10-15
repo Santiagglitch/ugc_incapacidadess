@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-// Cambiar a false al terminar las pruebas para deshabilitar el acceso.
-define('USUARIO_PRUEBA_HABILITADO', true);
+require_once __DIR__ . '/funcionalidades.php';
+
+// Este acceso se habilita o deshabilita desde el panel control-incapacidades/.
+define('USUARIO_PRUEBA_HABILITADO', app_feature_enabled('USUARIO_PRUEBA_HABILITADO'));
 
 // La contrasena se verifica con password_verify; no se guarda en texto plano.
 define('USUARIO_PRUEBA_PASSWORD_HASH', '$2y$10$EMCICIItUEtujqpMjt/oeuPn01CWJ9.7msNu5ITcwOMtSkxiDZAOK');

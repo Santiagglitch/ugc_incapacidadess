@@ -44,6 +44,7 @@ class authController
 
     public function loginForm(): void
     {
+        app_require_feature('LOGIN_HABILITADO');
         $accesoPrueba = USUARIO_PRUEBA_HABILITADO && ($_GET['pruebas'] ?? '') === '1';
         if (VACACIONES_ACTIVAS && !$accesoPrueba) {
             render_view('auth/vacaciones', [], 'auth');
@@ -100,6 +101,7 @@ class authController
 
     public function loginPost(): void
     {
+        app_require_feature('LOGIN_HABILITADO');
         $cedula = limpiar_texto($_POST['cedula'] ?? '');
         if (VACACIONES_ACTIVAS && !(USUARIO_PRUEBA_HABILITADO && es_usuario_prueba($cedula))) {
             render_view('auth/vacaciones', [], 'auth');

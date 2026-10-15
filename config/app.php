@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/server.php';
+require_once __DIR__ . '/funcionalidades.php';
 
-// true: muestra el aviso de vacaciones y bloquea el login. false: restaura el acceso.
-define('VACACIONES_ACTIVAS', true);
+// Los estados de las funcionalidades se administran desde control-incapacidades/.
+define('VACACIONES_ACTIVAS', app_feature_enabled('VACACIONES_ACTIVAS'));
 
 date_default_timezone_set(APP_TIMEZONE);
 

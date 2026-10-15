@@ -43,6 +43,22 @@ if ($method === 'GET' && $view === 'pdf_storage_file') {
 iniciar_sesion_segura();
 aplicar_headers_seguridad();
 
+$feature = app_route_feature($view, $action, $method);
+if ($feature !== null) {
+    app_require_feature($feature);
+}
+
+if (!app_feature_enabled('NOTIFICACIONES') && (
+    ($method === 'GET' && in_array($view, ['notif_count', 'notif_list'], true))
+    || ($method !== 'GET' && in_array($action, ['notif_read', 'notif_read_all'], true))
+)) {
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($method === 'GET'
+        ? ($view === 'notif_count' ? ['contador' => 0] : ['notificaciones' => []])
+        : ['success' => false]);
+    exit;
+}
+
 if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
     switch ($action) {
         case 'login':

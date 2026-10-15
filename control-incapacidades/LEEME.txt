@@ -1,0 +1,79 @@
+CONTROL DE INCAPACIDADES: ADMINISTRACION DESDE LA PAGINA
+
+Los 12 interruptores se administran exclusivamente en control-incapacidades/.
+config/funcionalidades.php solo conecta el portal con el estado guardado por el
+panel. Ya no contiene valores true/false para editar por codigo o FileZilla.
+
+PRIMER ACCESO, SIN COMANDOS
+1. Publica los archivos indicados abajo.
+2. Sube storage/private/control-panel/instalacion.key y su .htaccess desde tu
+   equipo a esa misma ruta del servidor. La llave ya fue generada para esta entrega.
+3. Abre la direccion publicada de control-incapacidades/.
+4. Copia el contenido del archivo instalacion.key en el campo Llave de instalacion.
+5. Elige usuario y contrasena (minimo 12 caracteres) y pulsa Crear acceso al panel.
+   La llave se consume; ya no se usa para ingresar de nuevo.
+
+USO HABITUAL
+Ingresa a control-incapacidades/ con tu usuario y contrasena. Cambia los
+interruptores, confirma, ingresa nuevamente la contrasena y pulsa Guardar cambios.
+Recarga las paginas del portal para ver el efecto. Puedes volver a encender el
+login aunque el acceso general del portal este apagado, porque el panel tiene
+su propia sesion. No requiere PowerShell, Composer, SQLite ni cambios en Oracle.
+
+Para mostrar el formulario normal del portal, en la pagina enciende Inicio de
+sesion y apaga Aviso de vacaciones. Usuarios de prueba conserva su acceso especial
+durante vacaciones mientras su interruptor siga encendido.
+
+Las funciones apagadas se bloquean sin mostrar avisos de deshabilitacion en el
+portal. El aviso de vacaciones se conserva. La confirmacion de guardado y los
+errores de acceso del panel mantienen su funcionamiento habitual.
+
+DATOS
+El panel guarda estados, acceso e historial automaticamente en
+storage/private/control-panel/estado.json, con bloqueo y reemplazo atomico.
+Conserva ese archivo durante futuras actualizaciones; no lo reemplaces por una
+copia de tu equipo. El usuario de PHP necesita escritura en esa carpeta.
+La contrasena queda guardada como hash. No hay una contrasena predeterminada.
+
+ARCHIVOS DE ESTA ACTUALIZACION (si ya publicaste la version anterior simplificada)
+Sube primero los archivos nuevos y despues config/funcionalidades.php:
+    services/controlIncapacidadesService.php
+    controllers/controlIncapacidadesController.php
+    views/control-panel/login.php
+    views/control-panel/panel.php
+    views/control-panel/.htaccess
+    control-incapacidades/index.php
+    control-incapacidades/control.js
+    control-incapacidades/style.css
+    config/funcionalidades.php
+    config/app.php
+    config/usuario_prueba.php
+    storage/private/control-panel/instalacion.key
+    storage/private/control-panel/.htaccess
+
+SI ES LA PRIMERA PUBLICACION DE TODOS LOS CONTROLES, sube tambien:
+    .htaccess
+    index.php
+    config/helpers.php
+    controllers/authController.php
+    controllers/solicitudController.php
+    services/notificacionService.php
+    views/empleado/form_crear.php
+    views/empleado/form_editar.php
+    views/layouts/main.php
+    Export/Admin/ExportController.php
+    Export/Jefe/ExportController.php
+    Export/RRHH/ExportController.php
+
+Conserva config/server.php del servidor. No se necesitan src/ControlPanel/ ni los
+scripts de configuracion de las versiones anteriores. En Apache, los .htaccess
+protegen el almacenamiento y las vistas; en otro servidor web configura tambien
+la denegacion HTTP de storage y views/control-panel.
+
+VERIFICACION LOCAL OPCIONAL (no es un paso de instalacion)
+    node tests/ControlPanel/integration.cjs
+    node --experimental-websocket tests/ControlPanel/integration.cjs --browser
+
+Las pruebas usan una copia temporal, llaves y contrasenas aleatorias y PHP sin
+extensiones. No modifican estados reales ni consultan Oracle/LDAP. Las capturas de
+la revision en Edge quedan en storage/private/control-panel-preview/.

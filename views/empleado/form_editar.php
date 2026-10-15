@@ -65,6 +65,7 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
       <!-- JEFE -->
       <div class="form-group">
         <label>Jefe que revisa</label>
+        <?php if (app_feature_enabled('SELECCION_JEFES')): ?>
         <select name="nit_jefe_seleccionado" required>
           <option value="">Selecciona...</option>
 
@@ -77,6 +78,9 @@ $returnTo = url_retorno_segura($_GET['return_to'] ?? null, url_view('dashboard')
             </option>
           <?php endforeach; ?>
         </select>
+        <?php else: ?>
+          <input type="text" aria-label="Jefe actual" value="<?= e((string)($solicitud['NIT_JEFE'] ?? '')) ?>" readonly>
+        <?php endif; ?>
       </div>
 
       <!-- SELECCION DE DURACION -->

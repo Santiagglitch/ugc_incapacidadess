@@ -299,6 +299,7 @@ $hoy   = $hoy ?? date('Y-m-d');
       <!-- JEFE -->
       <div class="form-group">
         <label>Jefe que revisa</label>
+        <?php if (app_feature_enabled('SELECCION_JEFES')): ?>
         <select name="nit_jefe_seleccionado" required>
           <option value="">Selecciona...</option>
           <?php foreach (($jefes ?? []) as $jefe): ?>
@@ -307,6 +308,9 @@ $hoy   = $hoy ?? date('Y-m-d');
             </option>
           <?php endforeach; ?>
         </select>
+        <?php else: ?>
+          <input type="text" aria-label="Jefe asignado" value="<?= e((string)($jefeFijo['NOMBRE_JEFE'] ?? '')) ?>" readonly>
+        <?php endif; ?>
       </div>
 
       <!-- SELECCIÓN DE DURACIÓN -->

@@ -3,7 +3,7 @@ RewriteEngine On
 RewriteBase /sede/bogota/ugc_incapacidadess/
 
 
-RewriteRule ^(?:\.git|config|controllers|models|services|data|database|logs|storage|uploads)(?:/|$) - [F,L]
+RewriteRule ^(?:\.git|config|controllers|models|services|src|scripts|tests|data|database|logs|storage|uploads)(?:/|$) - [F,L,NC]
 
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml

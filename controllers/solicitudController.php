@@ -155,11 +155,14 @@ class solicitudController
 
         $user = usuario_actual();
         $empleadoModel = new empleadoModel();
-        $jefes = $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? ''));
+        $jefeFijo = app_feature_enabled('SELECCION_JEFES') ? null
+            : $empleadoModel->getJefeInmediato((string)($user['cedula'] ?? ''));
+        $jefes = app_feature_enabled('SELECCION_JEFES')
+            ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
 
         $submitToken = $this->crearSubmitToken('solicitud_create');
 
-        render_view('empleado/form_crear', compact('user', 'jefes', 'submitToken'));
+        render_view('empleado/form_crear', compact('user', 'jefes', 'jefeFijo', 'submitToken'));
     }
 
     public function crearPost(): void
@@ -185,7 +188,9 @@ class solicitudController
         $this->normalizarDuracionSolicitud($tipoDuracion, $fechaInicio, $fechaFin, $duracionHoras, $duracionDias);
 
         $empleadoModel = new empleadoModel();
-        $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
+        $nitJefe = app_feature_enabled('SELECCION_JEFES')
+            ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
+            : (string)($empleadoModel->getJefeInmediato((string)$user['cedula'])['NIT_JEFE'] ?? '');
 
         $errores = $this->validarSolicitud(
             $tipoSolicitud,
@@ -297,7 +302,8 @@ class solicitudController
         }
 
         $empleadoModel = new empleadoModel();
-        $jefes = $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? ''));
+        $jefes = app_feature_enabled('SELECCION_JEFES')
+            ? $this->jefesDisponibles($empleadoModel, (string)($user['cedula'] ?? '')) : [];
 
         render_view('empleado/form_editar', compact('user', 'solicitud', 'jefes'));
     }
@@ -330,7 +336,9 @@ class solicitudController
         $this->normalizarDuracionSolicitud($tipoDuracion, $fechaInicio, $fechaFin, $duracionHoras, $duracionDias);
 
         $empleadoModel = new empleadoModel();
-        $nitJefe = limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '');
+        $nitJefe = app_feature_enabled('SELECCION_JEFES')
+            ? limpiar_texto($_POST['nit_jefe_seleccionado'] ?? '')
+            : (string)($solicitud['NIT_JEFE'] ?? '');
 
         $errores = $this->validarSolicitud(
             $tipoSolicitud,
@@ -343,12 +351,14 @@ class solicitudController
             $nitJefe
         );
 
-        $nitJefe = $this->validarJefeSeleccionado(
-            $empleadoModel,
-            $nitJefe,
-            (string)($user['cedula'] ?? ''),
-            $errores
-        );
+        if (app_feature_enabled('SELECCION_JEFES')) {
+            $nitJefe = $this->validarJefeSeleccionado(
+                $empleadoModel,
+                $nitJefe,
+                (string)($user['cedula'] ?? ''),
+                $errores
+            );
+        }
 
         if (!empty($errores)) {
             flash_set('error', implode(' ', $errores));

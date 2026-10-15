@@ -128,6 +128,9 @@ class notificacionService
 
     public function contarNoLeidas(string $nit): int
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return 0;
+        }
         try {
             return $this->model->contarNoLeidas($nit);
         } catch (Throwable $e) {
@@ -137,6 +140,9 @@ class notificacionService
 
     public function getNoLeidas(string $nit): array
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return [];
+        }
         try {
             return $this->model->getNoLeidas($nit);
         } catch (Throwable $e) {
@@ -146,6 +152,9 @@ class notificacionService
 
     public function marcarLeida(int $id, string $nit): bool
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return false;
+        }
         try {
             return $this->model->marcarLeida($id, $nit);
         } catch (Throwable $e) {
@@ -155,6 +164,9 @@ class notificacionService
 
     public function marcarTodasLeidas(string $nit): bool
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return false;
+        }
         try {
             return $this->model->marcarTodasLeidas($nit);
         } catch (Throwable $e) {
@@ -164,6 +176,9 @@ class notificacionService
 
     public function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return false;
+        }
         try {
             return $this->model->marcarLeidasPorSolicitud($idSolicitud, $nit);
         } catch (Throwable $e) {
@@ -234,6 +249,9 @@ class notificacionService
 
     private function safeCrear(string $nit, string $tipo, string $mensaje, int $idSolicitud): void
     {
+        if (!app_feature_enabled('NOTIFICACIONES')) {
+            return;
+        }
         if ($nit === '' || $idSolicitud <= 0) {
             return;
         }

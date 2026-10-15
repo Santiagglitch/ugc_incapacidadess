@@ -49,6 +49,7 @@ final class ExportController
     public function todasExcel(): void
     {
         require_once __DIR__ . '/../../config/helpers.php';
+        \app_require_feature('EXPORTACIONES');
         require_once __DIR__ . '/../Libraries/SimpleXLSXGen.php';
         require_once __DIR__ . '/../Shared/EmpleadoInfoEnricher.php';
         require_once __DIR__ . '/../Shared/SafeXlsx.php';

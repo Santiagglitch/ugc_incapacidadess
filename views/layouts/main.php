@@ -58,7 +58,7 @@ $headerHistorial = limpiar_texto($_GET['historial'] ?? '');
 
 // Sonido de notificaciÃ³n
 $notifSoundUrl = app_asset('assets/sounds/notificacion.mp3');
-$notifPlayOnLogin = !empty($_SESSION['notificacion_sonar_login']);
+$notifPlayOnLogin = app_feature_enabled('NOTIFICACIONES') && !empty($_SESSION['notificacion_sonar_login']);
 unset($_SESSION['notificacion_sonar_login']);
 $notifStateKey = 'ugc:notificaciones:count:' . (string)($user['cedula'] ?? '');
 $notifStateKeyJson = json_encode($notifStateKey, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES);
