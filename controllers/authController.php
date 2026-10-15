@@ -44,7 +44,8 @@ class authController
 
     public function loginForm(): void
     {
-        if (VACACIONES_ACTIVAS) {
+        $accesoPrueba = USUARIO_PRUEBA_HABILITADO && ($_GET['pruebas'] ?? '') === '1';
+        if (VACACIONES_ACTIVAS && !$accesoPrueba) {
             render_view('auth/vacaciones', [], 'auth');
             return;
         }
@@ -99,14 +100,14 @@ class authController
 
     public function loginPost(): void
     {
-        if (VACACIONES_ACTIVAS) {
+        $cedula = limpiar_texto($_POST['cedula'] ?? '');
+        if (VACACIONES_ACTIVAS && !(USUARIO_PRUEBA_HABILITADO && es_usuario_prueba($cedula))) {
             render_view('auth/vacaciones', [], 'auth');
             return;
         }
 
         csrf_requerido();
 
-        $cedula = limpiar_texto($_POST['cedula'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
 
         $bloqueo = $this->verificarBruteForce($cedula);
@@ -122,7 +123,7 @@ class authController
         if (empty($result['ok'])) {
             $this->registrarIntentoFallido($cedula);
             $_SESSION['login_error'] = 'Credenciales incorrectas.';
-            redirect_to(url_view('login'));
+            redirect_to(url_view('login') . (es_usuario_prueba($cedula) ? '&pruebas=1' : ''));
         }
 
         $this->limpiarIntentosFallidos($cedula);

@@ -1,0 +1,4206 @@
+[
+    {
+        "path": ".gitignore",
+        "bytes": 1622,
+        "lines": 38,
+        "sha256": "45ce4a1f00f0bda4393e83efda0a16162cb5e831643d0d2bbd56a92b0dbf83e0",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": ".htaccess",
+        "bytes": 1202,
+        "lines": 35,
+        "sha256": "7114623344275bb2cb6a0b2b372c2d411a446e9a2401a19c5c210ab2ab3bb6ac",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "Export/Admin/ExportController.php",
+        "bytes": 18501,
+        "lines": 612,
+        "sha256": "f985febfc615d791595fc9d97114ade2ef518c05e9cc09bdc70b7d6ce5f3df74",
+        "classes": [
+            {
+                "name": "App\\Export\\Admin\\ExportController",
+                "line": 11
+            }
+        ],
+        "functions": [
+            {
+                "name": "todasExcel",
+                "line": 49,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function todasExcel(): void"
+            },
+            {
+                "name": "obtenerCanceladasPorUsuario",
+                "line": 129,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function obtenerCanceladasPorUsuario(object $model, array $todas): array"
+            },
+            {
+                "name": "filtrarPorEstados",
+                "line": 219,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function filtrarPorEstados(array $rows, array $estados): array"
+            },
+            {
+                "name": "ordenarPorFechaCreacionAsc",
+                "line": 233,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function ordenarPorFechaCreacionAsc(array $rows): array"
+            },
+            {
+                "name": "unirFilasUnicas",
+                "line": 252,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function unirFilasUnicas(array ...$grupos): array"
+            },
+            {
+                "name": "generarExcelPorHojas",
+                "line": 285,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function generarExcelPorHojas(array $data, string $nombreArchivo): void"
+            },
+            {
+                "name": "prepararFilas",
+                "line": 323,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararFilas(array $rows): array"
+            },
+            {
+                "name": "prepararCabecerasConDiseno",
+                "line": 377,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararCabecerasConDiseno(): array"
+            },
+            {
+                "name": "celdaConDiseno",
+                "line": 393,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function celdaConDiseno($valor, string $campo): string"
+            },
+            {
+                "name": "aplicarAnchosColumnas",
+                "line": 427,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function aplicarAnchosColumnas(SimpleXLSXGen $xlsx): void"
+            },
+            {
+                "name": "limpiarValorParaExcel",
+                "line": 477,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarValorParaExcel($valor): string"
+            },
+            {
+                "name": "formatearFechaSolo",
+                "line": 504,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaSolo($valor): string"
+            },
+            {
+                "name": "formatearFechaHoraAmPm",
+                "line": 515,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaHoraAmPm($valor): string"
+            },
+            {
+                "name": "parsearFecha",
+                "line": 526,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function parsearFecha($valor): ?\\DateTimeImmutable"
+            },
+            {
+                "name": "constante",
+                "line": 574,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function constante(string $nombre, string $valorDefecto): string"
+            },
+            {
+                "name": "normalizarEstado",
+                "line": 579,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarEstado(string $estado): string"
+            },
+            {
+                "name": "limpiarTituloHoja",
+                "line": 584,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Admin",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarTituloHoja(string $titulo): string"
+            }
+        ]
+    },
+    {
+        "path": "Export/Jefe/ExportController.php",
+        "bytes": 14433,
+        "lines": 479,
+        "sha256": "64af46ed30aa1018003207d38c26e40419fa63e10f5159510297f2db789a4596",
+        "classes": [
+            {
+                "name": "App\\Export\\Jefe\\ExportController",
+                "line": 11
+            }
+        ],
+        "functions": [
+            {
+                "name": "todasExcel",
+                "line": 49,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "public",
+                "static": false,
+                "signature": "function todasExcel(): void"
+            },
+            {
+                "name": "obtenerCanceladasPorUsuario",
+                "line": 104,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function obtenerCanceladasPorUsuario(object $model, string $nitJefe, array $historialGestionado): array"
+            },
+            {
+                "name": "filtrarSoloEquipoDelJefe",
+                "line": 155,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function filtrarSoloEquipoDelJefe(array $rows, string $nitJefe): array"
+            },
+            {
+                "name": "filtrarPorEstados",
+                "line": 168,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function filtrarPorEstados(array $rows, array $estados): array"
+            },
+            {
+                "name": "unirFilasUnicas",
+                "line": 182,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function unirFilasUnicas(array ...$grupos): array"
+            },
+            {
+                "name": "generarExcelPorHojas",
+                "line": 211,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function generarExcelPorHojas(array $data, string $nombreArchivo): void"
+            },
+            {
+                "name": "prepararFilas",
+                "line": 249,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararFilas(array $rows): array"
+            },
+            {
+                "name": "prepararCabecerasConDiseno",
+                "line": 290,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararCabecerasConDiseno(): array"
+            },
+            {
+                "name": "celdaConDiseno",
+                "line": 306,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function celdaConDiseno($valor, string $campo): string"
+            },
+            {
+                "name": "aplicarAnchosColumnas",
+                "line": 330,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function aplicarAnchosColumnas(SimpleXLSXGen $xlsx): void"
+            },
+            {
+                "name": "limpiarValorParaExcel",
+                "line": 354,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarValorParaExcel($valor): string"
+            },
+            {
+                "name": "formatearFechaSolo",
+                "line": 377,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaSolo($valor): string"
+            },
+            {
+                "name": "formatearFechaHoraAmPm",
+                "line": 388,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaHoraAmPm($valor): string"
+            },
+            {
+                "name": "parsearFecha",
+                "line": 399,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function parsearFecha($valor): ?\\DateTimeImmutable"
+            },
+            {
+                "name": "constante",
+                "line": 447,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function constante(string $nombre, string $valorDefecto): string"
+            },
+            {
+                "name": "normalizarEstado",
+                "line": 452,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarEstado(string $estado): string"
+            },
+            {
+                "name": "normalizarNit",
+                "line": 457,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarNit(string $nit): string"
+            },
+            {
+                "name": "limpiarTituloHoja",
+                "line": 465,
+                "class": "ExportController",
+                "namespace": "App\\Export\\Jefe",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarTituloHoja(string $titulo): string"
+            }
+        ]
+    },
+    {
+        "path": "Export/Libraries/SimpleXLSXGen.php",
+        "bytes": 68149,
+        "lines": 1378,
+        "sha256": "3b426e312c118e0b3ee9702863727b06da3857e5a58fb6dc7d85241da2d19888",
+        "classes": [
+            {
+                "name": "Shuchkin\\SimpleXLSXGen",
+                "line": 25
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 104,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct()"
+            },
+            {
+                "name": "create",
+                "line": 238,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function create($title = null)"
+            },
+            {
+                "name": "fromArray",
+                "line": 247,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function fromArray(array $rows, $sheetName = null)"
+            },
+            {
+                "name": "addSheet",
+                "line": 257,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function addSheet(array $rows, $name = null)"
+            },
+            {
+                "name": "__toString",
+                "line": 290,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __toString()"
+            },
+            {
+                "name": "save",
+                "line": 305,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function save()"
+            },
+            {
+                "name": "saveAs",
+                "line": 309,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function saveAs($filename)"
+            },
+            {
+                "name": "download",
+                "line": 323,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function download()"
+            },
+            {
+                "name": "downloadAs",
+                "line": 328,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function downloadAs($filename)"
+            },
+            {
+                "name": "_write",
+                "line": 357,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function _write($fh)"
+            },
+            {
+                "name": "_writeEntry",
+                "line": 679,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function _writeEntry($fh, &$cdrec, $cfilename, $data)"
+            },
+            {
+                "name": "_sheetToXML",
+                "line": 753,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function _sheetToXML($idx, $template)"
+            },
+            {
+                "name": "setDefaultFont",
+                "line": 1147,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setDefaultFont($name)"
+            },
+            {
+                "name": "setDefaultFontSize",
+                "line": 1153,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setDefaultFontSize($size)"
+            },
+            {
+                "name": "setTitle",
+                "line": 1159,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setTitle($title)"
+            },
+            {
+                "name": "setSubject",
+                "line": 1164,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setSubject($subject)"
+            },
+            {
+                "name": "setAuthor",
+                "line": 1169,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setAuthor($author)"
+            },
+            {
+                "name": "setCompany",
+                "line": 1174,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setCompany($company)"
+            },
+            {
+                "name": "setManager",
+                "line": 1179,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setManager($manager)"
+            },
+            {
+                "name": "setKeywords",
+                "line": 1184,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setKeywords($keywords)"
+            },
+            {
+                "name": "setDescription",
+                "line": 1189,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setDescription($description)"
+            },
+            {
+                "name": "setCategory",
+                "line": 1194,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setCategory($category)"
+            },
+            {
+                "name": "setLanguage",
+                "line": 1200,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setLanguage($language)"
+            },
+            {
+                "name": "setApplication",
+                "line": 1206,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setApplication($application)"
+            },
+            {
+                "name": "setLastModifiedBy",
+                "line": 1211,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setLastModifiedBy($lastModifiedBy)"
+            },
+            {
+                "name": "autoFilter",
+                "line": 1221,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function autoFilter($range)"
+            },
+            {
+                "name": "mergeCells",
+                "line": 1227,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function mergeCells($range)"
+            },
+            {
+                "name": "setColWidth",
+                "line": 1238,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function setColWidth($col, $width)"
+            },
+            {
+                "name": "rightToLeft",
+                "line": 1252,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function rightToLeft($value = true)"
+            },
+            {
+                "name": "freezePanes",
+                "line": 1258,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function freezePanes($cell)"
+            },
+            {
+                "name": "getNumFmtId",
+                "line": 1264,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getNumFmtId($code)"
+            },
+            {
+                "name": "date2excel",
+                "line": 1278,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function date2excel($year, $month, $day, $hours = 0, $minutes = 0, $seconds = 0)"
+            },
+            {
+                "name": "esc",
+                "line": 1311,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function esc($str)"
+            },
+            {
+                "name": "raw",
+                "line": 1319,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function raw($value)"
+            },
+            {
+                "name": "rawArray",
+                "line": 1323,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function rawArray($array)"
+            },
+            {
+                "name": "col2index",
+                "line": 1333,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "private",
+                "static": true,
+                "signature": "function col2index($col)"
+            },
+            {
+                "name": "cell2coord",
+                "line": 1353,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function cell2coord($cell, &$x, &$y)"
+            },
+            {
+                "name": "coord2cell",
+                "line": 1368,
+                "class": "SimpleXLSXGen",
+                "namespace": "Shuchkin",
+                "visibility": "public",
+                "static": true,
+                "signature": "function coord2cell($x, $y = null)"
+            }
+        ]
+    },
+    {
+        "path": "Export/RRHH/ExportController.php",
+        "bytes": 18063,
+        "lines": 593,
+        "sha256": "31756705bb837bf43a0b00992b231a28d17477571454978d1dff3d22b96e6003",
+        "classes": [
+            {
+                "name": "App\\Export\\RRHH\\ExportController",
+                "line": 11
+            }
+        ],
+        "functions": [
+            {
+                "name": "todasExcel",
+                "line": 51,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "public",
+                "static": false,
+                "signature": "function todasExcel(): void"
+            },
+            {
+                "name": "obtenerCanceladasPorUsuario",
+                "line": 117,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function obtenerCanceladasPorUsuario(object $model, array $todas): array"
+            },
+            {
+                "name": "filtrarPorEstados",
+                "line": 212,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function filtrarPorEstados(array $rows, array $estados): array"
+            },
+            {
+                "name": "ordenarPorFechaCreacionAsc",
+                "line": 226,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function ordenarPorFechaCreacionAsc(array $rows): array"
+            },
+            {
+                "name": "unirFilasUnicas",
+                "line": 245,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function unirFilasUnicas(array ...$grupos): array"
+            },
+            {
+                "name": "generarExcelPorHojas",
+                "line": 278,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function generarExcelPorHojas(array $data, string $nombreArchivo): void"
+            },
+            {
+                "name": "prepararFilas",
+                "line": 316,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararFilas(array $rows): array"
+            },
+            {
+                "name": "prepararCabecerasConDiseno",
+                "line": 370,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function prepararCabecerasConDiseno(): array"
+            },
+            {
+                "name": "celdaConDiseno",
+                "line": 386,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function celdaConDiseno($valor, string $campo): string"
+            },
+            {
+                "name": "aplicarAnchosColumnas",
+                "line": 420,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function aplicarAnchosColumnas(SimpleXLSXGen $xlsx): void"
+            },
+            {
+                "name": "limpiarValorParaExcel",
+                "line": 472,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarValorParaExcel($valor): string"
+            },
+            {
+                "name": "formatearFechaSolo",
+                "line": 499,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaSolo($valor): string"
+            },
+            {
+                "name": "formatearFechaHoraAmPm",
+                "line": 510,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function formatearFechaHoraAmPm($valor): string"
+            },
+            {
+                "name": "parsearFecha",
+                "line": 521,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function parsearFecha($valor): ?\\DateTimeImmutable"
+            },
+            {
+                "name": "constante",
+                "line": 569,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function constante(string $nombre, string $valorDefecto): string"
+            },
+            {
+                "name": "normalizarEstado",
+                "line": 574,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarEstado(string $estado): string"
+            },
+            {
+                "name": "limpiarTituloHoja",
+                "line": 579,
+                "class": "ExportController",
+                "namespace": "App\\Export\\RRHH",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarTituloHoja(string $titulo): string"
+            }
+        ]
+    },
+    {
+        "path": "Export/Shared/EmpleadoInfoEnricher.php",
+        "bytes": 1457,
+        "lines": 57,
+        "sha256": "99bd6ae088ea59ff948e97f392df9ceec62edefeb0fb7b94d9478980e23f16dd",
+        "classes": [
+            {
+                "name": "App\\Export\\Shared\\EmpleadoInfoEnricher",
+                "line": 9
+            }
+        ],
+        "functions": [
+            {
+                "name": "enriquecerHojas",
+                "line": 11,
+                "class": "EmpleadoInfoEnricher",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "public",
+                "static": false,
+                "signature": "function enriquecerHojas(array $hojas): array"
+            }
+        ]
+    },
+    {
+        "path": "Export/Shared/SafeXlsx.php",
+        "bytes": 4440,
+        "lines": 144,
+        "sha256": "4c58530c39efba663875749d75eb2de3471fffb991f04069ea5987e3a83719cf",
+        "classes": [
+            {
+                "name": "App\\Export\\Shared\\SafeXlsx",
+                "line": 11
+            }
+        ],
+        "functions": [
+            {
+                "name": "valor",
+                "line": 13,
+                "class": "SafeXlsx",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "public",
+                "static": true,
+                "signature": "function valor($valor): string"
+            },
+            {
+                "name": "descargar",
+                "line": 34,
+                "class": "SafeXlsx",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "public",
+                "static": true,
+                "signature": "function descargar(SimpleXLSXGen $xlsx, string $nombreArchivo): void"
+            },
+            {
+                "name": "guardarParaPrueba",
+                "line": 84,
+                "class": "SafeXlsx",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "public",
+                "static": true,
+                "signature": "function guardarParaPrueba(SimpleXLSXGen $xlsx, string $ruta): bool"
+            },
+            {
+                "name": "reempaquetar",
+                "line": 100,
+                "class": "SafeXlsx",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "private",
+                "static": true,
+                "signature": "function reempaquetar(string $origen, string $salida): bool"
+            },
+            {
+                "name": "esEntradaActiva",
+                "line": 136,
+                "class": "SafeXlsx",
+                "namespace": "App\\Export\\Shared",
+                "visibility": "private",
+                "static": true,
+                "signature": "function esEntradaActiva(string $nombre): bool"
+            }
+        ]
+    },
+    {
+        "path": "assets/css/ugc.css",
+        "bytes": 90883,
+        "lines": 2892,
+        "sha256": "bddd877f05894e6befbacc0d286446443a567ad1304680e2eaf8f81353d239ea",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/Logo ULGC.png",
+        "bytes": 121760,
+        "lines": 374,
+        "sha256": "c03ae7e0131978d722eca96cca7ef5c0529f4836d5695c3d3fd013cf0d49fe00",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/capibara-login.png",
+        "bytes": 323976,
+        "lines": 1071,
+        "sha256": "4ba60fd821a798806d15d80c886b894d1d0aaba775ba32b6f4f70bcae9794a42",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/capibara-login1.png",
+        "bytes": 82212,
+        "lines": 552,
+        "sha256": "5c81fe3b98e758e60f2b82aaf2dc2885da133cbe057896413a5e6ba79e9db3b6",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/capibaras-equipo.webp",
+        "bytes": 878656,
+        "lines": 3881,
+        "sha256": "38e0b1084bd3a166a14120cfa1b43ac2293c902dd8e1089ab01c36c167069500",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/favicon.png",
+        "bytes": 101310,
+        "lines": 352,
+        "sha256": "74693081b8fc9767a7d5beb75cc6d06b59b803376e7eb389e66c29d60047c6eb",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/img/login-fondo.png",
+        "bytes": 1641785,
+        "lines": 6092,
+        "sha256": "0faacae6dd18f599afcb76eb208e570c80d1af8e390e48b4ab3263b14939b78c",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/js/acerca-de.js",
+        "bytes": 6395,
+        "lines": 192,
+        "sha256": "dc230ca36618331bd684393d193238d83a640a51a0e5e0dc5202aceda1c9c9b1",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/js/jefe-picker.js",
+        "bytes": 7100,
+        "lines": 236,
+        "sha256": "dfad13ea7b949e662522df155c376f08442d2c4e73686a0a6525e4fd0b440262",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/js/pdf-mobile-preview.js",
+        "bytes": 2630,
+        "lines": 1,
+        "sha256": "fbfe7b439dad961b426ca511d73e0a24935f29f15cf0c876bbc505cf4a77d981",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/sounds/notificacion.mp3",
+        "bytes": 97010,
+        "lines": 434,
+        "sha256": "1936315ca2d09673a2370e7a74aae474d5bd1fbf4aa960bae45565be3147306d",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/vendor/pdfjs/pdf.min.js",
+        "bytes": 320025,
+        "lines": 22,
+        "sha256": "86791280654fb3403853a2e3a39212941fd1c4af0c7e3608ae8f85cead458be0",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "assets/vendor/pdfjs/pdf.worker.min.js",
+        "bytes": 1087233,
+        "lines": 22,
+        "sha256": "6195a19b81679dfb8fbd6c387aa37cf212c83f02628d768d142925fddc3d88fb",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "config/app.php",
+        "bytes": 5708,
+        "lines": 197,
+        "sha256": "da8dea1bf4f63ffe6c948fe8e3d7b7245289b0b419eb939ae8b61791161e626e",
+        "classes": [],
+        "functions": [
+            {
+                "name": "super_admin_nits",
+                "line": 84,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function super_admin_nits(): array"
+            },
+            {
+                "name": "es_super_admin_nit",
+                "line": 98,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function es_super_admin_nit($nit): bool"
+            },
+            {
+                "name": "es_jefe_revisor_nit",
+                "line": 104,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function es_jefe_revisor_nit($nit): bool"
+            },
+            {
+                "name": "get_jefes_revisores_filtrados",
+                "line": 129,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function get_jefes_revisores_filtrados(): array"
+            },
+            {
+                "name": "es_talento_humano_nit",
+                "line": 134,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function es_talento_humano_nit($nit): bool"
+            },
+            {
+                "name": "app_base_url",
+                "line": 177,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function app_base_url(string $path = ''): string"
+            },
+            {
+                "name": "app_asset",
+                "line": 182,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function app_asset(string $path): string"
+            }
+        ]
+    },
+    {
+        "path": "config/conexion.php",
+        "bytes": 1760,
+        "lines": 62,
+        "sha256": "dd1f13d9f3d3bc15c438d899247778143df34fb39f94a8f3e43381c54bcc7210",
+        "classes": [
+            {
+                "name": "Conexion",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "conectar",
+                "line": 11,
+                "class": "Conexion",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function conectar()"
+            },
+            {
+                "name": "disponible",
+                "line": 42,
+                "class": "Conexion",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function disponible(): bool"
+            },
+            {
+                "name": "cerrar",
+                "line": 52,
+                "class": "Conexion",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function cerrar(): void"
+            }
+        ]
+    },
+    {
+        "path": "config/conexion_ldap.php",
+        "bytes": 15881,
+        "lines": 429,
+        "sha256": "f5376c045a8401f12885a257cdaab3944631301050f9153dfcb77ced22264813",
+        "classes": [],
+        "functions": [
+            {
+                "name": "ldap_diagnostico_archivo",
+                "line": 7,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_diagnostico_archivo(): string"
+            },
+            {
+                "name": "ldap_diagnostico_sanitizar",
+                "line": 12,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_diagnostico_sanitizar($valor, string $clave = '')"
+            },
+            {
+                "name": "ldap_diagnostico_id",
+                "line": 37,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_diagnostico_id(): string"
+            },
+            {
+                "name": "ldap_diagnostico_registrar",
+                "line": 46,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_diagnostico_registrar( string $intentoId, string $cedula, string $etapa, string $resultado, array $detalle = [] ): void"
+            },
+            {
+                "name": "ldap_diagnostico_error",
+                "line": 101,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_diagnostico_error($conexion, string $etapa): array"
+            },
+            {
+                "name": "ldap_uid_para_dn",
+                "line": 152,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_uid_para_dn(string $cedula): string"
+            },
+            {
+                "name": "ldap_cn_directo_dn",
+                "line": 161,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_cn_directo_dn(string $cedula): string"
+            },
+            {
+                "name": "ldap_login_directo_cn_activo",
+                "line": 166,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_login_directo_cn_activo(): bool"
+            },
+            {
+                "name": "ldap_conectar",
+                "line": 171,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_conectar(?string $intentoId = null, string $cedula = '')"
+            },
+            {
+                "name": "ldap_autenticar_usuario",
+                "line": 259,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ldap_autenticar_usuario(string $cedula, string $password): ?array"
+            }
+        ]
+    },
+    {
+        "path": "config/conexion_uxxi.php",
+        "bytes": 1351,
+        "lines": 53,
+        "sha256": "2e28db9b1012a5a5018060fda9e8a6707e497c8e7f01ffb675a21578ea7cfc30",
+        "classes": [
+            {
+                "name": "ConexionUXXI",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "conectar",
+                "line": 11,
+                "class": "ConexionUXXI",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function conectar()"
+            },
+            {
+                "name": "disponible",
+                "line": 35,
+                "class": "ConexionUXXI",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function disponible(): bool"
+            },
+            {
+                "name": "cerrar",
+                "line": 45,
+                "class": "ConexionUXXI",
+                "namespace": "",
+                "visibility": "public",
+                "static": true,
+                "signature": "function cerrar(): void"
+            }
+        ]
+    },
+    {
+        "path": "config/helpers.php",
+        "bytes": 4193,
+        "lines": 159,
+        "sha256": "3ea10ce80a40d79babde69b72f2eaaddae2f66e8c48df613ae15ff92430354e8",
+        "classes": [],
+        "functions": [
+            {
+                "name": "url_view",
+                "line": 7,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function url_view(string $view = 'login'): string"
+            },
+            {
+                "name": "url_action",
+                "line": 12,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function url_action(string $action): string"
+            },
+            {
+                "name": "redirect_to",
+                "line": 17,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function redirect_to(string $url): void"
+            },
+            {
+                "name": "app_url_interna",
+                "line": 27,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function app_url_interna(string $url): bool"
+            },
+            {
+                "name": "url_retorno_segura",
+                "line": 73,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function url_retorno_segura(?string $url, string $fallback): string"
+            },
+            {
+                "name": "flash_set",
+                "line": 80,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function flash_set(string $type, string $message): void"
+            },
+            {
+                "name": "flash_get",
+                "line": 86,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function flash_get(): ?array"
+            },
+            {
+                "name": "fecha_hora_co",
+                "line": 99,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function fecha_hora_co(string $valor, string $default = ''): string"
+            },
+            {
+                "name": "fecha_co",
+                "line": 121,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function fecha_co(string $valor, string $default = ''): string"
+            },
+            {
+                "name": "render_view",
+                "line": 136,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function render_view(string $view, array $data = [], string $layout = 'main'): void"
+            }
+        ]
+    },
+    {
+        "path": "config/seguridad.php",
+        "bytes": 8751,
+        "lines": 311,
+        "sha256": "9aa06e2b47e9dd13d0ab181633686973b75b2fa3811eccf089df7a369eed9b6e",
+        "classes": [],
+        "functions": [
+            {
+                "name": "iniciar_sesion_segura",
+                "line": 14,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function iniciar_sesion_segura(): void"
+            },
+            {
+                "name": "csp_nonce",
+                "line": 42,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csp_nonce(): string"
+            },
+            {
+                "name": "aplicar_headers_seguridad",
+                "line": 51,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function aplicar_headers_seguridad(): void"
+            },
+            {
+                "name": "csrf_token",
+                "line": 73,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_token(): string"
+            },
+            {
+                "name": "csrf_generar_token",
+                "line": 86,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_generar_token(int $timestamp): string"
+            },
+            {
+                "name": "csrf_token_expirado",
+                "line": 91,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_token_expirado(string $token): bool"
+            },
+            {
+                "name": "csrf_input",
+                "line": 102,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_input(): string"
+            },
+            {
+                "name": "validar_csrf",
+                "line": 107,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function validar_csrf(?string $token): bool"
+            },
+            {
+                "name": "csrf_regenerate_after_login",
+                "line": 142,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_regenerate_after_login(): void"
+            },
+            {
+                "name": "e",
+                "line": 156,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function e($valor): string"
+            },
+            {
+                "name": "limpiar_texto",
+                "line": 161,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function limpiar_texto($valor): string"
+            },
+            {
+                "name": "normalizar_documento",
+                "line": 166,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function normalizar_documento($valor): string"
+            },
+            {
+                "name": "usuario_actual",
+                "line": 171,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function usuario_actual(): array"
+            },
+            {
+                "name": "usuario_autenticado",
+                "line": 177,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function usuario_autenticado(): bool"
+            },
+            {
+                "name": "admin_modo_pendiente",
+                "line": 182,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function admin_modo_pendiente(): bool"
+            },
+            {
+                "name": "es_peticion_ajax",
+                "line": 187,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function es_peticion_ajax(): bool"
+            },
+            {
+                "name": "responder_sesion_expirada",
+                "line": 193,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function responder_sesion_expirada(): void"
+            },
+            {
+                "name": "csrf_requerido",
+                "line": 209,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function csrf_requerido(): void"
+            },
+            {
+                "name": "usuario_tiene_selector_modo",
+                "line": 228,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function usuario_tiene_selector_modo(): bool"
+            },
+            {
+                "name": "rol_actual",
+                "line": 242,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function rol_actual(): string"
+            },
+            {
+                "name": "validar_vigencia_sesion",
+                "line": 248,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function validar_vigencia_sesion(): void"
+            },
+            {
+                "name": "requiere_login",
+                "line": 272,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function requiere_login(): void"
+            },
+            {
+                "name": "requiere_rol",
+                "line": 288,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function requiere_rol(array $roles): void"
+            },
+            {
+                "name": "cerrar_sesion",
+                "line": 298,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function cerrar_sesion(): void"
+            }
+        ]
+    },
+    {
+        "path": "config/server.php",
+        "bytes": 2556,
+        "lines": 78,
+        "sha256": "d61b0aa678783750ec19a3703c3a346fa6df2e3ce1706ef6bdc27f3af5a6e7c3",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "controllers/adminController.php",
+        "bytes": 28769,
+        "lines": 706,
+        "sha256": "d8b269060b26bc900aee43963d01b69643d47c0178c3e5cd404bc6b6425dfdcb",
+        "classes": [
+            {
+                "name": "adminController",
+                "line": 13
+            }
+        ],
+        "functions": [
+            {
+                "name": "empleados",
+                "line": 17,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function empleados(): void"
+            },
+            {
+                "name": "exportEmpleadosCsv",
+                "line": 86,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function exportEmpleadosCsv(): void"
+            },
+            {
+                "name": "empleadoDetalle",
+                "line": 137,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function empleadoDetalle(string $nit): void"
+            },
+            {
+                "name": "hacerAdmin",
+                "line": 181,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function hacerAdmin(string $nit): void"
+            },
+            {
+                "name": "quitarAdmin",
+                "line": 223,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function quitarAdmin(string $nit): void"
+            },
+            {
+                "name": "intervenirSolicitud",
+                "line": 253,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function intervenirSolicitud(int $id): void"
+            },
+            {
+                "name": "forzarEstadoSolicitud",
+                "line": 296,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function forzarEstadoSolicitud(int $id): void"
+            },
+            {
+                "name": "guardarNotaAdmin",
+                "line": 339,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function guardarNotaAdmin(int $id): void"
+            },
+            {
+                "name": "superAdminPanel",
+                "line": 358,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function superAdminPanel(): void"
+            },
+            {
+                "name": "buscarEmpleadoJson",
+                "line": 407,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function buscarEmpleadoJson(string $q): void"
+            },
+            {
+                "name": "auditoriaExportCsv",
+                "line": 457,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function auditoriaExportCsv(): void"
+            },
+            {
+                "name": "asignarAdminDesdePanel",
+                "line": 480,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function asignarAdminDesdePanel(string $nit): void"
+            },
+            {
+                "name": "systemHealth",
+                "line": 531,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function systemHealth(): void"
+            },
+            {
+                "name": "obtenerEstadoSistema",
+                "line": 547,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function obtenerEstadoSistema(): array"
+            },
+            {
+                "name": "soloSuperAdmin",
+                "line": 580,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function soloSuperAdmin(): void"
+            },
+            {
+                "name": "validarPost",
+                "line": 589,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarPost(): void"
+            },
+            {
+                "name": "verificarRateLimit",
+                "line": 594,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function verificarRateLimit(string $clave): void"
+            },
+            {
+                "name": "regenerarCsrf",
+                "line": 608,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function regenerarCsrf(): void"
+            },
+            {
+                "name": "rolEmpleado",
+                "line": 617,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function rolEmpleado(array $emp, array $adminsAdicionales): string"
+            },
+            {
+                "name": "calcularStats",
+                "line": 630,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function calcularStats(array $empleados, array $adminsAdicionales): array"
+            },
+            {
+                "name": "enriquecerSolicitudes",
+                "line": 640,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function enriquecerSolicitudes(array $solicitudes, empleadoModel $empleadoModel): array"
+            },
+            {
+                "name": "calcularAntiguedad",
+                "line": 681,
+                "class": "adminController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function calcularAntiguedad(string $fechaIngreso): string"
+            }
+        ]
+    },
+    {
+        "path": "controllers/authController.php",
+        "bytes": 12668,
+        "lines": 347,
+        "sha256": "691b0965a2d99f9cc1926fe6602a4181234808ecd06c725a2a448517ed378116",
+        "classes": [
+            {
+                "name": "authController",
+                "line": 12
+            }
+        ],
+        "functions": [
+            {
+                "name": "usuarioTieneSelectorModo",
+                "line": 17,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function usuarioTieneSelectorModo(array $user): bool"
+            },
+            {
+                "name": "esSuperAdmin",
+                "line": 32,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function esSuperAdmin(array $user): bool"
+            },
+            {
+                "name": "esTalentoHumanoFijo",
+                "line": 40,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function esTalentoHumanoFijo(array $user): bool"
+            },
+            {
+                "name": "loginForm",
+                "line": 45,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function loginForm(): void"
+            },
+            {
+                "name": "verificarBruteForce",
+                "line": 64,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function verificarBruteForce(string $cedula): ?string"
+            },
+            {
+                "name": "registrarIntentoFallido",
+                "line": 73,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function registrarIntentoFallido(string $cedula): void"
+            },
+            {
+                "name": "limpiarIntentosFallidos",
+                "line": 87,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarIntentosFallidos(string $cedula): void"
+            },
+            {
+                "name": "esperaHtml",
+                "line": 94,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function esperaHtml(): bool"
+            },
+            {
+                "name": "loginPost",
+                "line": 100,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function loginPost(): void"
+            },
+            {
+                "name": "seleccionarModoForm",
+                "line": 167,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function seleccionarModoForm(): void"
+            },
+            {
+                "name": "seleccionarModoPost",
+                "line": 190,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function seleccionarModoPost(): void"
+            },
+            {
+                "name": "cambiarModo",
+                "line": 235,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function cambiarModo(): void"
+            },
+            {
+                "name": "calcularRolOperativo",
+                "line": 326,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function calcularRolOperativo(string $cedula, ?array $empleado): string"
+            },
+            {
+                "name": "logout",
+                "line": 339,
+                "class": "authController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function logout(): void"
+            }
+        ]
+    },
+    {
+        "path": "controllers/conflictoJefesController.php",
+        "bytes": 5635,
+        "lines": 154,
+        "sha256": "ff6ec3f80032d1e798612aea3f95c02a7f38ba69a4603d41fe8efd4ebdaa8e61",
+        "classes": [
+            {
+                "name": "conflictoJefesController",
+                "line": 8
+            }
+        ],
+        "functions": [
+            {
+                "name": "analizarConflictos",
+                "line": 13,
+                "class": "conflictoJefesController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function analizarConflictos(): array"
+            },
+            {
+                "name": "verificarConflictoPorNit",
+                "line": 42,
+                "class": "conflictoJefesController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function verificarConflictoPorNit(string $nit): array"
+            },
+            {
+                "name": "getJefesValidados",
+                "line": 75,
+                "class": "conflictoJefesController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getJefesValidados(): array"
+            },
+            {
+                "name": "generarReporteCompleto",
+                "line": 90,
+                "class": "conflictoJefesController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function generarReporteCompleto(): array"
+            },
+            {
+                "name": "apiAnalisis",
+                "line": 117,
+                "class": "conflictoJefesController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function apiAnalisis(): void"
+            }
+        ]
+    },
+    {
+        "path": "controllers/dashboardController.php",
+        "bytes": 20574,
+        "lines": 421,
+        "sha256": "3db1f23f3f2d1cf52a7ee1171f89f15bbad3c4049f078e3e17057992044387ae",
+        "classes": [
+            {
+                "name": "dashboardController",
+                "line": 9
+            }
+        ],
+        "functions": [
+            {
+                "name": "index",
+                "line": 13,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function index(): void"
+            },
+            {
+                "name": "dashboardRrhh",
+                "line": 84,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function dashboardRrhh(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void"
+            },
+            {
+                "name": "dashboardJefe",
+                "line": 151,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function dashboardJefe(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void"
+            },
+            {
+                "name": "dashboardEmpleado",
+                "line": 234,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function dashboardEmpleado(array $user, solicitudModel $model, empleadoModel $empleadoModel, string $q, string $tipoFiltro): void"
+            },
+            {
+                "name": "resolverHistorialPage",
+                "line": 271,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function resolverHistorialPage( string $historialTipo, array $historialOpciones, solicitudModel $model, array $pendientesPage, string $tipoPendientes, string $paramPendientes, array $misPage, string $tipoMis, string $paramMis ): array"
+            },
+            {
+                "name": "estadisticasJefe",
+                "line": 300,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function estadisticasJefe( solicitudModel $model, array $filtrosBase, string $cedula, array $gestionadasEstados, array $aprobadasEstados ): array"
+            },
+            {
+                "name": "estadisticasEmpleado",
+                "line": 323,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function estadisticasEmpleado(solicitudModel $model, array $filtrosBase, string $cedula): array"
+            },
+            {
+                "name": "sumarConteos",
+                "line": 336,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function sumarConteos(array $conteos, ?array $estados = null): int"
+            },
+            {
+                "name": "filtrosBase",
+                "line": 351,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function filtrosBase(string $q, string $tipoFiltro, empleadoModel $empleadoModel, bool $permitirBusquedaEmpleado): array"
+            },
+            {
+                "name": "enriquecerSolicitudes",
+                "line": 375,
+                "class": "dashboardController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function enriquecerSolicitudes(array $solicitudes, empleadoModel $empleadoModel): array"
+            }
+        ]
+    },
+    {
+        "path": "controllers/notificacionController.php",
+        "bytes": 2283,
+        "lines": 73,
+        "sha256": "f27084d16855cb58c0fca36daa7ef3faeed930284492b0d5086f0ce3e74e556c",
+        "classes": [
+            {
+                "name": "notificacionController",
+                "line": 8
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 12,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct()"
+            },
+            {
+                "name": "contador",
+                "line": 17,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contador(): void"
+            },
+            {
+                "name": "listar",
+                "line": 25,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function listar(): void"
+            },
+            {
+                "name": "marcarLeida",
+                "line": 33,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarLeida(int $id): void"
+            },
+            {
+                "name": "marcarTodasLeidas",
+                "line": 42,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarTodasLeidas(): void"
+            },
+            {
+                "name": "validarAjaxCsrf",
+                "line": 51,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarAjaxCsrf(): void"
+            },
+            {
+                "name": "json",
+                "line": 64,
+                "class": "notificacionController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function json(array $data, int $code = 200): void"
+            }
+        ]
+    },
+    {
+        "path": "controllers/pdfStorageController.php",
+        "bytes": 3132,
+        "lines": 110,
+        "sha256": "ccad261ea0ef5e84ae2d6f032056bda7039efdcd3484a199120a6fbb53874955",
+        "classes": [
+            {
+                "name": "pdfStorageController",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 13,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct()"
+            },
+            {
+                "name": "upload",
+                "line": 18,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function upload(): void"
+            },
+            {
+                "name": "file",
+                "line": 35,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function file(): void"
+            },
+            {
+                "name": "delete",
+                "line": 62,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function delete(): void"
+            },
+            {
+                "name": "autorizar",
+                "line": 70,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function autorizar(): void"
+            },
+            {
+                "name": "pdfValido",
+                "line": 80,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function pdfValido(array $archivo): bool"
+            },
+            {
+                "name": "json",
+                "line": 102,
+                "class": "pdfStorageController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function json(array $data, int $status): void"
+            }
+        ]
+    },
+    {
+        "path": "controllers/solicitudController.php",
+        "bytes": 38769,
+        "lines": 1131,
+        "sha256": "8c25c0d46f38159261424722371a891812689ebc5ea97b47f89b943caf19a7eb",
+        "classes": [
+            {
+                "name": "solicitudController",
+                "line": 12
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 17,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct()"
+            },
+            {
+                "name": "listar",
+                "line": 23,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function listar(): void"
+            },
+            {
+                "name": "crearForm",
+                "line": 152,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function crearForm(): void"
+            },
+            {
+                "name": "crearPost",
+                "line": 165,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function crearPost(): void"
+            },
+            {
+                "name": "ver",
+                "line": 257,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function ver(int $id): void"
+            },
+            {
+                "name": "editarForm",
+                "line": 283,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function editarForm(int $id): void"
+            },
+            {
+                "name": "editarPost",
+                "line": 305,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function editarPost(int $id): void"
+            },
+            {
+                "name": "gestionJefePost",
+                "line": 399,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function gestionJefePost(int $id): void"
+            },
+            {
+                "name": "gestionRrhhPost",
+                "line": 484,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function gestionRrhhPost(int $id): void"
+            },
+            {
+                "name": "cancelarAgenda",
+                "line": 550,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function cancelarAgenda(?int $id = null): void"
+            },
+            {
+                "name": "eliminar",
+                "line": 617,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function eliminar(int $id): void"
+            },
+            {
+                "name": "servirArchivo",
+                "line": 644,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function servirArchivo(int $id): void"
+            },
+            {
+                "name": "validarSolicitud",
+                "line": 668,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarSolicitud( string $tipo, string $inicio, string $fin, string $tipoDuracion, ?float $horas, ?float $dias, string $obs, string $nitJefe ): array"
+            },
+            {
+                "name": "normalizarDuracionSolicitud",
+                "line": 741,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarDuracionSolicitud( string $tipoDuracion, string $fechaInicio, string &$fechaFin, ?float &$horas, ?float &$dias ): void"
+            },
+            {
+                "name": "calcularDiasHabiles",
+                "line": 768,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function calcularDiasHabiles(string $inicio, string $fin): int"
+            },
+            {
+                "name": "procesarArchivoPDF",
+                "line": 788,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function procesarArchivoPDF(string $nitEmpleado)"
+            },
+            {
+                "name": "numeroOpcional",
+                "line": 841,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function numeroOpcional($valor): ?float"
+            },
+            {
+                "name": "fechaValida",
+                "line": 852,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function fechaValida(string $fecha): bool"
+            },
+            {
+                "name": "returnTo",
+                "line": 859,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function returnTo(string $fallback): string"
+            },
+            {
+                "name": "redirigirSolicitudBorrada",
+                "line": 877,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function redirigirSolicitudBorrada(): void"
+            },
+            {
+                "name": "puedeVer",
+                "line": 883,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeVer(array $solicitud, array $user): bool"
+            },
+            {
+                "name": "enriquecerSolicitudDetalle",
+                "line": 892,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function enriquecerSolicitudDetalle(array $solicitud): array"
+            },
+            {
+                "name": "puedeEditar",
+                "line": 930,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeEditar(array $solicitud, array $user): bool"
+            },
+            {
+                "name": "puedeCancelarAgenda",
+                "line": 940,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeCancelarAgenda(array $solicitud, array $user): bool"
+            },
+            {
+                "name": "puedeGestionarJefe",
+                "line": 952,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeGestionarJefe(array $solicitud, array $user): bool"
+            },
+            {
+                "name": "puedeGestionarRrhh",
+                "line": 962,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeGestionarRrhh(array $solicitud, array $user): bool"
+            },
+            {
+                "name": "solicitudEsDeTalentoHumano",
+                "line": 973,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function solicitudEsDeTalentoHumano(array $solicitud): bool"
+            },
+            {
+                "name": "jefesDisponibles",
+                "line": 984,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function jefesDisponibles(empleadoModel $empleadoModel, string $excluirNit = ''): array"
+            },
+            {
+                "name": "puedeActuarComoJefeRevisor",
+                "line": 1032,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function puedeActuarComoJefeRevisor(array $jefe, adminRolesModel $adminRolesModel): bool"
+            },
+            {
+                "name": "validarJefeSeleccionado",
+                "line": 1054,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarJefeSeleccionado( empleadoModel $empleadoModel, string $nitJefe, string $nitEmpleado, array &$errores ): string"
+            },
+            {
+                "name": "validarPost",
+                "line": 1082,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarPost(): void"
+            },
+            {
+                "name": "validarObservacionGestion",
+                "line": 1087,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function validarObservacionGestion(string $accion, string $observacion, string $mensajeRechazo): void"
+            },
+            {
+                "name": "crearSubmitToken",
+                "line": 1100,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function crearSubmitToken(string $key): string"
+            },
+            {
+                "name": "consumirSubmitToken",
+                "line": 1116,
+                "class": "solicitudController",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function consumirSubmitToken(string $key, $token): bool"
+            }
+        ]
+    },
+    {
+        "path": "index.php",
+        "bytes": 6016,
+        "lines": 203,
+        "sha256": "61ef2ba1f38c1472a676346c9f46ebed3c19a722fc6888f4ae337f534a9fc6cf",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "models/adminAuditoriaModel.php",
+        "bytes": 7381,
+        "lines": 195,
+        "sha256": "bd5bd6c0663e0deedb29dbdf0f28524cbb5b5a8246b7fde71f2b869d69bf57e6",
+        "classes": [
+            {
+                "name": "adminAuditoriaModel",
+                "line": 8
+            }
+        ],
+        "functions": [
+            {
+                "name": "registrar",
+                "line": 10,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function registrar(string $nitActor, string $accion, string $descripcion, array $meta = [], string $nombreActor = ''): bool"
+            },
+            {
+                "name": "filtrar",
+                "line": 36,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function filtrar(string $accion = '', int $pagina = 1, int $porPagina = 20): array"
+            },
+            {
+                "name": "getByNitObjetivo",
+                "line": 73,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getByNitObjetivo(string $nit, int $limite = 10): array"
+            },
+            {
+                "name": "getAccionesUnicas",
+                "line": 90,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getAccionesUnicas(): array"
+            },
+            {
+                "name": "exportCsv",
+                "line": 97,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function exportCsv(): string"
+            },
+            {
+                "name": "normalizarFilas",
+                "line": 122,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarFilas(array $rows): array"
+            },
+            {
+                "name": "resolverNombre",
+                "line": 151,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function resolverNombre(string $nit): string"
+            },
+            {
+                "name": "ipCliente",
+                "line": 180,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function ipCliente(): string"
+            },
+            {
+                "name": "csvEscape",
+                "line": 186,
+                "class": "adminAuditoriaModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function csvEscape(string $valor): string"
+            }
+        ]
+    },
+    {
+        "path": "models/adminRolesModel.php",
+        "bytes": 2331,
+        "lines": 91,
+        "sha256": "580f873cc7bd53dc22ffe2b9d975e3e5e49e3ce5bb0c870ccf8b793d32396e91",
+        "classes": [
+            {
+                "name": "adminRolesModel",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "getAdminsAdicionales",
+                "line": 12,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getAdminsAdicionales(): array"
+            },
+            {
+                "name": "esAdminAdicional",
+                "line": 28,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function esAdminAdicional(string $nit): bool"
+            },
+            {
+                "name": "agregarAdmin",
+                "line": 33,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function agregarAdmin(string $nit, string $nitAsignadoPor = ''): bool"
+            },
+            {
+                "name": "quitarAdmin",
+                "line": 63,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function quitarAdmin(string $nit): bool"
+            },
+            {
+                "name": "getLimiteMaximo",
+                "line": 81,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getLimiteMaximo(): int"
+            },
+            {
+                "name": "alcanzaLimite",
+                "line": 86,
+                "class": "adminRolesModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function alcanzaLimite(): bool"
+            }
+        ]
+    },
+    {
+        "path": "models/authModel.php",
+        "bytes": 1653,
+        "lines": 52,
+        "sha256": "85b2bed98bcc50bd783efd4810639f583699ceecbea5d2674c853c864af0994d",
+        "classes": [
+            {
+                "name": "authModel",
+                "line": 12
+            }
+        ],
+        "functions": [
+            {
+                "name": "login",
+                "line": 14,
+                "class": "authModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function login(string $cedula, string $password): array"
+            }
+        ]
+    },
+    {
+        "path": "models/empleadoModel.php",
+        "bytes": 14594,
+        "lines": 386,
+        "sha256": "945fc522fb55c11827cd80dfe7c9e9670926d27b947b242d851e6eeee69fba93",
+        "classes": [
+            {
+                "name": "empleadoModel",
+                "line": 9
+            }
+        ],
+        "functions": [
+            {
+                "name": "getByNit",
+                "line": 11,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getByNit(string $nit): ?array"
+            },
+            {
+                "name": "getNombresPorNit",
+                "line": 28,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getNombresPorNit(array $nits): array"
+            },
+            {
+                "name": "getInfoExportacionPorNits",
+                "line": 68,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getInfoExportacionPorNits(array $nits): array"
+            },
+            {
+                "name": "buscarNitsPorNombreONit",
+                "line": 124,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function buscarNitsPorNombreONit(string $busqueda, int $limite = 200): array"
+            },
+            {
+                "name": "getTodos",
+                "line": 168,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getTodos(): array"
+            },
+            {
+                "name": "getRol",
+                "line": 182,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getRol(string $nit, ?array $empleado = null): string"
+            },
+            {
+                "name": "getJefeInmediato",
+                "line": 204,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getJefeInmediato(string $nit): ?array"
+            },
+            {
+                "name": "esAprendiz",
+                "line": 309,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function esAprendiz(string $centroCosto): bool"
+            },
+            {
+                "name": "getTodosLosJefes",
+                "line": 314,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getTodosLosJefes(): array"
+            },
+            {
+                "name": "getPorCentrosCosto",
+                "line": 347,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getPorCentrosCosto(array $centrosCosto): array"
+            },
+            {
+                "name": "toUpper",
+                "line": 374,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function toUpper(string $valor): string"
+            },
+            {
+                "name": "escapeLike",
+                "line": 381,
+                "class": "empleadoModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function escapeLike(string $valor): string"
+            }
+        ]
+    },
+    {
+        "path": "models/mainModel.php",
+        "bytes": 3056,
+        "lines": 107,
+        "sha256": "0e78cf60b4128d51a917871ff9b272257ecb36a64daa2f498f4f2b33755507eb",
+        "classes": [
+            {
+                "name": "mainModel",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "conectar",
+                "line": 9,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function conectar()"
+            },
+            {
+                "name": "ejecutarConsulta",
+                "line": 14,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function ejecutarConsulta(string $sql, array $params = [], int $modo = OCI_DEFAULT)"
+            },
+            {
+                "name": "consultarTodo",
+                "line": 56,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function consultarTodo(string $sql, array $params = []): array"
+            },
+            {
+                "name": "consultarUno",
+                "line": 71,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function consultarUno(string $sql, array $params = []): ?array"
+            },
+            {
+                "name": "ejecutar",
+                "line": 84,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function ejecutar(string $sql, array $params = []): bool"
+            },
+            {
+                "name": "buildInClause",
+                "line": 95,
+                "class": "mainModel",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function buildInClause(array $values, string $prefix): array"
+            }
+        ]
+    },
+    {
+        "path": "models/mainModelUXXI.php",
+        "bytes": 440,
+        "lines": 18,
+        "sha256": "8edef6e4372bccc65e22bd15b2bb81032de69288db53a2775562b948a97b38fe",
+        "classes": [
+            {
+                "name": "mainModelUXXI",
+                "line": 8
+            }
+        ],
+        "functions": [
+            {
+                "name": "conectar",
+                "line": 13,
+                "class": "mainModelUXXI",
+                "namespace": "",
+                "visibility": "protected",
+                "static": false,
+                "signature": "function conectar()"
+            }
+        ]
+    },
+    {
+        "path": "models/notificacionModel.php",
+        "bytes": 2754,
+        "lines": 80,
+        "sha256": "76c418f9c2a6ac4cf92252deedf496b670f606ec4251c7ec97cf7ee971ec791c",
+        "classes": [
+            {
+                "name": "notificacionModel",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "crear",
+                "line": 9,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function crear(string $nitDestinatario, string $tipo, string $mensaje, int $idSolicitud): bool"
+            },
+            {
+                "name": "getNoLeidas",
+                "line": 22,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getNoLeidas(string $nit): array"
+            },
+            {
+                "name": "contarNoLeidas",
+                "line": 37,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarNoLeidas(string $nit): int"
+            },
+            {
+                "name": "marcarLeida",
+                "line": 49,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarLeida(int $id, string $nit): bool"
+            },
+            {
+                "name": "marcarTodasLeidas",
+                "line": 59,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarTodasLeidas(string $nit): bool"
+            },
+            {
+                "name": "marcarLeidasPorSolicitud",
+                "line": 69,
+                "class": "notificacionModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool"
+            }
+        ]
+    },
+    {
+        "path": "models/solicitudModel.php",
+        "bytes": 33099,
+        "lines": 916,
+        "sha256": "402da70b01e6cb0ba128adc76dfd9de03555aff01d5df67a65a744e9b0b745e3",
+        "classes": [
+            {
+                "name": "solicitudModel",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "crear",
+                "line": 27,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function crear(array $data): bool"
+            },
+            {
+                "name": "getUltimoIdByEmpleado",
+                "line": 60,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getUltimoIdByEmpleado(string $nit): int"
+            },
+            {
+                "name": "getById",
+                "line": 74,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getById(int $id): ?array"
+            },
+            {
+                "name": "getByEmpleado",
+                "line": 84,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getByEmpleado(string $nit): array"
+            },
+            {
+                "name": "getPendientesJefe",
+                "line": 95,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getPendientesJefe(string $nit): array"
+            },
+            {
+                "name": "getGestionadasByJefe",
+                "line": 109,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getGestionadasByJefe(string $nit): array"
+            },
+            {
+                "name": "getPendientesRRHH",
+                "line": 123,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getPendientesRRHH(): array"
+            },
+            {
+                "name": "getHistoricoRRHH",
+                "line": 134,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getHistoricoRRHH(): array"
+            },
+            {
+                "name": "getAll",
+                "line": 144,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getAll(array $filtros = []): array"
+            },
+            {
+                "name": "getAllPaginado",
+                "line": 157,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getAllPaginado(array $filtros = [], int $pagina = 1, int $porPagina = 6, string $orden = 'FECHA_CREACION DESC'): array"
+            },
+            {
+                "name": "getByEmpleadoPaginado",
+                "line": 172,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getByEmpleadoPaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array"
+            },
+            {
+                "name": "getPendientesJefePaginado",
+                "line": 179,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getPendientesJefePaginado(string $nit, int $pagina = 1, int $porPagina = 6, array $filtros = []): array"
+            },
+            {
+                "name": "contarTotal",
+                "line": 188,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarTotal(array $filtros = []): int"
+            },
+            {
+                "name": "contarPorEstado",
+                "line": 202,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarPorEstado(array $filtros = []): array"
+            },
+            {
+                "name": "contarPorNits",
+                "line": 223,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarPorNits(array $nits): array"
+            },
+            {
+                "name": "kpiAdmin",
+                "line": 270,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function kpiAdmin(array $filtros = []): array"
+            },
+            {
+                "name": "contarPorMes",
+                "line": 315,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarPorMes(int $meses = 6): array"
+            },
+            {
+                "name": "aprobarJefe",
+                "line": 354,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function aprobarJefe(int $id, string $nit, string $obs): bool"
+            },
+            {
+                "name": "aprobarJefeTalentoHumano",
+                "line": 359,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function aprobarJefeTalentoHumano(int $id, string $nitJefe, string $obs): bool"
+            },
+            {
+                "name": "rechazarJefe",
+                "line": 386,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function rechazarJefe(int $id, string $nit, string $obs): bool"
+            },
+            {
+                "name": "aprobarRRHH",
+                "line": 391,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function aprobarRRHH(int $id, string $nit, string $obs): bool"
+            },
+            {
+                "name": "rechazarRRHH",
+                "line": 396,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function rechazarRRHH(int $id, string $nit, string $obs): bool"
+            },
+            {
+                "name": "adminIntervenir",
+                "line": 401,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function adminIntervenir(int $id, string $nitAdmin, string $obs, string $decision): bool"
+            },
+            {
+                "name": "adminForzarEstado",
+                "line": 446,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function adminForzarEstado(int $id, string $nitAdmin, string $nuevoEstado, string $motivo): bool"
+            },
+            {
+                "name": "cancelarAgenda",
+                "line": 511,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function cancelarAgenda(int $id, string $nitUsuario, bool $esGestor = false, string $observacionCancelacion = ''): bool"
+            },
+            {
+                "name": "eliminar",
+                "line": 570,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function eliminar(int $id, string $nit, bool $permitirAprobadoJefe = false): bool"
+            },
+            {
+                "name": "buildSolicitudWhere",
+                "line": 594,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function buildSolicitudWhere(array $filtros): array"
+            },
+            {
+                "name": "normalizarFiltroBusqueda",
+                "line": 705,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarFiltroBusqueda(string $busqueda): string"
+            },
+            {
+                "name": "toUpper",
+                "line": 718,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function toUpper(string $valor): string"
+            },
+            {
+                "name": "toLower",
+                "line": 725,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function toLower(string $valor): string"
+            },
+            {
+                "name": "escapeLike",
+                "line": 732,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function escapeLike(string $valor): string"
+            },
+            {
+                "name": "tiposSolicitudCoincidentes",
+                "line": 737,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function tiposSolicitudCoincidentes(string $busqueda): array"
+            },
+            {
+                "name": "normalizarTextoBusqueda",
+                "line": 758,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function normalizarTextoBusqueda(string $texto): string"
+            },
+            {
+                "name": "paginar",
+                "line": 781,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function paginar(string $sqlBase, array $binds, string $orden, int $pagina, int $porPagina): array"
+            },
+            {
+                "name": "contarSqlBase",
+                "line": 809,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function contarSqlBase(string $sqlBase, array $binds): int"
+            },
+            {
+                "name": "ordenSeguro",
+                "line": 819,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function ordenSeguro(string $orden): string"
+            },
+            {
+                "name": "actualizarSolicitudEmpleado",
+                "line": 832,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function actualizarSolicitudEmpleado(int $id, string $nitEmpleado, array $data, bool $permitirAprobadoJefe = false): bool"
+            },
+            {
+                "name": "gestionarJefe",
+                "line": 871,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function gestionarJefe(int $id, string $nit, string $obs, string $estado): bool"
+            },
+            {
+                "name": "gestionarRRHH",
+                "line": 894,
+                "class": "solicitudModel",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function gestionarRRHH(int $id, string $nit, string $obs, string $estado): bool"
+            }
+        ]
+    },
+    {
+        "path": "services/loginBloqueoService.php",
+        "bytes": 3083,
+        "lines": 101,
+        "sha256": "9505480b48305df6da471f6010b02b3d951b0ec5fc5197820b2e6f5f22ff0e49",
+        "classes": [
+            {
+                "name": "loginBloqueoService",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "verificar",
+                "line": 12,
+                "class": "loginBloqueoService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function verificar(string $cedula): ?string"
+            },
+            {
+                "name": "registrarFallido",
+                "line": 39,
+                "class": "loginBloqueoService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function registrarFallido(string $cedula): int"
+            },
+            {
+                "name": "limpiar",
+                "line": 86,
+                "class": "loginBloqueoService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function limpiar(string $cedula): void"
+            },
+            {
+                "name": "limpiarExpirados",
+                "line": 94,
+                "class": "loginBloqueoService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function limpiarExpirados(): void"
+            }
+        ]
+    },
+    {
+        "path": "services/notaAdminService.php",
+        "bytes": 1551,
+        "lines": 46,
+        "sha256": "24b9e2668c4a6c1dddc88d4886bc8bcd3340669203b75604a4709718e75ed2e9",
+        "classes": [
+            {
+                "name": "notaAdminService",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "guardar",
+                "line": 9,
+                "class": "notaAdminService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function guardar(int $idSolicitud, string $nitAdmin, string $nombreAdmin, string $nota): bool"
+            },
+            {
+                "name": "getByIdSolicitud",
+                "line": 25,
+                "class": "notaAdminService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getByIdSolicitud(int $idSolicitud): array"
+            }
+        ]
+    },
+    {
+        "path": "services/notificacionService.php",
+        "bytes": 9972,
+        "lines": 247,
+        "sha256": "9d5a1d59bb884ee71a4fbf231f41437f3862f81a6210574b9a08dd6e78ffc7b7",
+        "classes": [
+            {
+                "name": "notificacionService",
+                "line": 10
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 17,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct()"
+            },
+            {
+                "name": "notificarNuevaSolicitud",
+                "line": 22,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarNuevaSolicitud(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void"
+            },
+            {
+                "name": "notificarAprobacionJefe",
+                "line": 29,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarAprobacionJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void"
+            },
+            {
+                "name": "notificarAprobacionFinalJefeTalentoHumano",
+                "line": 38,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarAprobacionFinalJefeTalentoHumano(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud): void"
+            },
+            {
+                "name": "notificarRechazoJefe",
+                "line": 45,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarRechazoJefe(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void"
+            },
+            {
+                "name": "notificarRevisionRRHH",
+                "line": 56,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarRevisionRRHH(int $idSolicitud, string $nitEmpleado, string $tipoSolicitud): void"
+            },
+            {
+                "name": "notificarAprobacionRRHH",
+                "line": 65,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarAprobacionRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $nitGestor = ''): void"
+            },
+            {
+                "name": "notificarRechazoRRHH",
+                "line": 80,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarRechazoRRHH(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = '', string $nitGestor = ''): void"
+            },
+            {
+                "name": "notificarCancelacionUsuario",
+                "line": 99,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function notificarCancelacionUsuario(int $idSolicitud, string $nitEmpleado, string $nitJefe, string $tipoSolicitud, string $obs = ''): void"
+            },
+            {
+                "name": "contarNoLeidas",
+                "line": 129,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function contarNoLeidas(string $nit): int"
+            },
+            {
+                "name": "getNoLeidas",
+                "line": 138,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getNoLeidas(string $nit): array"
+            },
+            {
+                "name": "marcarLeida",
+                "line": 147,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarLeida(int $id, string $nit): bool"
+            },
+            {
+                "name": "marcarTodasLeidas",
+                "line": 156,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarTodasLeidas(string $nit): bool"
+            },
+            {
+                "name": "marcarLeidasPorSolicitud",
+                "line": 165,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function marcarLeidasPorSolicitud(int $idSolicitud, string $nit): bool"
+            },
+            {
+                "name": "usuariosRRHH",
+                "line": 174,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function usuariosRRHH(): array"
+            },
+            {
+                "name": "nombreEmpleado",
+                "line": 198,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function nombreEmpleado(string $nit, string $fallback): string"
+            },
+            {
+                "name": "empleadoModel",
+                "line": 221,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function empleadoModel(): empleadoModel"
+            },
+            {
+                "name": "tipoLabel",
+                "line": 230,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function tipoLabel(string $tipo): string"
+            },
+            {
+                "name": "safeCrear",
+                "line": 235,
+                "class": "notificacionService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function safeCrear(string $nit, string $tipo, string $mensaje, int $idSolicitud): void"
+            }
+        ]
+    },
+    {
+        "path": "services/pdfStorageService.php",
+        "bytes": 8538,
+        "lines": 269,
+        "sha256": "160dde7aca84447f68645bd3cf8fb28d071d49249eb949a2937f6e0b33ce1324",
+        "classes": [
+            {
+                "name": "pdfStorageService",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "guardarArchivoSubido",
+                "line": 9,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function guardarArchivoSubido(array $archivo, string $nitEmpleado): ?string"
+            },
+            {
+                "name": "servirRuta",
+                "line": 23,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function servirRuta(string $ruta): bool"
+            },
+            {
+                "name": "eliminarRuta",
+                "line": 75,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function eliminarRuta(string $ruta): bool"
+            },
+            {
+                "name": "guardarEnCentral",
+                "line": 91,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function guardarEnCentral(string $tmpName, string $nombre): bool"
+            },
+            {
+                "name": "rutaCentral",
+                "line": 99,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function rutaCentral(string $nombre): ?string"
+            },
+            {
+                "name": "eliminarEnCentral",
+                "line": 106,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function eliminarEnCentral(string $nombre): bool"
+            },
+            {
+                "name": "esServidorCentral",
+                "line": 118,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function esServidorCentral(): bool"
+            },
+            {
+                "name": "subirRemoto",
+                "line": 125,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function subirRemoto(array $archivo, string $nombre): bool"
+            },
+            {
+                "name": "solicitudRemota",
+                "line": 166,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function solicitudRemota(string $action, array $campos): bool"
+            },
+            {
+                "name": "guardarLocal",
+                "line": 190,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function guardarLocal(string $tmpName, string $nombre, bool $esUpload): bool"
+            },
+            {
+                "name": "generarNombre",
+                "line": 212,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function generarNombre(string $nombreOriginal, string $nitEmpleado): string"
+            },
+            {
+                "name": "nombreSeguro",
+                "line": 231,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function nombreSeguro(string $ruta): ?string"
+            },
+            {
+                "name": "rutaLocal",
+                "line": 242,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function rutaLocal(string $nombre): string"
+            },
+            {
+                "name": "enviarPdf",
+                "line": 247,
+                "class": "pdfStorageService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function enviarPdf($contenido, string $nombre): void"
+            }
+        ]
+    },
+    {
+        "path": "services/sesionActivaService.php",
+        "bytes": 4370,
+        "lines": 129,
+        "sha256": "c0c08a4a5140010fcd8cadcc64370c49dd3ed167c39d25b0b8876a34a29a860c",
+        "classes": [
+            {
+                "name": "sesionActivaService",
+                "line": 7
+            }
+        ],
+        "functions": [
+            {
+                "name": "__construct",
+                "line": 11,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function __construct(int $ttlSegundos = 1800)"
+            },
+            {
+                "name": "registrar",
+                "line": 16,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function registrar(array $usuario): void"
+            },
+            {
+                "name": "getSesionesActivas",
+                "line": 59,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function getSesionesActivas(): array"
+            },
+            {
+                "name": "cerrar",
+                "line": 87,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "public",
+                "static": false,
+                "signature": "function cerrar(string $sid = ''): void"
+            },
+            {
+                "name": "purgar",
+                "line": 102,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function purgar(): void"
+            },
+            {
+                "name": "ip",
+                "line": 113,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function ip(): string"
+            },
+            {
+                "name": "hace",
+                "line": 119,
+                "class": "sesionActivaService",
+                "namespace": "",
+                "visibility": "private",
+                "static": false,
+                "signature": "function hace(int $segundos): string"
+            }
+        ]
+    },
+    {
+        "path": "storage/.htaccess",
+        "bytes": 150,
+        "lines": 7,
+        "sha256": "1a4e27b65c440f5bc4264087f5ab4e1caa44fa9ae12721dca2d84684cd810c88",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "uploads/.htaccess",
+        "bytes": 89,
+        "lines": 4,
+        "sha256": "eb5d91f87d447307f96b050dca252d48acf31a6a078fa338da329f1c4e428a81",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/admin/conflictos/index.php",
+        "bytes": 13820,
+        "lines": 286,
+        "sha256": "c09772e4b623cf25370b36deae7716f1403cf9c324e33222dab26ece54da96db",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/admin/dashboard.php",
+        "bytes": 13284,
+        "lines": 183,
+        "sha256": "a35b22912e6cd4dd1c276edd5c0629f214268853673e196179cd2a1db7a417a1",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/admin/empleados/detalle.php",
+        "bytes": 12579,
+        "lines": 262,
+        "sha256": "c3d707568913a027bb44d79178baee873fd4440a0fc659f383e2f763bca9b4a4",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/admin/empleados/index.php",
+        "bytes": 15372,
+        "lines": 295,
+        "sha256": "703bfda922b7560c9fda1d7e761f80a18787b7149199318a8e5193787a0a4461",
+        "classes": [],
+        "functions": [
+            {
+                "name": "_rolBadge",
+                "line": 36,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function _rolBadge(array $emp, array $adminsAdicionales): array"
+            }
+        ]
+    },
+    {
+        "path": "views/auth/acerca_de.php",
+        "bytes": 8435,
+        "lines": 117,
+        "sha256": "9fa2df4c99d5bcfbdc9bcf425bb2941c2c64dc8bb2aad3be3e056de0f94f6c7a",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/auth/login.php",
+        "bytes": 4897,
+        "lines": 134,
+        "sha256": "a581c49fc9e8b864894a5c9957e0f231d3aef40f3a482bf6d14b5bd5265569d1",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/auth/seleccionar_modo.php",
+        "bytes": 7188,
+        "lines": 238,
+        "sha256": "e51d33586e07058c02fabc36c1fad3ddc7214535ab53863fd1ecb4e1d174145b",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/auth/vacaciones.php",
+        "bytes": 348,
+        "lines": 10,
+        "sha256": "7e58a78839aa7546998aecc21361efe0713d345b29afebdccd4dfda227876f26",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/empleado/dashboard.php",
+        "bytes": 2745,
+        "lines": 42,
+        "sha256": "e73f596a8028bf9dbf0d29602987bd2210c833efec5520c65d2f056676113d23",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/empleado/form_crear.php",
+        "bytes": 29185,
+        "lines": 1042,
+        "sha256": "c8631909b93583074f94dcd749d17ac0140d8986573d7c97ddc2f445707388b3",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/empleado/form_editar.php",
+        "bytes": 26919,
+        "lines": 837,
+        "sha256": "4d15decaf3f855f1fedf7acdb48853b78fe885309ed58777a6bb8e10e3911981",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/jefe/dashboard.php",
+        "bytes": 3940,
+        "lines": 56,
+        "sha256": "e0c42da4f71454595ebe58e49d85adf7003a9a4a1e66ed7f82b3958663d2625c",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/layouts/auth.php",
+        "bytes": 4382,
+        "lines": 149,
+        "sha256": "c694f45d3593cdfaf0318b6478be57cd6ec1ab77da06358ff1dcc6464c684332",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/layouts/main.php",
+        "bytes": 29082,
+        "lines": 947,
+        "sha256": "a21548da3cc03b5dd01bdc6569207d4eca1c1245f78a1e9970d5f318eb995177",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/rrhh/dashboard.php",
+        "bytes": 4116,
+        "lines": 59,
+        "sha256": "59568e049618c5ad21145db799e3541b18cfb65d691f94c490ff3ee81d5292ef",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/404.php",
+        "bytes": 380,
+        "lines": 8,
+        "sha256": "919310f0eb53ba1fa426711e95e068e2ab2db1d86c3e1887a9b0240c2a7d2145",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/badge_estado.php",
+        "bytes": 1083,
+        "lines": 44,
+        "sha256": "c19c9aef8b59d405bd32f536c723e6a77a64c67c3e62ca4f3860ef68bb7104ce",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/dashboard_kpi_cards.php",
+        "bytes": 1682,
+        "lines": 34,
+        "sha256": "97af2acb4b591b5588dc68abfd3e7437399121d9c096554a9483e63cf03d8927",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/detalle.php",
+        "bytes": 23923,
+        "lines": 538,
+        "sha256": "5b34a56bf372f61e228153ba69ef71c00dd754b2b573a0ac9a859e42387f1263",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/pagination.php",
+        "bytes": 3920,
+        "lines": 90,
+        "sha256": "9b5b9b4347be25ae5424832a8a9a037be8db9010552856d7c88e643aea4e4d55",
+        "classes": [],
+        "functions": [
+            {
+                "name": "ugcPaginateRows",
+                "line": 6,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ugcPaginateRows(array $rows, string $paramName = 'pagina', int $perPage = 6): array"
+            },
+            {
+                "name": "ugcBuildPageUrl",
+                "line": 26,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ugcBuildPageUrl(string $paramName, int $page): string"
+            },
+            {
+                "name": "ugcRenderPagination",
+                "line": 35,
+                "class": "",
+                "namespace": "",
+                "visibility": "",
+                "static": false,
+                "signature": "function ugcRenderPagination(array $pagination, string $label = 'registros'): void"
+            }
+        ]
+    },
+    {
+        "path": "views/shared/solicitudes.php",
+        "bytes": 291,
+        "lines": 7,
+        "sha256": "5f87657d3053449f8805fc07d9519b7f95a213abd9853e014ee614e1cb6a5511",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/shared/tabla_solicitudes.php",
+        "bytes": 15161,
+        "lines": 491,
+        "sha256": "39579c31e76256a1e198397c151d096f4b5aae8f191b72f05b888ca5635e0308",
+        "classes": [],
+        "functions": []
+    },
+    {
+        "path": "views/superadmin/panel.php",
+        "bytes": 30134,
+        "lines": 638,
+        "sha256": "57f9c456a2f6f050d796ada7fbcff69e1b70ec73de7cb1269bf4cbc612345a84",
+        "classes": [],
+        "functions": []
+    }
+]

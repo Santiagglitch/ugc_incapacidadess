@@ -1,0 +1,20 @@
+{
+  "file": "C:\\xampp\\htdocs\\ugc_incapacidadess\\documentacion\\Manual_completo_ugc_incapacidadess.docx",
+  "size_bytes": 218579,
+  "chapters": 20,
+  "source_files": 74,
+  "php_files": 57,
+  "php_classes": 28,
+  "php_named_functions": 382,
+  "js_named_functions": 97,
+  "word_count_approx": 20541,
+  "tables": 69,
+  "php_lint_errors": 0,
+  "js_external_checks": 5,
+  "js_inline_checks": 16,
+  "js_syntax_errors": 0,
+  "unchanged_sources": true,
+  "zip_and_xml_valid": true,
+  "secret_scan_passed": true,
+  "rendered_in_word": false
+}

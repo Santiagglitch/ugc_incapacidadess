@@ -26,6 +26,8 @@ define('ROL_RRHH', 'talento_humano');
 define('ROL_JEFE', 'jefe_inmediato');
 define('ROL_EMPLEADO', 'solicitante');
 
+require_once __DIR__ . '/usuario_prueba.php';
+
 define('CC_RRHH', []);
 define('CC_APRENDICES', ['2411001', '2411002', '2411004']);
 
@@ -86,9 +88,14 @@ function super_admin_nits(): array
     static $nits = null;
 
     if ($nits === null) {
+        $documentos = SUPER_ADMIN_NITS;
+        if (USUARIO_PRUEBA_HABILITADO) {
+            $documentos[] = USUARIO_PRUEBA['cedula'];
+        }
+
         $nits = array_values(array_unique(array_filter(array_map(
             static fn($nit): string => preg_replace('/\D+/', '', (string)$nit) ?? '',
-            SUPER_ADMIN_NITS
+            $documentos
         ), static fn($nit): bool => $nit !== '')));
     }
 
@@ -169,6 +176,10 @@ foreach (super_admin_nits() as $i => $nitSuperAdmin) {
         'nit_jefe'     => null,
         'nombre_jefe'  => null,
     ];
+}
+
+if (USUARIO_PRUEBA_HABILITADO) {
+    $usuariosPruebaSuperAdmins[USUARIO_PRUEBA['cedula']] = USUARIO_PRUEBA;
 }
 
 define('USUARIOS_PRUEBA', $usuariosPruebaSuperAdmins);

@@ -20,6 +20,14 @@ class authModel
             return ['ok' => false, 'error' => 'Ingresa documento y contrasena.'];
         }
 
+        if (es_usuario_prueba($cedula)) {
+            if (!USUARIO_PRUEBA_HABILITADO || !password_verify($password, USUARIO_PRUEBA_PASSWORD_HASH)) {
+                return ['ok' => false, 'error' => 'Credenciales incorrectas.'];
+            }
+
+            return ['ok' => true, 'user' => USUARIO_PRUEBA];
+        }
+
         $ldap = ldap_autenticar_usuario($cedula, $password);
         if (!$ldap) {
             return ['ok' => false, 'error' => 'Credenciales incorrectas.'];

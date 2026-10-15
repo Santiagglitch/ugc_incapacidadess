@@ -1,0 +1,112 @@
+{
+  "external_js": 5,
+  "inline_scripts": 16,
+  "checks": [
+    {
+      "source": "assets/js/acerca-de.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "assets/js/jefe-picker.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "assets/js/pdf-mobile-preview.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "assets/vendor/pdfjs/pdf.min.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "assets/vendor/pdfjs/pdf.worker.min.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/admin/conflictos/index.php:script2",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/admin/empleados/detalle.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/admin/empleados/index.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/auth/login.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/auth/seleccionar_modo.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/empleado/form_crear.php:script4",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/empleado/form_editar.php:script4",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/layouts/auth.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/layouts/main.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/detalle.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/detalle.php:script2",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/detalle.php:script3",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/detalle.php:script4",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/detalle.php:script5",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/shared/tabla_solicitudes.php:script1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "source": "views/superadmin/panel.php:script1",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "limitations": "Sintaxis de JavaScript externo y scripts de templates con expresiones PHP reemplazadas por placeholders; no prueba DOM, CSP ni comportamiento en navegador."
+}

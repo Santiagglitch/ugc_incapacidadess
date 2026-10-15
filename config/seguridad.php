@@ -271,6 +271,12 @@ function validar_vigencia_sesion(): void
 
 function requiere_login(): void
 {
+    $cedula = (string)(usuario_actual()['cedula'] ?? '');
+    if (!USUARIO_PRUEBA_HABILITADO && es_usuario_prueba($cedula)) {
+        cerrar_sesion();
+        responder_sesion_expirada();
+    }
+
     if (!usuario_autenticado()) {
         iniciar_sesion_segura();
         $_SESSION['login_error'] = 'Tu sesion expiro. Ingresa nuevamente.';

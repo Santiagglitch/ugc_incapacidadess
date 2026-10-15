@@ -10,6 +10,17 @@ class empleadoModel extends mainModel
 {
     public function getByNit(string $nit): ?array
     {
+        if (es_usuario_prueba($nit)) {
+            return [
+                'NIT' => USUARIO_PRUEBA['cedula'],
+                'NOMBRE_COMPLETO' => USUARIO_PRUEBA['nombre'],
+                'CENTRO_COSTO' => USUARIO_PRUEBA['centro_costo'],
+                'NIVEL' => USUARIO_PRUEBA['nivel'],
+                'ESTADO' => 'A',
+                'FECHA_INGRESO' => null,
+            ];
+        }
+
         return $this->consultarUno(
             "SELECT NIT,
                     TRIM(NOMBRE||' '||PRIMER_APELLIDO||' '||NVL(SEGUNDO_APELLIDO,'')) AS NOMBRE_COMPLETO,
@@ -29,11 +40,11 @@ class empleadoModel extends mainModel
     {
         $nits = array_values(array_unique(array_filter(array_map('strval', $nits), static fn(string $nit): bool => $nit !== '')));
 
-        if (empty($nits)) {
-            return [];
-        }
-
         $nombres = [];
+        if (in_array(USUARIO_PRUEBA['cedula'], $nits, true)) {
+            $nombres[USUARIO_PRUEBA['cedula']] = USUARIO_PRUEBA['nombre'];
+            $nits = array_values(array_diff($nits, [USUARIO_PRUEBA['cedula']]));
+        }
 
         foreach (array_chunk($nits, 900) as $chunkIndex => $chunk) {
             [$inClause, $binds] = $this->buildInClause($chunk, 'nit_nombre_' . $chunkIndex . '_');
